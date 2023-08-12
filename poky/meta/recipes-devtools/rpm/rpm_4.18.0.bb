@@ -25,7 +25,6 @@ LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=c4eec0c20c6034b9407a09945b48a43f"
 
 SRC_URI = "git://github.com/rpm-software-management/rpm;branch=rpm-4.18.x;protocol=https \
-           file://environment.d-rpm.sh \
            file://0001-Do-not-add-an-unsatisfiable-dependency-when-building.patch \
            file://0001-Do-not-read-config-files-from-HOME.patch \
            file://0001-When-cross-installing-execute-package-scriptlets-wit.patch \
@@ -40,6 +39,7 @@ SRC_URI = "git://github.com/rpm-software-management/rpm;branch=rpm-4.18.x;protoc
            file://0001-build-pack.c-do-not-insert-payloadflags-into-.rpm-me.patch \
            file://0001-configure.ac-add-linux-gnux32-variant-to-triplet-han.patch \
            file://fifofix.patch \
+           file://0001-python-Use-Py_hash_t-instead-of-long-in-hdr_hash.patch \
            "
 
 PE = "1"
@@ -118,18 +118,14 @@ do_install:append:class-native() {
 }
 
 do_install:append:class-nativesdk() {
-        for tool in ${WRAPPER_TOOLS}; do
-                test -x ${D}$tool && create_wrapper ${D}$tool \
-                        RPM_CONFIGDIR='`dirname $''realpath`'/${@os.path.relpath(d.getVar('libdir'), d.getVar('bindir'))}/rpm \
-                        RPM_ETCCONFIGDIR='$'{RPM_ETCCONFIGDIR-'`dirname $''realpath`'/${@os.path.relpath(d.getVar('sysconfdir'), d.getVar('bindir'))}/..} \
-                        MAGIC='`dirname $''realpath`'/${@os.path.relpath(d.getVar('datadir'), d.getVar('bindir'))}/misc/magic.mgc \
-                        RPM_NO_CHROOT_FOR_SCRIPTS=1
-        done
-
         rm -rf ${D}/var
 
-        mkdir -p ${D}${SDKPATHNATIVE}/environment-setup.d
-        install -m 644 ${WORKDIR}/environment.d-rpm.sh ${D}${SDKPATHNATIVE}/environment-setup.d/rpm.sh
+	mkdir -p ${D}${SDKPATHNATIVE}/environment-setup.d
+	cat <<- EOF > ${D}${SDKPATHNATIVE}/environment-setup.d/rpm.sh
+		export RPM_CONFIGDIR="${libdir}/rpm"
+		export RPM_ETCCONFIGDIR="${SDKPATHNATIVE}"
+		export RPM_NO_CHROOT_FOR_SCRIPTS=1
+	EOF
 }
 
 # Rpm's make install creates var/tmp which clashes with base-files packaging
@@ -138,6 +134,9 @@ do_install:append:class-target() {
 }
 do_install:append:class-nativesdk() {
     rm -rf ${D}${SDKPATHNATIVE}/var
+    # Ensure find-debuginfo is located correctly inside SDK
+    mkdir -p ${D}${SDKPATHNATIVE}/etc/rpm
+    echo "%__find_debuginfo   ${SDKPATHNATIVE}/usr/bin/find-debuginfo" >> ${D}${SDKPATHNATIVE}/etc/rpm/macros
 }
 
 do_install:append () {
@@ -163,9 +162,7 @@ FILES:${PN}-build = "\
     ${libdir}/librpmbuild.so.* \
     ${libdir}/rpm/brp-* \
     ${libdir}/rpm/check-* \
-    ${libdir}/rpm/debugedit \
     ${libdir}/rpm/sepdebugcrcfix \
-    ${libdir}/rpm/find-debuginfo.sh \
     ${libdir}/rpm/find-lang.sh \
     ${libdir}/rpm/*provides* \
     ${libdir}/rpm/*requires* \
@@ -177,6 +174,7 @@ FILES:${PN}-build = "\
     ${libdir}/rpm/macros.p* \
     ${libdir}/rpm/fileattrs/* \
 "
+FILES:${PN}-build:append:class-nativesdk = " ${SDKPATHNATIVE}/etc/rpm/macros"
 
 FILES:${PN}-sign = "\
     ${bindir}/rpmsign \
@@ -191,7 +189,7 @@ PACKAGES += "python3-rpm"
 PROVIDES += "python3-rpm"
 FILES:python3-rpm = "${PYTHON_SITEPACKAGES_DIR}/rpm/*"
 
-RDEPENDS:${PN}-build = "bash perl python3-core"
+RDEPENDS:${PN}-build = "bash perl python3-core debugedit"
 
 PACKAGE_PREPROCESS_FUNCS += "rpm_package_preprocess"
 

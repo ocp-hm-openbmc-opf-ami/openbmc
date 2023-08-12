@@ -19,6 +19,7 @@ valid_archs = "alpha cris ia64 \
                sh sh64 um h8300   \
                parisc s390  v850 \
                avr32 blackfin \
+               loongarch64 \
                microblaze \
                nios2 arc riscv xtensa"
 
@@ -34,6 +35,7 @@ def map_kernel_arch(a, d):
     elif re.match('aarch64_be$', a):            return 'arm64'
     elif re.match('aarch64_ilp32$', a):         return 'arm64'
     elif re.match('aarch64_be_ilp32$', a):      return 'arm64'
+    elif re.match('loongarch(32|64|)$', a):     return 'loongarch'
     elif re.match('mips(isa|)(32|64|)(r6|)(el|)$', a):      return 'mips'
     elif re.match('mcf', a):                    return 'm68k'
     elif re.match('riscv(32|64|)(eb|)$', a):    return 'riscv'
@@ -66,9 +68,12 @@ TARGET_LD_KERNEL_ARCH ?= ""
 HOST_LD_KERNEL_ARCH ?= "${TARGET_LD_KERNEL_ARCH}"
 TARGET_AR_KERNEL_ARCH ?= ""
 HOST_AR_KERNEL_ARCH ?= "${TARGET_AR_KERNEL_ARCH}"
+TARGET_OBJCOPY_KERNEL_ARCH ?= ""
+HOST_OBJCOPY_KERNEL_ARCH ?= "${TARGET_OBJCOPY_KERNEL_ARCH}"
 
 KERNEL_CC = "${CCACHE}${HOST_PREFIX}gcc ${HOST_CC_KERNEL_ARCH} -fuse-ld=bfd ${DEBUG_PREFIX_MAP} -fdebug-prefix-map=${STAGING_KERNEL_DIR}=${KERNEL_SRC_PATH} -fdebug-prefix-map=${STAGING_KERNEL_BUILDDIR}=${KERNEL_SRC_PATH}"
 KERNEL_LD = "${CCACHE}${HOST_PREFIX}ld.bfd ${HOST_LD_KERNEL_ARCH}"
 KERNEL_AR = "${CCACHE}${HOST_PREFIX}ar ${HOST_AR_KERNEL_ARCH}"
-TOOLCHAIN = "gcc"
+KERNEL_OBJCOPY = "${CCACHE}${HOST_PREFIX}objcopy ${HOST_OBJCOPY_KERNEL_ARCH}"
+TOOLCHAIN ?= "gcc"
 

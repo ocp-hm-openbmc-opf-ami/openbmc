@@ -10,7 +10,7 @@ DEPENDS = " \
     enchant2 \
     evolution-data-server \
     folks \
-    gcr \
+    gcr3 \
     gmime \
     gnome-online-accounts \
     gsound \
@@ -35,13 +35,14 @@ inherit meson pkgconfig mime-xdg gtk-icon-cache gobject-introspection vala featu
 
 SRC_URI = " \
 	git://github.com/GNOME/geary.git;nobranch=1;protocol=https \
+	file://0001-meson-Use-PKG_CONFIG_SYSROOT_DIR-when-using-pkg-conf.patch \
 "
 
 S = "${WORKDIR}/git"
 SRCREV = "94d6bec861daffb27efea85a296f347db7a5af6d"
 
 ANY_OF_DISTRO_FEATURES = "${GTK3DISTROFEATURES}"
-REQUIRED_DISTRO_FEATURES = "gobject-introspection-data"
+REQUIRED_DISTRO_FEATURES = "gobject-introspection-data opengl"
 
 GIR_MESON_OPTION = ""
 EXTRA_OEMESON = "-Dprofile=release"

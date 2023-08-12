@@ -51,6 +51,7 @@ PACKAGE_NO_GCONV ?= "0"
 OVERRIDES:append = ":${TARGET_ARCH}-${TARGET_OS}"
 
 locale_base_postinst_ontarget() {
+mkdir ${libdir}/locale
 localedef --inputfile=${datadir}/i18n/locales/%s --charmap=%s %s
 }
 
@@ -267,7 +268,8 @@ python package_do_split_gconvs () {
                 "riscv32": " --uint32-align=4 --little-endian ", \
                 "i586":    " --uint32-align=4 --little-endian ", \
                 "i686":    " --uint32-align=4 --little-endian ", \
-                "x86_64":  " --uint32-align=4 --little-endian "  }
+                "x86_64":  " --uint32-align=4 --little-endian ", \
+                "loongarch64": " --uint32-align=4 --little-endian "  }
 
             if target_arch in locale_arch_options:
                 localedef_opts = locale_arch_options[target_arch]

@@ -11,7 +11,7 @@ DEPENDS = " \
     phosphor-logging \
     sdbusplus \
     "
-SRCREV = "ead7e927675d28e0e1b7bbc5d47e9bbcdda4da2e"
+SRCREV = "88a32137fb8173970e2bda25c41561b837f89f7d"
 PACKAGECONFIG ??= " \
     adcsensor \
     intelcpusensor \
@@ -25,7 +25,7 @@ PACKAGECONFIG ??= " \
     external \
     "
 PACKAGECONFIG[adcsensor] = "-Dadc=enabled, -Dadc=disabled"
-PACKAGECONFIG[intelcpusensor] = "-Dintel-cpu=enabled, -Dintel-cpu=disabled"
+PACKAGECONFIG[intelcpusensor] = "-Dintel-cpu=enabled, -Dintel-cpu=disabled, libpeci"
 PACKAGECONFIG[exitairtempsensor] = "-Dexit-air=enabled, -Dexit-air=disabled"
 PACKAGECONFIG[fansensor] = "-Dfan=enabled, -Dfan=disabled"
 PACKAGECONFIG[hwmontempsensor] = "-Dhwmon-temp=enabled, -Dhwmon-temp=disabled"

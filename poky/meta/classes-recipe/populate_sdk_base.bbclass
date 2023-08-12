@@ -15,7 +15,7 @@ COMPLEMENTARY_GLOB[staticdev-pkgs] = '*-staticdev'
 COMPLEMENTARY_GLOB[doc-pkgs] = '*-doc'
 COMPLEMENTARY_GLOB[dbg-pkgs] = '*-dbg'
 COMPLEMENTARY_GLOB[src-pkgs] = '*-src'
-COMPLEMENTARY_GLOB[ptest-pkgs] = '*-ptest ptest-runner'
+COMPLEMENTARY_GLOB[ptest-pkgs] = '*-ptest ${MLPREFIX}ptest-runner'
 COMPLEMENTARY_GLOB[bash-completion-pkgs] = '*-bash-completion'
 
 def complementary_globs(featurevar, d):
@@ -162,6 +162,7 @@ SDK_POSTPROCESS_COMMAND = " create_sdk_files; check_sdk_sysroots; archive_sdk; $
 def populate_sdk_common(d):
     from oe.sdk import populate_sdk
     from oe.manifest import create_manifest, Manifest
+    import oe.packagedata
 
     # Handle package exclusions
     excl_pkgs = (d.getVar("PACKAGE_EXCLUDE") or "").split()
@@ -184,13 +185,13 @@ def populate_sdk_common(d):
     d.setVar("PACKAGE_INSTALL_ATTEMPTONLY", ' '.join(inst_attempt_pkgs))
 
     pn = d.getVar('PN')
-    runtime_mapping_rename("TOOLCHAIN_TARGET_TASK", pn, d)
-    runtime_mapping_rename("TOOLCHAIN_TARGET_TASK_ATTEMPTONLY", pn, d)
+    oe.packagedata.runtime_mapping_rename("TOOLCHAIN_TARGET_TASK", pn, d)
+    oe.packagedata.runtime_mapping_rename("TOOLCHAIN_TARGET_TASK_ATTEMPTONLY", pn, d)
 
     ld = bb.data.createCopy(d)
     ld.setVar("PKGDATA_DIR", "${STAGING_DIR}/${SDK_ARCH}-${SDKPKGSUFFIX}${SDK_VENDOR}-${SDK_OS}/pkgdata")
-    runtime_mapping_rename("TOOLCHAIN_HOST_TASK", pn, ld)
-    runtime_mapping_rename("TOOLCHAIN_HOST_TASK_ATTEMPTONLY", pn, ld)
+    oe.packagedata.runtime_mapping_rename("TOOLCHAIN_HOST_TASK", pn, ld)
+    oe.packagedata.runtime_mapping_rename("TOOLCHAIN_HOST_TASK_ATTEMPTONLY", pn, ld)
     d.setVar("TOOLCHAIN_HOST_TASK", ld.getVar("TOOLCHAIN_HOST_TASK"))
     d.setVar("TOOLCHAIN_HOST_TASK_ATTEMPTONLY", ld.getVar("TOOLCHAIN_HOST_TASK_ATTEMPTONLY"))
     
@@ -207,7 +208,7 @@ fakeroot python do_populate_sdk() {
 }
 SSTATETASKS += "do_populate_sdk"
 SSTATE_SKIP_CREATION:task-populate-sdk = '1'
-do_populate_sdk[cleandirs] = "${SDKDEPLOYDIR}"
+do_populate_sdk[cleandirs] += "${SDKDEPLOYDIR}"
 do_populate_sdk[sstate-inputdirs] = "${SDKDEPLOYDIR}"
 do_populate_sdk[sstate-outputdirs] = "${SDK_DEPLOY}"
 do_populate_sdk[stamp-extra-info] = "${MACHINE_ARCH}${SDKMACHINE}"

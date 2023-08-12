@@ -40,8 +40,7 @@ overview of their function and contents.
       Azure Storage Shared Access Signature, when using the
       :ref:`Azure Storage fetcher <bitbake-user-manual/bitbake-user-manual-fetching:fetchers>`
       This variable can be defined to be used by the fetcher to authenticate
-      and gain access to non-public artifacts.
-      ::
+      and gain access to non-public artifacts::
 
          AZ_SAS = ""se=2021-01-01&sp=r&sv=2018-11-09&sr=c&skoid=<skoid>&sig=<signature>""
 
@@ -100,9 +99,25 @@ overview of their function and contents.
       the path of the build. BitBake's output should not (and usually does
       not) depend on the directory in which it was built.
 
+   :term:`BB_CACHEDIR`
+      Specifies the code parser cache directory (distinct from :term:`CACHE`
+      and :term:`PERSISTENT_DIR` although they can be set to the same value
+      if desired). The default value is "${TOPDIR}/cache".
+
    :term:`BB_CHECK_SSL_CERTS`
       Specifies if SSL certificates should be checked when fetching. The default
       value is ``1`` and certificates are not checked if the value is set to ``0``.
+
+   :term:`BB_HASH_CODEPARSER_VALS`
+      Specifies values for variables to use when populating the codeparser cache.
+      This can be used selectively to set dummy values for variables to avoid
+      the codeparser cache growing on every parse. Variables that would typically
+      be included are those where the value is not significant for where the
+      codeparser cache is used (i.e. when calculating variable dependencies for
+      code fragments.) The value is space-separated without quoting values, for
+      example::
+
+         BB_HASH_CODEPARSER_VALS = "T=/ WORKDIR=/ DATE=1234 TIME=1234"
 
    :term:`BB_CONSOLELOG`
       Specifies the path to a log file into which BitBake's user interface
@@ -344,6 +359,14 @@ overview of their function and contents.
 
       For example usage, see :term:`BB_GIT_SHALLOW`.
 
+   :term:`BB_GLOBAL_PYMODULES`
+      Specifies the list of Python modules to place in the global namespace.
+      It is intended that only the core layer should set this and it is meant
+      to be a very small list, typically just ``os`` and ``sys``.
+      :term:`BB_GLOBAL_PYMODULES` is expected to be set before the first
+      ``addpylib`` directive.
+      See also ":ref:`bitbake-user-manual/bitbake-user-manual-metadata:extending python library code`".
+
    :term:`BB_HASHCHECK_FUNCTION`
       Specifies the name of the function to call during the "setscene" part
       of the task's execution in order to validate the list of task hashes.
@@ -540,7 +563,7 @@ overview of their function and contents.
       :term:`BB_RUNFMT` variable is undefined and the run filenames get
       created using the following form::
 
-         run.{task}.{pid}
+         run.{func}.{pid}
 
       If you want to force run files to take a specific name, you can set this
       variable in a configuration file.
@@ -991,7 +1014,7 @@ overview of their function and contents.
       ``bblayers.conf`` configuration file.
 
       To exclude a recipe from a world build using this variable, set the
-      variable to "1" in the recipe.
+      variable to "1" in the recipe. Set it to "0" to add it back to world build.
 
       .. note::
 
@@ -1096,6 +1119,29 @@ overview of their function and contents.
       expression (:term:`BBFILE_PATTERN`). This
       variable is not available outside of ``layer.conf`` and references
       are expanded immediately when parsing of the file completes.
+
+   :term:`LAYERSERIES_COMPAT`
+      Lists the versions of the OpenEmbedded-Core (OE-Core) for which
+      a layer is compatible. Using the :term:`LAYERSERIES_COMPAT` variable
+      allows the layer maintainer to indicate which combinations of the
+      layer and OE-Core can be expected to work. The variable gives the
+      system a way to detect when a layer has not been tested with new
+      releases of OE-Core (e.g. the layer is not maintained).
+
+      To specify the OE-Core versions for which a layer is compatible, use
+      this variable in your layer's ``conf/layer.conf`` configuration file.
+      For the list, use the Yocto Project release name (e.g. "kirkstone",
+      "mickledore"). To specify multiple OE-Core versions for the layer, use
+      a space-separated list::
+
+         LAYERSERIES_COMPAT_layer_root_name = "kirkstone mickledore"
+
+      .. note::
+
+         Setting :term:`LAYERSERIES_COMPAT` is required by the Yocto Project
+         Compatible version 2 standard.
+         The OpenEmbedded build system produces a warning if the variable
+         is not set for any given layer.
 
    :term:`LAYERVERSION`
       Optionally specifies the version of a layer as a single number. You

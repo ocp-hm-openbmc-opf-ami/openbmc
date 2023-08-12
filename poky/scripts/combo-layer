@@ -19,9 +19,8 @@ import tempfile
 import configparser
 import re
 import copy
-import pipes
+import shlex
 import shutil
-from collections import OrderedDict
 from string import Template
 from functools import reduce
 
@@ -191,6 +190,23 @@ def runcmd(cmd,destdir=None,printerr=True,out=None,env=None):
     output = err.read().decode('utf-8')
     logger.debug("output: %s" % output.replace(chr(0), '\\0'))
     return output
+
+def action_sync_revs(conf, args):
+    """
+    Update the last_revision config option for each repo with the latest
+    revision in the remote's branch. Useful if multiple people are using
+    combo-layer.
+    """
+    repos = get_repos(conf, args[1:])
+
+    for name in repos:
+        repo = conf.repos[name]
+        ldir = repo['local_repo_dir']
+        branch = repo.get('branch', "master")
+        runcmd("git fetch", ldir)
+        lastrev = runcmd('git rev-parse origin/%s' % branch, ldir).strip()
+        print("Updating %s to %s" % (name, lastrev))
+        conf.update(name, "last_revision", lastrev)
 
 def action_init(conf, args):
     """
@@ -508,7 +524,7 @@ def check_patch(patchfile):
     f.close()
     if of:
         of.close()
-        bb.utils.rename(patchfile + '.tmp', patchfile)
+        os.rename(of.name, patchfile)
 
 def drop_to_shell(workdir=None):
     if not sys.stdin.isatty():
@@ -1259,7 +1275,7 @@ def apply_commit(parent, rev, largs, wargs, dest_dir, file_filter=None):
         target = os.path.join(wargs["destdir"], dest_dir)
         if not os.path.isdir(target):
             os.makedirs(target)
-        quoted_target = pipes.quote(target)
+        quoted_target = shlex.quote(target)
         # os.sysconf('SC_ARG_MAX') is lying: running a command with
         # string length 629343 already failed with "Argument list too
         # long" although SC_ARG_MAX = 2097152. "man execve" explains
@@ -1271,7 +1287,7 @@ def apply_commit(parent, rev, largs, wargs, dest_dir, file_filter=None):
             unquoted_args = []
             cmdsize = 100 + len(quoted_target)
             while update:
-                quoted_next = pipes.quote(update[0])
+                quoted_next = shlex.quote(update[0])
                 size_next = len(quoted_next) + len(dest_dir) + 1
                 logger.debug('cmdline length %d + %d < %d?' % (cmdsize, size_next, os.sysconf('SC_ARG_MAX')))
                 if cmdsize + size_next < max_cmdsize:
@@ -1302,6 +1318,7 @@ actions = {
     "update": action_update,
     "pull": action_pull,
     "splitpatch": action_splitpatch,
+    "sync-revs": action_sync_revs,
 }
 
 def main():
@@ -1312,10 +1329,11 @@ def main():
 Create and update a combination layer repository from multiple component repositories.
 
 Action:
-  init                 initialise the combo layer repo
-  update [components]  get patches from component repos and apply them to the combo repo
-  pull [components]    just pull component repos only
-  splitpatch [commit]  generate commit patch and split per component, default commit is HEAD""")
+  init                   initialise the combo layer repo
+  update [components]    get patches from component repos and apply them to the combo repo
+  pull [components]      just pull component repos only
+  sync-revs [components] update the config file's last_revision for each repository
+  splitpatch [commit]    generate commit patch and split per component, default commit is HEAD""")
 
     parser.add_option("-c", "--conf", help = "specify the config file (conf/combo-layer.conf is the default).",
                action = "store", dest = "conffile", default = "conf/combo-layer.conf")

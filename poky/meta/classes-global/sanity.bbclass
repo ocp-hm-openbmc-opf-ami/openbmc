@@ -42,7 +42,7 @@ BBLAYERS_CONF_UPDATE_FUNCS += " \
 
 SANITY_DIFF_TOOL ?= "meld"
 
-SANITY_LOCALCONF_SAMPLE ?= "${COREBASE}/meta*/conf/local.conf.sample"
+SANITY_LOCALCONF_SAMPLE ?= "${COREBASE}/meta*/conf/templates/default/local.conf.sample"
 python oecore_update_localconf() {
     # Check we are using a valid local.conf
     current_conf  = d.getVar('CONF_VERSION')
@@ -62,7 +62,7 @@ is a good way to visualise the changes."""
     raise NotImplementedError(failmsg)
 }
 
-SANITY_SITECONF_SAMPLE ?= "${COREBASE}/meta*/conf/site.conf.sample"
+SANITY_SITECONF_SAMPLE ?= "${COREBASE}/meta*/conf/templates/default/site.conf.sample"
 python oecore_update_siteconf() {
     # If we have a site.conf, check it's valid
     current_sconf = d.getVar('SCONF_VERSION')
@@ -82,7 +82,7 @@ is a good way to visualise the changes."""
     raise NotImplementedError(failmsg)
 }
 
-SANITY_BBLAYERCONF_SAMPLE ?= "${COREBASE}/meta*/conf/bblayers.conf.sample"
+SANITY_BBLAYERCONF_SAMPLE ?= "${COREBASE}/meta*/conf/templates/default/bblayers.conf.sample"
 python oecore_update_bblayers() {
     # bblayers.conf is out of date, so see if we can resolve that
 
@@ -475,7 +475,7 @@ def check_wsl(d):
             bb.warn("You are running bitbake under WSLv2, this works properly but you should optimize your VHDX file eventually to avoid running out of storage space")
     return None
 
-# Require at least gcc version 7.5.
+# Require at least gcc version 8.0
 #
 # This can be fixed on CentOS-7 with devtoolset-6+
 # https://www.softwarecollections.org/en/scls/rhscl/devtoolset-6/
@@ -488,13 +488,13 @@ def check_gcc_version(sanity_data):
     
     build_cc, version = oe.utils.get_host_compiler_version(sanity_data)
     if build_cc.strip() == "gcc":
-        if bb.utils.vercmp_string_op(version, "7.5", "<"):
-            return "Your version of gcc is older than 7.5 and will break builds. Please install a newer version of gcc (you could use the project's buildtools-extended-tarball or use scripts/install-buildtools).\n"
+        if bb.utils.vercmp_string_op(version, "8.0", "<"):
+            return "Your version of gcc is older than 8.0 and will break builds. Please install a newer version of gcc (you could use the project's buildtools-extended-tarball or use scripts/install-buildtools).\n"
     return None
 
 # Tar version 1.24 and onwards handle overwriting symlinks correctly
 # but earlier versions do not; this needs to work properly for sstate
-# Version 1.28 is needed so opkg-build works correctly when reproducibile builds are enabled
+# Version 1.28 is needed so opkg-build works correctly when reproducible builds are enabled
 def check_tar_version(sanity_data):
     import subprocess
     try:
@@ -622,10 +622,10 @@ def check_sanity_sstate_dir_change(sstate_dir, data):
 def check_sanity_version_change(status, d):
     # Sanity checks to be done when SANITY_VERSION or NATIVELSBSTRING changes
     # In other words, these tests run once in a given build directory and then 
-    # never again until the sanity version or host distrubution id/version changes.
+    # never again until the sanity version or host distribution id/version changes.
 
     # Check the python install is complete. Examples that are often removed in
-    # minimal installations: glib-2.0-natives requries # xml.parsers.expat
+    # minimal installations: glib-2.0-natives requires xml.parsers.expat
     try:
         import xml.parsers.expat
     except ImportError as e:
@@ -682,7 +682,7 @@ def check_sanity_version_change(status, d):
         if i and workdir.startswith(i):
             status.addresult("You are building in a path included in PSEUDO_IGNORE_PATHS " + str(i) + " please locate the build outside this path.\n")
 
-    # Check if PSEUDO_IGNORE_PATHS and and paths under pseudo control overlap
+    # Check if PSEUDO_IGNORE_PATHS and paths under pseudo control overlap
     pseudoignorepaths = d.getVar('PSEUDO_IGNORE_PATHS', expand=True).split(",")
     pseudo_control_dir = "${D},${PKGD},${PKGDEST},${IMAGEROOTFS},${SDK_OUTPUT}"
     pseudocontroldir = d.expand(pseudo_control_dir).split(",")
@@ -759,10 +759,10 @@ def check_sanity_everybuild(status, d):
     if 0 == os.getuid():
         raise_sanity_error("Do not use Bitbake as root.", d)
 
-    # Check the Python version, we now have a minimum of Python 3.6
+    # Check the Python version, we now have a minimum of Python 3.8
     import sys
-    if sys.hexversion < 0x030600F0:
-        status.addresult('The system requires at least Python 3.6 to run. Please update your Python interpreter.\n')
+    if sys.hexversion < 0x030800F0:
+        status.addresult('The system requires at least Python 3.8 to run. Please update your Python interpreter.\n')
 
     # Check the bitbake version meets minimum requirements
     minversion = d.getVar('BB_MIN_VERSION')

@@ -81,6 +81,10 @@ UBOOT_FIT_KEY_REQ_ARGS ?= "-batch -new"
 # Standard format for public key certificate
 UBOOT_FIT_KEY_SIGN_PKCS ?= "-x509"
 
+# length of address in number of <u32> cells
+# ex: 1 32bits address, 2 64bits address
+UBOOT_FIT_ADDRESS_CELLS ?= "1"
+
 # This is only necessary for determining the signing configuration
 KERNEL_PN = "${PREFERRED_PROVIDER_virtual/kernel}"
 
@@ -149,7 +153,7 @@ deploy_dtb() {
 	fi
 
 	if [ -f "${UBOOT_NODTB_BINARY}" ]; then
-		install -Dm644 ${UBOOT_DTB_BINARY} ${DEPLOYDIR}/${uboot_nodtb_binary}
+		install -Dm644 ${UBOOT_NODTB_BINARY} ${DEPLOYDIR}/${uboot_nodtb_binary}
 		if [ -n "${type}" ]; then
 			ln -sf ${uboot_nodtb_binary} ${DEPLOYDIR}/${UBOOT_NODTB_IMAGE}
 		fi
@@ -234,7 +238,7 @@ uboot_fitimage_assemble() {
 
 / {
     description = "${UBOOT_FIT_DESC}";
-    #address-cells = <1>;
+    #address-cells = <${UBOOT_FIT_ADDRESS_CELLS}>;
 
     images {
         uboot {
@@ -407,7 +411,9 @@ do_deploy:prepend() {
 					deploy_helper ${type}
 				fi
 			done
+			unset j
 		done
+		unset i
 	else
 		cd ${B}
 		deploy_helper ""

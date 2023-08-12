@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-SSTATE_VERSION = "10"
+SSTATE_VERSION = "11"
 
 SSTATE_ZSTD_CLEVEL ??= "8"
 
@@ -365,8 +365,9 @@ def sstate_installpkg(ss, d):
     d.setVar("SSTATE_CURRTASK", ss['task'])
     sstatefetch = d.getVar('SSTATE_PKGNAME')
     sstatepkg = d.getVar('SSTATE_PKG')
+    verify_sig = bb.utils.to_boolean(d.getVar("SSTATE_VERIFY_SIG"), False)
 
-    if not os.path.exists(sstatepkg):
+    if not os.path.exists(sstatepkg) or (verify_sig and not os.path.exists(sstatepkg + '.sig')):
         pstaging_fetch(sstatefetch, d)
 
     if not os.path.isfile(sstatepkg):
@@ -377,7 +378,7 @@ def sstate_installpkg(ss, d):
 
     d.setVar('SSTATE_INSTDIR', sstateinst)
 
-    if bb.utils.to_boolean(d.getVar("SSTATE_VERIFY_SIG"), False):
+    if verify_sig:
         if not os.path.isfile(sstatepkg + '.sig'):
             bb.warn("No signature file for sstate package %s, skipping acceleration..." % sstatepkg)
             return False
@@ -925,6 +926,8 @@ sstate_unpack_package () {
 BB_HASHCHECK_FUNCTION = "sstate_checkhashes"
 
 def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, **kwargs):
+    import itertools
+
     found = set()
     missed = set()
 
@@ -1019,7 +1022,8 @@ def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, 
             connection_cache_pool.put(connection_cache)
 
             if progress:
-                bb.event.fire(bb.event.ProcessProgress(msg, len(tasklist) - thread_worker.tasks.qsize()), d)
+                bb.event.fire(bb.event.ProcessProgress(msg, next(cnt_tasks_done)), d)
+            bb.event.check_for_interrupts(d)
 
         tasklist = []
         for tid in missed:
@@ -1029,6 +1033,8 @@ def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, 
         if tasklist:
             nproc = min(int(d.getVar("BB_NUMBER_THREADS")), len(tasklist))
 
+            ## thread-safe counter
+            cnt_tasks_done = itertools.count(start = 1)
             progress = len(tasklist) >= 100
             if progress:
                 msg = "Checking sstate mirror object availability"
@@ -1291,6 +1297,7 @@ python sstate_eventhandler_reachablestamps() {
                 lines.remove(r)
                 removed = removed + 1
                 bb.event.fire(bb.event.ProcessProgress(msg, removed), d)
+                bb.event.check_for_interrupts(d)
 
             bb.event.fire(bb.event.ProcessFinished(msg), d)
 
@@ -1360,6 +1367,7 @@ python sstate_eventhandler_stalesstate() {
                     bb.utils.remove(stamp)
                 removed = removed + 1
                 bb.event.fire(bb.event.ProcessProgress(msg, removed), d)
+                bb.event.check_for_interrupts(d)
 
             bb.event.fire(bb.event.ProcessFinished(msg), d)
 }

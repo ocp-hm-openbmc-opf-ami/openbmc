@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-# This bbclass implements device tree compliation for user provided device tree
+# This bbclass implements device tree compilation for user provided device tree
 # sources. The compilation of the device tree sources is the same as the kernel
 # device tree compilation process, this includes being able to include sources
 # from the kernel such as soc dtsi files or header files such as gpio.h. In
@@ -53,8 +53,10 @@ KERNEL_INCLUDE ??= " \
 
 DT_INCLUDE[doc] = "Search paths to be made available to both the device tree compiler and preprocessor for inclusion."
 DT_INCLUDE ?= "${DT_FILES_PATH} ${KERNEL_INCLUDE}"
-DT_FILES_PATH[doc] = "Defaults to source directory, can be used to select dts files that are not in source (e.g. generated)."
+DT_FILES_PATH[doc] = "Path to the directory containing dts files to build. Defaults to source directory."
 DT_FILES_PATH ?= "${S}"
+DT_FILES[doc] = "Space-separated list of dts or dtb files (relative to DT_FILES_PATH) to build. If empty, all dts files are built."
+DT_FILES ?= ""
 
 DT_PADDING_SIZE[doc] = "Size of padding on the device tree blob, used as extra space typically for additional properties during boot."
 DT_PADDING_SIZE ??= "0x3000"
@@ -125,9 +127,12 @@ def devicetree_compile(dtspath, includes, d):
     subprocess.run(dtcargs, check = True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 python devicetree_do_compile() {
+    import re
     includes = expand_includes("DT_INCLUDE", d)
+    dtfiles = d.getVar("DT_FILES").split()
+    dtfiles = [ re.sub(r"\.dtbo?$", ".dts", dtfile) for dtfile in dtfiles ]
     listpath = d.getVar("DT_FILES_PATH")
-    for dts in os.listdir(listpath):
+    for dts in dtfiles or os.listdir(listpath):
         dtspath = os.path.join(listpath, dts)
         try:
             if not(os.path.isfile(dtspath)) or not(dts.endswith(".dts") or devicetree_source_is_overlay(dtspath)):

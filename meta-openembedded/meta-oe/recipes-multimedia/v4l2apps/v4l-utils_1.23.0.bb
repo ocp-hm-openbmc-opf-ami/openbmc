@@ -13,6 +13,10 @@ DEPENDS = "jpeg \
 DEPENDS:append:libc-musl = " argp-standalone"
 DEPENDS:append:class-target = " udev"
 LDFLAGS:append = " -pthread"
+# v4l2 explicitly sets _FILE_OFFSET_BITS=32 to get access to
+# both 32 and 64 bit file APIs.  But it does not handle the time side?
+# Needs further investigation
+GLIBC_64BIT_TIME_FLAGS = ""
 
 inherit autotools gettext pkgconfig
 
@@ -27,20 +31,17 @@ SRC_URI = "\
     file://0002-original-patch-mediactl-pkgconfig.patch \
     file://0003-original-patch-export-mediactl-headers.patch \
     file://0004-Do-not-use-getsubopt.patch \
-    file://0005-configure.ac-Makefile.am-Support-building-without-NL.patch \
 "
 
-SRCREV = "fd544473800d02e90bc289434cc44e5aa8fadd0f"
+SRCREV = "9431e4b26b4842d1401e80ada9f14593dca3a94c"
+
+PV .= "+git${SRCPV}"
 
 S = "${WORKDIR}/git"
-B = "${S}"
 
 do_configure:prepend() {
-    ${S}/bootstrap.sh
+    cd ${S}; ./bootstrap.sh; cd -
 }
-
-SRC_URI[md5sum] = "8aa73287320a49e9170a8255d7b2c7e6"
-SRC_URI[sha256sum] = "65c6fbe830a44ca105c443b027182c1b2c9053a91d1e72ad849dfab388b94e31"
 
 EXTRA_OECONF = "--enable-shared --with-udevdir=${base_libdir}/udev \
                 --disable-v4l2-compliance-32 --disable-v4l2-ctl-32"

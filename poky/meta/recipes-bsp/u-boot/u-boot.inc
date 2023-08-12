@@ -32,7 +32,7 @@ do_savedefconfig() {
 }
 do_savedefconfig[nostamp] = "1"
 addtask savedefconfig after do_configure
-
+UBOOT_ARCH_DIR = "${@'arm' if d.getVar('UBOOT_ARCH').startswith('arm') else d.getVar('UBOOT_ARCH')}"
 do_compile () {
     if [ "${@bb.utils.filter('DISTRO_FEATURES', 'ld-is-gold', d)}" ]; then
         sed -i 's/$(CROSS_COMPILE)ld$/$(CROSS_COMPILE)ld.bfd/g' ${S}/config.mk
@@ -206,6 +206,7 @@ FILES:${PN}-env = " \
 FILES:${PN}-extlinux = "${UBOOT_EXTLINUX_INSTALL_DIR}/${UBOOT_EXTLINUX_CONF_NAME}"
 RDEPENDS:${PN} += "${@bb.utils.contains('UBOOT_EXTLINUX', '1', '${PN}-extlinux', '', d)}"
 
+SYSROOT_DIRS += "/boot"
 FILES:${PN} = "/boot ${datadir}"
 RDEPENDS:${PN} += "${PN}-env"
 
@@ -333,7 +334,7 @@ do_deploy () {
 
     if [ -n "${UBOOT_DTB}" ]
     then
-        install -m 644 ${B}/arch/${UBOOT_ARCH}/dts/${UBOOT_DTB_BINARY} ${DEPLOYDIR}/
+        install -m 644 ${B}/arch/${UBOOT_ARCH_DIR}/dts/${UBOOT_DTB_BINARY} ${DEPLOYDIR}/
     fi
 }
 

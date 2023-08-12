@@ -469,6 +469,7 @@ def uri_replace(ud, uri_find, uri_replace, replacements, d, mirrortarball=None):
                     basename = os.path.basename(mirrortarball)
                     # Kill parameters, they make no sense for mirror tarballs
                     uri_decoded[5] = {}
+                    uri_find_decoded[5] = {}
                 elif ud.localpath and ud.method.supports_checksum(ud):
                     basename = os.path.basename(ud.localpath)
                 if basename:
@@ -517,7 +518,7 @@ def fetcher_init(d):
     else:
         raise FetchError("Invalid SRCREV cache policy of: %s" % srcrev_policy)
 
-    _checksum_cache.init_cache(d)
+    _checksum_cache.init_cache(d.getVar("BB_CACHEDIR"))
 
     for m in methods:
         if hasattr(m, "init"):
@@ -559,7 +560,6 @@ def verify_checksum(ud, d, precomputed={}, localpath=None, fatal_nochecksum=True
     file against those in the recipe each time, rather than only after
     downloading. See https://bugzilla.yoctoproject.org/show_bug.cgi?id=5571.
     """
-
     if ud.ignore_checksums or not ud.method.supports_checksum(ud):
         return {}
 
@@ -604,11 +604,7 @@ def verify_checksum(ud, d, precomputed={}, localpath=None, fatal_nochecksum=True
 
         # If strict checking enabled and neither sum defined, raise error
         if strict == "1":
-            messages.append("No checksum specified for '%s', please add at " \
-                            "least one to the recipe:" % ud.localpath)
-            messages.extend(checksum_lines)
-            logger.error("\n".join(messages))
-            raise NoChecksumError("Missing SRC_URI checksum", ud.url)
+            raise NoChecksumError("\n".join(checksum_lines))
 
         bb.event.fire(MissingChecksumEvent(ud.url, **checksum_event), d)
 
@@ -748,10 +744,13 @@ def subprocess_setup():
     # SIGPIPE errors are known issues with gzip/bash
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
-def get_autorev(d):
-    #  only not cache src rev in autorev case
+def mark_recipe_nocache(d):
     if d.getVar('BB_SRCREV_POLICY') != "cache":
         d.setVar('BB_DONT_CACHE', '1')
+
+def get_autorev(d):
+    mark_recipe_nocache(d)
+    d.setVar("__BBAUTOREV_SEEN", True)
     return "AUTOINC"
 
 def get_srcrev(d, method_name='sortable_revision'):
@@ -768,7 +767,7 @@ def get_srcrev(d, method_name='sortable_revision'):
     that fetcher provides a method with the given name and the same signature as sortable_revision.
     """
 
-    d.setVar("__BBSEENSRCREV", "1")
+    d.setVar("__BBSRCREV_SEEN", "1")
     recursion = d.getVar("__BBINSRCREV")
     if recursion:
         raise FetchError("There are recursive references in fetcher variables, likely through SRC_URI")
@@ -850,10 +849,13 @@ FETCH_EXPORT_VARS = ['HOME', 'PATH',
                      'DBUS_SESSION_BUS_ADDRESS',
                      'P4CONFIG',
                      'SSL_CERT_FILE',
+                     'NODE_EXTRA_CA_CERTS',
                      'AWS_PROFILE',
                      'AWS_ACCESS_KEY_ID',
                      'AWS_SECRET_ACCESS_KEY',
-                     'AWS_DEFAULT_REGION']
+                     'AWS_DEFAULT_REGION',
+                     'GIT_CACHE_PATH',
+                     'SSL_CERT_DIR']
 
 def get_fetcher_environment(d):
     newenv = {}
@@ -1215,6 +1217,7 @@ def srcrev_internal_helper(ud, d, name):
     if srcrev == "INVALID" or not srcrev:
         raise FetchError("Please set a valid SRCREV for url %s (possible key names are %s, or use a ;rev=X URL parameter)" % (str(attempts), ud.url), ud.url)
     if srcrev == "AUTOINC":
+        d.setVar("__BBAUTOREV_ACTED_UPON", True)
         srcrev = ud.method.latest_revision(ud, d, name)
 
     return srcrev
@@ -1287,17 +1290,12 @@ class FetchData(object):
 
             if checksum_name in self.parm:
                 checksum_expected = self.parm[checksum_name]
-            elif self.type not in ["http", "https", "ftp", "ftps", "sftp", "s3", "az"]:
+            elif self.type not in ["http", "https", "ftp", "ftps", "sftp", "s3", "az", "crate"]:
                 checksum_expected = None
             else:
                 checksum_expected = d.getVarFlag("SRC_URI", checksum_name)
 
             setattr(self, "%s_expected" % checksum_id, checksum_expected)
-
-        for checksum_id in CHECKSUM_LIST:
-            configure_checksum(checksum_id)
-
-        self.ignore_checksums = False
 
         self.names = self.parm.get("name",'default').split(',')
 
@@ -1319,6 +1317,11 @@ class FetchData(object):
 
         if hasattr(self.method, "urldata_init"):
             self.method.urldata_init(self, d)
+
+        for checksum_id in CHECKSUM_LIST:
+            configure_checksum(checksum_id)
+
+        self.ignore_checksums = False
 
         if "localpath" in self.parm:
             # if user sets localpath for file, use it instead.
@@ -1720,6 +1723,7 @@ class Fetch(object):
         network = self.d.getVar("BB_NO_NETWORK")
         premirroronly = bb.utils.to_boolean(self.d.getVar("BB_FETCH_PREMIRRORONLY"))
 
+        checksum_missing_messages = []
         for u in urls:
             ud = self.ud[u]
             ud.setup_localpath(self.d)
@@ -1731,7 +1735,6 @@ class Fetch(object):
 
             try:
                 self.d.setVar("BB_NO_NETWORK", network)
-
                 if m.verify_donestamp(ud, self.d) and not m.need_update(ud, self.d):
                     done = True
                 elif m.try_premirror(ud, self.d):
@@ -1803,13 +1806,20 @@ class Fetch(object):
                     raise ChecksumError("Stale Error Detected")
 
             except BBFetchException as e:
-                if isinstance(e, ChecksumError):
+                if isinstance(e, NoChecksumError):
+                    (message, _) = e.args
+                    checksum_missing_messages.append(message)
+                    continue
+                elif isinstance(e, ChecksumError):
                     logger.error("Checksum failure fetching %s" % u)
                 raise
 
             finally:
                 if ud.lockfile:
                     bb.utils.unlockfile(lf)
+        if checksum_missing_messages:
+            logger.error("Missing SRC_URI checksum, please add those to the recipe: \n%s", "\n".join(checksum_missing_messages))
+            raise BBFetchException("There was some missing checksums in the recipe")
 
     def checkstatus(self, urls=None):
         """

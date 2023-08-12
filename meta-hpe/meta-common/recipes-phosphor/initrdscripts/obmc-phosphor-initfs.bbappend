@@ -9,3 +9,4 @@ do_install:append() {
 
 FILES:${PN} += " /init /shutdown /update /whitelist /dev "
 FILES:${PN} += " /init-options /init-download-url "
+

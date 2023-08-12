@@ -805,12 +805,13 @@ class Wic2(WicTestCase):
         config = 'IMAGE_FSTYPES += "wic"\nWKS_FILE = "wic-image-minimal"\n'\
                  'MACHINE_FEATURES:append = " efi"\n'
         self.append_config(config)
-        bitbake('wic-image-minimal')
+        image = 'wic-image-minimal'
+        bitbake(image)
         self.remove_config(config)
 
-        deploy_dir = get_bb_var('DEPLOY_DIR_IMAGE')
-        machine = self.td['MACHINE']
-        prefix = os.path.join(deploy_dir, 'wic-image-minimal-%s.' % machine)
+        bb_vars = get_bb_vars(['DEPLOY_DIR_IMAGE', 'IMAGE_LINK_NAME'], image)
+        prefix = os.path.join(bb_vars['DEPLOY_DIR_IMAGE'], '%s.' % bb_vars['IMAGE_LINK_NAME'])
+
         # check if we have result image and manifests symlinks
         # pointing to existing files
         for suffix in ('wic', 'manifest'):
@@ -1033,9 +1034,13 @@ class Wic2(WicTestCase):
         config = 'IMAGE_FSTYPES = "ext4"\n'
         self.append_config(config)
         bitbake('core-image-minimal')
+        image_link_name = get_bb_var('IMAGE_LINK_NAME', 'core-image-minimal')
         self.remove_config(config)
 
-        config = 'IMAGE_FSTYPES = "wic"\nWKS_FILE = "test_rawcopy_plugin.wks.in"\n'
+        config = 'IMAGE_FSTYPES = "wic"\n' \
+                 'IMAGE_LINK_NAME_CORE_IMAGE_MINIMAL = "%s"\n'\
+                 'WKS_FILE = "test_rawcopy_plugin.wks.in"\n'\
+                 % image_link_name
         self.append_config(config)
         bitbake('core-image-minimal-mtdutils')
         self.remove_config(config)
@@ -1049,14 +1054,14 @@ class Wic2(WicTestCase):
 
     def _rawcopy_plugin(self, fstype):
         """Test rawcopy plugin"""
-        img = 'core-image-minimal'
-        machine = self.td["MACHINE"]
+        image = 'core-image-minimal'
+        bb_vars = get_bb_vars(['DEPLOY_DIR_IMAGE', 'IMAGE_LINK_NAME'], image)
         params = ',unpack' if fstype.endswith('.gz') else ''
         with NamedTemporaryFile("w", suffix=".wks") as wks:
-            wks.write('part / --source rawcopy --sourceparams="file=%s-%s.%s%s"\n'\
-                      % (img, machine, fstype, params))
+            wks.write('part / --source rawcopy --sourceparams="file=%s.%s%s"\n'\
+                      % (bb_vars['IMAGE_LINK_NAME'], fstype, params))
             wks.flush()
-            cmd = "wic create %s -e %s -o %s" % (wks.name, img, self.resultdir)
+            cmd = "wic create %s -e %s -o %s" % (wks.name, image, self.resultdir)
             runCmd(cmd)
             wksname = os.path.splitext(os.path.basename(wks.name))[0]
             out = glob(os.path.join(self.resultdir, "%s-*direct" % wksname))
@@ -1077,12 +1082,11 @@ class Wic2(WicTestCase):
         """Test empty plugin"""
         config = 'IMAGE_FSTYPES = "wic"\nWKS_FILE = "test_empty_plugin.wks"\n'
         self.append_config(config)
-        bitbake('core-image-minimal')
+        image = 'core-image-minimal'
+        bitbake(image)
         self.remove_config(config)
-        deploy_dir = get_bb_var('DEPLOY_DIR_IMAGE')
-        machine = self.td['MACHINE']
-
-        image_path = os.path.join(deploy_dir, 'core-image-minimal-%s.wic' % machine)
+        bb_vars = get_bb_vars(['DEPLOY_DIR_IMAGE', 'IMAGE_LINK_NAME'], image)
+        image_path = os.path.join(bb_vars['DEPLOY_DIR_IMAGE'], '%s.wic' % bb_vars['IMAGE_LINK_NAME'])
         self.assertTrue(os.path.exists(image_path))
 
         sysroot = get_bb_var('RECIPE_SYSROOT_NATIVE', 'wic-tools')
@@ -1142,6 +1146,26 @@ class Wic2(WicTestCase):
         img = 'core-image-minimal'
         with NamedTemporaryFile("w", suffix=".wks") as wks:
             wks.writelines(['part /boot --active --source bootimg-biosplusefi --sourceparams="loader=grub-efi"\n',
+                            'part / --source rootfs --fstype=ext4 --align 1024 --use-uuid\n'\
+                            'bootloader --timeout=0 --append="console=ttyS0,115200n8"\n'])
+            wks.flush()
+            cmd = "wic create %s -e %s -o %s" % (wks.name, img, self.resultdir)
+            runCmd(cmd)
+            wksname = os.path.splitext(os.path.basename(wks.name))[0]
+            out = glob(os.path.join(self.resultdir, "%s-*.direct" % wksname))
+            self.assertEqual(1, len(out))
+
+    @skipIfNotArch(['i586', 'i686', 'x86_64', 'aarch64'])
+    def test_uefi_kernel(self):
+        """ Test uefi-kernel in wic """
+        config = 'IMAGE_EFI_BOOT_FILES="/etc/fstab;testfile"\nIMAGE_FSTYPES = "wic"\nWKS_FILE = "test_uefikernel.wks"\nMACHINE_FEATURES:append = " efi"\n'
+        self.append_config(config)
+        bitbake('core-image-minimal')
+        self.remove_config(config)
+
+        img = 'core-image-minimal'
+        with NamedTemporaryFile("w", suffix=".wks") as wks:
+            wks.writelines(['part /boot --source bootimg-efi --sourceparams="loader=uefi-kernel"\n'
                             'part / --source rootfs --fstype=ext4 --align 1024 --use-uuid\n'\
                             'bootloader --timeout=0 --append="console=ttyS0,115200n8"\n'])
             wks.flush()
@@ -1277,12 +1301,12 @@ class Wic2(WicTestCase):
         # build an image
         config = 'IMAGE_FSTYPES = "wic"\nWKS_FILE = "directdisk.wks"\n'
         self.append_config(config)
-        bitbake('core-image-minimal')
+        image = 'core-image-minimal'
+        bitbake(image)
 
         # get path to the image
-        deploy_dir = get_bb_var('DEPLOY_DIR_IMAGE')
-        machine = self.td['MACHINE']
-        image_path = os.path.join(deploy_dir, 'core-image-minimal-%s.wic' % machine)
+        bb_vars = get_bb_vars(['DEPLOY_DIR_IMAGE', 'IMAGE_LINK_NAME'], image)
+        image_path = os.path.join(bb_vars['DEPLOY_DIR_IMAGE'], '%s.wic' % bb_vars['IMAGE_LINK_NAME'])
 
         self.remove_config(config)
 
@@ -1290,7 +1314,7 @@ class Wic2(WicTestCase):
             # expand image to 1G
             new_image_path = None
             with NamedTemporaryFile(mode='wb', suffix='.wic.exp',
-                                    dir=deploy_dir, delete=False) as sparse:
+                                    dir=bb_vars['DEPLOY_DIR_IMAGE'], delete=False) as sparse:
                 sparse.truncate(1024 ** 3)
                 new_image_path = sparse.name
 
@@ -1323,6 +1347,29 @@ class Wic2(WicTestCase):
                 os.unlink(new_image_path)
             if os.path.exists(image_path + '.bak'):
                 os.rename(image_path + '.bak', image_path)
+
+    def test_gpt_partition_name(self):
+        """Test --part-name argument to set partition name in GPT table"""
+        config = 'IMAGE_FSTYPES += "wic"\nWKS_FILE = "test_gpt_partition_name.wks"\n'
+        self.append_config(config)
+        bitbake('core-image-minimal')
+        self.remove_config(config)
+        deploy_dir = get_bb_var('DEPLOY_DIR_IMAGE')
+        machine = self.td['MACHINE']
+
+        image_path = os.path.join(deploy_dir, 'core-image-minimal-%s.wic' % machine)
+        # Image is created
+        self.assertTrue(os.path.exists(image_path))
+
+        # Check the names of the three partitions
+        # as listed in test_gpt_partition_name.wks
+        result = runCmd("sfdisk --part-label %s 1" % image_path)
+        self.assertEqual('boot-A', result.output)
+        result = runCmd("sfdisk --part-label %s 2" % image_path)
+        self.assertEqual('root-A', result.output)
+        # When the --part-name is not defined, the partition name is equal to the --label
+        result = runCmd("sfdisk --part-label %s 3" % image_path)
+        self.assertEqual('ext-space', result.output)
 
 class ModifyTests(WicTestCase):
     def test_wic_ls(self):

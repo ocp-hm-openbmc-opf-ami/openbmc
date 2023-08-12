@@ -7,11 +7,11 @@ DEPENDS += "sdbusplus"
 DEPENDS += "systemd"
 DEPENDS += "phosphor-dbus-interfaces"
 DEPENDS += "boost"
-SRCREV = "3930b6bff5dc1d94c2860db427c86b8e7b28e5c1"
+SRCREV = "1c4503e796bafca446412e142c7528ba0a8e4de1"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
-SRC_URI += "git://github.com/openbmc/phosphor-led-sysfs;branch=master;protocol=https"
+SRC_URI = "git://github.com/openbmc/phosphor-led-sysfs;branch=master;protocol=https"
 
 S = "${WORKDIR}/git"
 

@@ -221,7 +221,7 @@ class BootimgEFIPlugin(SourcePlugin):
             elif source_params['loader'] == 'systemd-boot':
                 cls.do_configure_systemdboot(hdddir, creator, cr_workdir, source_params)
             elif source_params['loader'] == 'uefi-kernel':
-                return
+                pass
             else:
                 raise WicError("unrecognized bootimg-efi loader: %s" % source_params['loader'])
         except KeyError:
@@ -438,6 +438,13 @@ class BootimgEFIPlugin(SourcePlugin):
 
         logger.debug("Added %d extra blocks to %s to get to %d total blocks",
                      extra_blocks, part.mountpoint, blocks)
+
+        # required for compatibility with certain devices expecting file system
+        # block count to be equal to partition block count
+        if blocks < part.fixed_size:
+            blocks = part.fixed_size
+            logger.debug("Overriding %s to %d total blocks for compatibility",
+                     part.mountpoint, blocks)
 
         # dosfs image, created by mkdosfs
         bootimg = "%s/boot.img" % cr_workdir

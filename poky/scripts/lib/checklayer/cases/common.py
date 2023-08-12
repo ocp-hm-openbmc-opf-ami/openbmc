@@ -12,6 +12,9 @@ from checklayer.case import OECheckLayerTestCase
 
 class CommonCheckLayer(OECheckLayerTestCase):
     def test_readme(self):
+        if self.tc.layer['type'] == LayerType.CORE:
+            raise unittest.SkipTest("Core layer's README is top level")
+
         # The top-level README file may have a suffix (like README.rst or README.txt).
         readme_files = glob.glob(os.path.join(self.tc.layer['path'], '[Rr][Ee][Aa][Dd][Mm][Ee]*'))
         self.assertTrue(len(readme_files) > 0,
@@ -68,6 +71,21 @@ class CommonCheckLayer(OECheckLayerTestCase):
             msg.insert(0, 'Layer %s failed additional checks from yocto-check-layer.bbclass\nSee below log for specific recipe parsing errors:\n' % \
                 self.tc.layer['name'])
             self.fail('\n'.join(msg))
+
+    @unittest.expectedFailure
+    def test_patches_upstream_status(self):
+        import sys
+        sys.path.append(os.path.join(sys.path[0], '../../../../meta/lib/'))
+        import oe.qa
+        patches = []
+        for dirpath, dirs, files in os.walk(self.tc.layer['path']):
+            for filename in files:
+                if filename.endswith(".patch"):
+                    ppath = os.path.join(dirpath, filename)
+                    if oe.qa.check_upstream_status(ppath):
+                        patches.append(ppath)
+        self.assertEqual(len(patches), 0 , \
+                msg="Found following patches with malformed or missing upstream status:\n%s" % '\n'.join([str(patch) for patch in patches]))
 
     def test_signatures(self):
         if self.tc.layer['type'] == LayerType.SOFTWARE and \

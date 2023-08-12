@@ -44,7 +44,8 @@ Supported SRC_URI options are:
 
 - nobranch
    Don't check the SHA validation for branch. set this option for the recipe
-   referring to commit which is valid in tag instead of branch.
+   referring to commit which is valid in any namespace (branch, tag, ...)
+   instead of branch.
    The default is "0", set nobranch=1 if needed.
 
 - usehead
@@ -366,9 +367,13 @@ class Git(FetchMethod):
 
         # If the repo still doesn't exist, fallback to cloning it
         if not os.path.exists(ud.clonedir):
-            # We do this since git will use a "-l" option automatically for local urls where possible
+            # We do this since git will use a "-l" option automatically for local urls where possible,
+            # but it doesn't work when git/objects is a symlink, only works when it is a directory.
             if repourl.startswith("file://"):
-                repourl = repourl[7:]
+                repourl_path = repourl[7:]
+                objects = os.path.join(repourl_path, 'objects')
+                if os.path.isdir(objects) and not os.path.islink(objects):
+                    repourl = repourl_path
             clone_cmd = "LANG=C %s clone --bare --mirror %s %s --progress" % (ud.basecmd, shlex.quote(repourl), ud.clonedir)
             if ud.proto.lower() != 'file':
                 bb.fetch2.check_network_access(d, clone_cmd, ud.url)
@@ -382,7 +387,11 @@ class Git(FetchMethod):
               runfetchcmd("%s remote rm origin" % ud.basecmd, d, workdir=ud.clonedir)
 
             runfetchcmd("%s remote add --mirror=fetch origin %s" % (ud.basecmd, shlex.quote(repourl)), d, workdir=ud.clonedir)
-            fetch_cmd = "LANG=C %s fetch -f --progress %s refs/*:refs/*" % (ud.basecmd, shlex.quote(repourl))
+
+            if ud.nobranch:
+                fetch_cmd = "LANG=C %s fetch -f --progress %s refs/*:refs/*" % (ud.basecmd, shlex.quote(repourl))
+            else:
+                fetch_cmd = "LANG=C %s fetch -f --progress %s refs/heads/*:refs/heads/* refs/tags/*:refs/tags/*" % (ud.basecmd, shlex.quote(repourl))
             if ud.proto.lower() != 'file':
                 bb.fetch2.check_network_access(d, fetch_cmd, ud.url)
             progresshandler = GitProgressHandler(d)
@@ -412,8 +421,7 @@ class Git(FetchMethod):
             # It would be nice to just do this inline here by running 'git-lfs fetch'
             # on the bare clonedir, but that operation requires a working copy on some
             # releases of Git LFS.
-            tmpdir = tempfile.mkdtemp(dir=d.getVar('DL_DIR'))
-            try:
+            with tempfile.TemporaryDirectory(dir=d.getVar('DL_DIR')) as tmpdir:
                 # Do the checkout. This implicitly involves a Git LFS fetch.
                 Git.unpack(self, ud, tmpdir, d)
 
@@ -431,8 +439,6 @@ class Git(FetchMethod):
                 # downloaded.
                 if os.path.exists(os.path.join(tmpdir, "git", ".git", "lfs")):
                     runfetchcmd("tar -cf - lfs | tar -xf - -C %s" % ud.clonedir, d, workdir="%s/git/.git" % tmpdir)
-            finally:
-                bb.utils.remove(tmpdir, recurse=True)
 
     def build_mirror_data(self, ud, d):
 
@@ -655,11 +661,6 @@ class Git(FetchMethod):
         Check if the repository has 'lfs' (large file) content
         """
 
-        if not ud.nobranch:
-            branchname = ud.branches[ud.names[0]]
-        else:
-            branchname = "master"
-
         # The bare clonedir doesn't use the remote names; it has the branch immediately.
         if wd == ud.clonedir:
             refname = ud.branches[ud.names[0]]
@@ -736,11 +737,11 @@ class Git(FetchMethod):
         """
         Compute the HEAD revision for the url
         """
-        if not d.getVar("__BBSEENSRCREV"):
+        if not d.getVar("__BBSRCREV_SEEN"):
             raise bb.fetch2.FetchError("Recipe uses a floating tag/branch '%s' for repo '%s' without a fixed SRCREV yet doesn't call bb.fetch2.get_srcrev() (use SRCPV in PV for OE)." % (ud.unresolvedrev[name], ud.host+ud.path))
 
         # Ensure we mark as not cached
-        bb.fetch2.get_autorev(d)
+        bb.fetch2.mark_recipe_nocache(d)
 
         output = self._lsremote(ud, d, "")
         # Tags of the form ^{} may not work, need to fallback to other form

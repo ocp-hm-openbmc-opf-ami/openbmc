@@ -1,6 +1,3 @@
-LICENSE = "CLOSED"
-LIC_FILES_CHKSUM = ""
-
 # TODO:  Manually copy the U-Boot signing key and customer-key-block here:
 HPE_GXP_KEY_FILES_DIR = "${COREBASE}/meta-hpe/meta-gxp/recipes-bsp/image/files"
 
@@ -21,6 +18,3 @@ do_deploy () {
   # Copy in the customer keyblock
   install -m 644 ${HPE_GXP_KEY_FILES_DIR}/customer-key-block ${DEPLOYDIR}/customer-key-block
 }
-
-addtask deploy before do_build after do_compile
-

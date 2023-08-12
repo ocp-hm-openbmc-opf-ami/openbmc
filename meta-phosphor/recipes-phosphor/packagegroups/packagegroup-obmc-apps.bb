@@ -37,7 +37,6 @@ SUMMARY:${PN}-bmc-state-mgmt = "BMC state management"
 RDEPENDS:${PN}-bmc-state-mgmt = " \
         ${VIRTUAL-RUNTIME_obmc-bmc-state-manager} \
         phosphor-state-manager-systemd-target-monitor \
-        obmc-targets \
         "
 
 SUMMARY:${PN}-bmcweb = "bmcweb support"
@@ -70,6 +69,11 @@ RDEPENDS:${PN}-devtools = " \
         lrzsz \
         rsync \
         trace-enable \
+        "
+
+EXTRA_DEV_DEBUG_TOOLS = "gdbserver strace opkg curl"
+RDEPENDS:${PN}-devtools:append = " \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'extra-dev-debug-tools', '${EXTRA_DEV_DEBUG_TOOLS}', '', d)} \
         "
 
 SUMMARY:${PN}-dbus-monitor = "Support for dbus monitoring"

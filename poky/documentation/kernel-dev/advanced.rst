@@ -352,17 +352,15 @@ in the manual.
 Kernel Types
 ------------
 
-A kernel type defines a high-level kernel policy by aggregating
-non-hardware configuration fragments with patches you want to use when
-building a Linux kernel of a specific type (e.g. a real-time kernel).
-Syntactically, kernel types are no different than features as described
-in the ":ref:`kernel-dev/advanced:features`" section. The
-:term:`LINUX_KERNEL_TYPE`
-variable in the kernel recipe selects the kernel type. For example, in
-the ``linux-yocto_4.12.bb`` kernel recipe found in
-``poky/meta/recipes-kernel/linux``, a
-:ref:`require <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:\`\`require\`\` directive>` directive
-includes the ``poky/meta/recipes-kernel/linux/linux-yocto.inc`` file,
+A kernel type defines a high-level kernel policy by aggregating non-hardware
+configuration fragments with patches you want to use when building a Linux
+kernel of a specific type (e.g. a real-time kernel). Syntactically, kernel
+types are no different than features as described in the
+":ref:`kernel-dev/advanced:features`" section. The :term:`LINUX_KERNEL_TYPE`
+variable in the kernel recipe selects the kernel type. For example, in the
+``linux-yocto_4.12.bb`` kernel recipe found in ``poky/meta/recipes-kernel/linux``, a
+:ref:`require <bitbake-user-manual/bitbake-user-manual-metadata:\`\`require\`\` directive>`
+directive includes the ``poky/meta/recipes-kernel/linux/linux-yocto.inc`` file,
 which has the following statement that defines the default kernel type::
 
    LINUX_KERNEL_TYPE ??= "standard"
@@ -566,15 +564,7 @@ Example
 Many real-world examples are more complex. Like any other ``.scc`` file,
 BSP descriptions can aggregate features. Consider the Minnow BSP
 definition given the ``linux-yocto-4.4`` branch of the
-``yocto-kernel-cache`` (i.e.
-``yocto-kernel-cache/bsp/minnow/minnow.scc``):
-
-.. note::
-
-   Although the Minnow Board BSP is unused, the Metadata remains and is
-   being used here just as an example.
-
-::
+``yocto-kernel-cache`` (i.e. ``yocto-kernel-cache/bsp/minnow/minnow.scc``)::
 
    include cfg/x86.scc
    include features/eg20t/eg20t.scc
@@ -596,6 +586,11 @@ definition given the ``linux-yocto-4.4`` branch of the
 
    kconf hardware minnow.cfg
    kconf hardware minnow-dev.cfg
+
+.. note::
+
+   Although the Minnow Board BSP is unused, the Metadata remains and is
+   being used here just as an example.
 
 The ``minnow.scc`` description file includes a hardware configuration
 fragment (``minnow.cfg``) specific to the Minnow BSP as well as several

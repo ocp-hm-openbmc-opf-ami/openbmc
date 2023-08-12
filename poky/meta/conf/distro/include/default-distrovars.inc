@@ -4,7 +4,10 @@ OEINCLUDELOGS ?= "yes"
 KERNEL_CONSOLE ?= "ttyS0"
 KEEPUIMAGE ??= "yes"
 
-IMAGE_LINGUAS ?= "en-us en-gb"
+DEFAULT_IMAGE_LINGUAS = "en-us en-gb"
+DEFAULT_IMAGE_LINGUAS:libc-glibc = "c en-us en-gb"
+IMAGE_LINGUAS ?= "${DEFAULT_IMAGE_LINGUAS}"
+
 ENABLE_BINARY_LOCALE_GENERATION ?= "1"
 LOCALE_UTF8_ONLY ?= "0"
 LOCALE_UTF8_IS_DEFAULT ?= "1"
@@ -18,6 +21,9 @@ DISTRO_FEATURES_DEFAULT:remove:arc = "seccomp"
 
 # seccomp is not yet ported to microblaze
 DISTRO_FEATURES_DEFAULT:remove:microblaze = "seccomp"
+
+# seccomp is not yet ported to loongarch64
+DISTRO_FEATURES_DEFAULT:remove:loongarch64 = "seccomp"
 
 DISTRO_FEATURES_DEFAULT ?= "acl alsa bluetooth debuginfod ext2 ipv4 ipv6 pcmcia usbgadget usbhost wifi xattr nfs zeroconf pci 3g nfc x11 vfat seccomp"
 DISTRO_FEATURES ?= "${DISTRO_FEATURES_DEFAULT}"

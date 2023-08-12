@@ -27,6 +27,8 @@ SRC_URI += " \
   file://gbmc-br-dhcp-term.service \
   file://gbmc-br-lib.sh \
   file://gbmc-br-load-ip.service \
+  file://gbmc-start-dhcp.sh \
+  file://50-gbmc-br-cn-redirect.rules \
   "
 
 FILES:${PN}:append = " \
@@ -45,6 +47,7 @@ RDEPENDS:${PN}:append = " \
   mstpd-mstpd \
   network-sh \
   ndisc6-rdisc6 \
+  nftables-systemd \
   "
 
 SYSTEMD_SERVICE:${PN} += " \
@@ -71,6 +74,23 @@ def mac_to_eui64(mac):
   idx = range(0, len(b)-1, 2)
   return ':'.join([format((b[i] << 8) + b[i+1], '04x') for i in idx])
 
+GBMC_BRIDGE_INTFS ?= ""
+
+ethernet_bridge_install() {
+  # install udev rules if any
+  if [ -z "${GBMC_BRIDGE_INTFS}"]; then
+    return
+  fi
+  cat /dev/null > ${WORKDIR}/-ether-bridge.network
+  echo "[Match]" >> ${WORKDIR}/-ether-bridge.network
+  echo "Name=${GBMC_BRIDGE_INTFS}" >>  ${WORKDIR}/-ether-bridge.network
+  echo "[Network]" >> ${WORKDIR}/-ether-bridge.network
+  echo "Bridge=gbmcbr" >> ${WORKDIR}/-ether-bridge.network
+
+  install -d ${D}/${sysconfdir}/systemd/network
+  install -m 0644 ${WORKDIR}/-ether-bridge.network ${D}/${sysconfdir}/systemd/network/
+}
+
 do_install() {
   netdir=${D}${systemd_unitdir}/network
   install -d -m0755 $netdir
@@ -83,6 +103,8 @@ do_install() {
     sed -i '/@ADDR@/d' ${WORKDIR}/-bmc-gbmcbr.network.in
   fi
 
+  ethernet_bridge_install
+
   install -m0644 ${WORKDIR}/-bmc-gbmcbr.netdev $netdir/
   install -m0644 ${WORKDIR}/-bmc-gbmcbr.network.in $netdir/-bmc-gbmcbr.network
   install -m0644 ${WORKDIR}/-bmc-gbmcbrdummy.netdev $netdir/
@@ -92,6 +114,7 @@ do_install() {
   nftables_dir=${D}${sysconfdir}/nftables
   install -d -m0755 "$nftables_dir"
   install -m0644 ${WORKDIR}/50-gbmc-br.rules $nftables_dir/
+  install -m0644 ${WORKDIR}/50-gbmc-br-cn-redirect.rules $nftables_dir/
 
   avahi_dir=${D}${sysconfdir}/avahi/services
   install -d -m 0755 "$avahi_dir"
@@ -120,6 +143,9 @@ do_install() {
   install -m0644 ${WORKDIR}/50-gbmc-psu-hardreset.sh ${D}${datadir}/gbmc-br-dhcp/
 
   install -m0644 ${WORKDIR}/gbmc-br-lib.sh ${D}${datadir}/
+
+  install -d ${D}/${bindir}
+  install -m0755 ${WORKDIR}/gbmc-start-dhcp.sh ${D}${bindir}/
 }
 
 do_rm_work:prepend() {

@@ -21,6 +21,8 @@ SRC_URI = "${GNUPG_MIRROR}/gpgme/${BP}.tar.bz2 \
            file://0007-python-Add-variables-to-tests.patch \
            file://0008-do-not-auto-check-var-PYTHON.patch \
            file://0001-use-closefrom-on-linux-and-glibc-2.34.patch \
+           file://0001-posix-io.c-Use-off_t-instead-of-off64_t.patch \
+           file://0001-autogen.sh-remove-unknown-in-version.patch \
            "
 
 SRC_URI[sha256sum] = "361d4eae47ce925dba0ea569af40e7b52c645c4ae2e65e5621bf1b6cdd8b0e9e"
@@ -67,6 +69,8 @@ FILES:python3-gpg = "${PYTHON_SITEPACKAGES_DIR}/*"
 FILES:${PN}-dev += "${datadir}/common-lisp/source/gpgme/*"
 
 CFLAGS:append:libc-musl = " -D__error_t_defined "
+CACHED_CONFIGUREVARS:libc-musl = "ac_cv_sys_file_offset_bits=no"
+
 do_configure:prepend () {
 	# Else these could be used in preference to those in aclocal-copy
 	rm -f ${S}/m4/gpg-error.m4

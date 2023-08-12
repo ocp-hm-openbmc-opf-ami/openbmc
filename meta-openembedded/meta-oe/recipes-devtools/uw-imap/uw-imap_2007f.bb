@@ -14,6 +14,7 @@ SRC_URI = "https://fossies.org/linux/misc/old/imap-${PV}.tar.gz \
            file://0001-Define-prototype-for-safe_flock.patch \
            file://0001-Do-not-build-mtest.patch \
            file://0002-tmail-Include-ctype.h-for-isdigit.patch \
+           file://0001-Fix-Wincompatible-function-pointer-types.patch \
            "
 
 SRC_URI[md5sum] = "2126fd125ea26b73b20f01fcd5940369"
@@ -28,7 +29,7 @@ CVE_CHECK_IGNORE += "\
 PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
 PACKAGECONFIG[pam] = ",,libpam"
 
-EXTRA_OEMAKE = "CC='${CC} -std=c99 -D_GNU_SOURCE' ARRC='${AR} -rc' RANLIB='${RANLIB}'"
+EXTRA_OEMAKE = "CC='${CC} -std=c99 -D_GNU_SOURCE' ARRC='${AR} -rc' RANLIB='${RANLIB}' EXTRACFLAGS='${CFLAGS}'"
 
 HEADERS = "src/c-client/*.h src/osdep/unix/*.h c-client/auths.c c-client/linkage.c c-client/linkage.h c-client/osdep.h"
 
@@ -49,4 +50,6 @@ RREPLACES:${PN} = "libc-client"
 RCONFLICTS:${PN} = "libc-client"
 
 ALLOW_EMPTY:${PN} = "1"
+
+PARALLEL_MAKE = ""
 

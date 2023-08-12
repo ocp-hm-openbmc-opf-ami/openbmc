@@ -34,11 +34,8 @@ git ls-files -- \
 #
 # https://github.com/openbmc/docs/blob/master/meta-layer-guidelines.md
 echo "\
-meta-ampere/meta-common/recipes-devtools/mtd/mtd-utils/0001-flashcp-support-offset-option.patch
 meta-aspeed/recipes-bsp/u-boot/files/default-gcc.patch
 meta-bytedance/meta-g220a/recipes-kernel/linux/linux-aspeed/0005-ARM-dts-aspeed-Enable-g220a-uart-route.patch
-meta-bytedance/meta-g220a/recipes-phosphor/ipmi/phosphor-node-manager-proxy/0001-Remove-Total_Power-sensor.patch
-meta-facebook/meta-tiogapass/recipes-bsp/u-boot/u-boot-aspeed/0001-configs-ast-common-use-57600-baud-rate-to-match-Tiog.patch
 meta-facebook/meta-yosemitev2/recipes-bsp/u-boot/u-boot-aspeed-sdk/0001-board-aspeed-Add-Mux-for-yosemitev2.patch
 meta-facebook/meta-yosemitev2/recipes-bsp/u-boot/u-boot-aspeed-sdk/0002-spl-host-console-handle.patch
 meta-google/dynamic-layers/nuvoton-layer/recipes-bsp/images/npcm7xx-igps/0001-Set-FIU0_DRD_CFG-and-FIU_Clk_divider-for-gbmc-hoth.patch
@@ -47,7 +44,6 @@ meta-google/recipes-extended/libconfig/files/0001-makefile-Add-missing-LDFLAGS.p
 meta-google/recipes-phosphor/initrdscripts/obmc-phosphor-initfs/rwfs-clean-dev.patch
 meta-ingrasys/meta-zaius/recipes-bsp/u-boot/u-boot-aspeed/0001-board-aspeed-Add-reset_phy-for-Zaius.patch
 meta-nuvoton/recipes-bsp/images/npcm7xx-igps/0001-Adjust-paths-for-use-with-Bitbake.patch
-meta-nuvoton/recipes-bsp/images/npcm8xx-igps/0001-Adjust-paths-for-use-with-Bitbake.patch
 meta-yadro/meta-nicole/recipes-bsp/u-boot/files/0001-Add-system-reset-status-support.patch
 meta-yadro/meta-nicole/recipes-bsp/u-boot/files/0002-config-ast-common-set-fieldmode-to-true.patch
 meta-yadro/meta-nicole/recipes-bsp/u-boot/files/0003-aspeed-add-gpio-support.patch
@@ -104,9 +100,6 @@ exit 1
 fi
 
 lint_exempt="\
-meta-amd/recipes-amd/amd-fpga/files/ethanolx/fpgardu.sh
-meta-bytedance/meta-g220a/recipes-network/network/static-mac-addr/mac-check
-meta-bytedance/meta-g220a/recipes-phosphor/datetime/me-time-sync/me-time-sync.sh
 meta-google/recipes-google/gpio/gpio-ctrl/lib.sh
 meta-google/recipes-google/host-power-ctrl/gpio-host-pwr/host_isoff.sh
 meta-google/recipes-google/host-power-ctrl/gpio-host-pwr/host_powercycle.sh
@@ -132,58 +125,10 @@ meta-google/recipes-google/ssh/authorized-keys-comp/authorized-keys-comp.sh
 meta-google/recipes-google/test/test-sh/test.sh
 meta-google/recipes-phosphor/flash/google-key/verify-bmc-image.sh
 meta-google/recipes-phosphor/flash/inplace-gbmc-update/inplace-gbmc-verify.sh
-meta-hpe/meta-common/recipes-hpe/host/host-boot-enable/host-boot-enable.sh
-meta-hpe/meta-common/recipes-phosphor/initrdscripts/files/gxp-obmc-init.sh
-meta-hpe/meta-dl360poc/recipes-hpe/host/host-boot-enable/host-boot-enable.sh
 meta-ibm/meta-romulus/recipes-phosphor/chassis/vrm-control/vrm-control.sh
-meta-ibm/meta-romulus/recipes-phosphor/gpio/id-button/toggle_identify_led.sh
-meta-ibm/recipes-phosphor/chassis/power-workarounds/witherspoon/power-workarounds.sh
-meta-ibm/recipes-phosphor/chassis/vrm-control/ibm-ac-server/ir35221-unbind-bind.sh
 meta-ibm/recipes-phosphor/chassis/vrm-control/vrm-control.sh
-meta-ibm/recipes-phosphor/dump/phosphor-debug-collector/plugins.d/ibm_elogall
-meta-ibm/recipes-phosphor/dump/phosphor-debug-collector/plugins.d/pels
-meta-ibm/recipes-phosphor/gpio/id-button/toggle_identify_led.sh
-meta-ibm/recipes-phosphor/mboxd/mboxd/check_pnor_format.sh
-meta-ingrasys/meta-zaius/recipes-phosphor/chassis/avsbus-control/zaius_avsbus.sh
-meta-ingrasys/meta-zaius/recipes-phosphor/chassis/vcs-control/zaius_vcs.sh
 meta-inventec/meta-transformers/recipes-phosphor/init/transformers-init/transformers-init.sh
-meta-openpower/recipes-bsp/pdata/files/power-target.sh
-meta-openpower/recipes-phosphor/dump/phosphor-debug-collector/plugins.d/guard
-meta-openpower/recipes-phosphor/network/first-boot-set-hostname/first-boot-set-hostname.sh
-meta-openpower/recipes-phosphor/network/first-boot-set-mac/first-boot-set-mac.sh
-meta-openpower/recipes-phosphor/occ/openpower-occ-control/occ-active.sh
-meta-phosphor/recipes-phosphor/initrdscripts/files/obmc-init.sh
-meta-phosphor/recipes-phosphor/initrdscripts/files/obmc-shutdown.sh
-meta-phosphor/recipes-phosphor/initrdscripts/files/obmc-update.sh
-meta-phosphor/recipes-phosphor/initrdscripts/phosphor-mmc-init/mmc-init.sh
-meta-phosphor/recipes-phosphor/interfaces/bmcweb/run-ptest
-meta-phosphor/recipes-phosphor/preinit-mounts/preinit-mounts/init
 meta-phosphor/recipes-support/nss-pam-ldapd/files/nslcd.init
-meta-quanta/meta-common/recipes-quanta/network/usb-network/usb-network.sh
-meta-quanta/meta-gbs/recipes-gbs/gbs-bios-update/files/bios-update.sh
-meta-quanta/meta-gbs/recipes-gbs/gbs-bios-update/files/bios-verify.sh
-meta-quanta/meta-gbs/recipes-gbs/gbs-bmc-update/files/bmc-verify.sh
-meta-quanta/meta-gbs/recipes-gbs/gbs-detect-gpio-present/files/detect-gpio-present.sh
-meta-quanta/meta-gbs/recipes-gbs/gbs-sysinit/files/gbs-sysinit.sh
-meta-quanta/meta-gbs/recipes-gbs/hotswap-power-cycle/files/tray_powercycle.sh
-meta-quanta/meta-gbs/recipes-google/acpi-power-state/acpi-power-state-daemon/gbs-check-host-state.sh
-meta-quanta/meta-gbs/recipes-google/acpi-power-state/acpi-power-state-daemon/gbs-set-failsafe.sh
-meta-quanta/meta-gbs/recipes-phosphor/fans/phosphor-pid-control/fan-table-init.sh
-meta-quanta/meta-gbs/recipes-phosphor/sensors/phosphor-nvme/nvme_json_rewrite.sh
-meta-quanta/meta-gsj/recipes-gsj/detect-fan-fail/files/detect-fan-fail.sh
-meta-quanta/meta-gsj/recipes-gsj/gsj-hotswap-change-setting/files/gsj-hotswap-change-setting.sh
-meta-quanta/meta-gsj/recipes-gsj/quanta-nvme-powerctrl/files/init_once.sh
-meta-quanta/meta-gsj/recipes-gsj/quanta-nvme-powerctrl/files/nvme_powerctrl_library.sh
-meta-quanta/meta-gsj/recipes-gsj/quanta-nvme-powerctrl/files/nvme_powermanager.sh
-meta-quanta/meta-gsj/recipes-gsj/usb-network/files/usb_network.sh
-meta-quanta/meta-gsj/recipes-phosphor/fans/phosphor-pid-control/fan-control.sh
-meta-quanta/meta-gsj/recipes-phosphor/fans/phosphor-pid-control/fan-default-speed.sh
-meta-quanta/meta-olympus-nuvoton/recipes-olympus-nuvoton/power/first-boot-set-psu/first-boot-set-psu.sh
-meta-quanta/meta-olympus-nuvoton/recipes-phosphor/fans/phosphor-pid-control/fan-full-speed.sh
-meta-quanta/meta-q71l/recipes-phosphor/quanta-powerctrl/files/init_once.sh
-meta-quanta/meta-q71l/recipes-phosphor/quanta-powerctrl/files/poweroff.sh
-meta-quanta/meta-q71l/recipes-phosphor/quanta-powerctrl/files/poweron.sh
-meta-yadro/meta-nicole/recipes-phosphor/chassis/avsbus-control/avsbus-control.sh
 "
 
 types=(json shell)

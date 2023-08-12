@@ -4,14 +4,15 @@
 # SPDX-License-Identifier: MIT
 #
 
+import os
 import re
-import tempfile
 import time
 import oe.types
 from oeqa.core.decorator import OETestTag
 from oeqa.core.decorator.data import skipIfNotArch, skipIfNotMachine
 from oeqa.selftest.case import OESelftestTestCase
-from oeqa.utils.commands import bitbake, runqemu, get_bb_var, runCmd
+from oeqa.utils.commands import bitbake, runqemu, get_bb_var
+
 
 @OETestTag("runqemu")
 class RunqemuTests(OESelftestTestCase):
@@ -23,7 +24,8 @@ class RunqemuTests(OESelftestTestCase):
     def setUpLocal(self):
         super(RunqemuTests, self).setUpLocal()
         self.recipe = 'core-image-minimal'
-        self.machine =  self.td['MACHINE']
+        self.machine = self.td['MACHINE']
+        self.image_link_name = get_bb_var('IMAGE_LINK_NAME', self.recipe)
 
         self.fstypes = "ext4"
         if self.td["HOST_ARCH"] in ('i586', 'i686', 'x86_64'):
@@ -60,7 +62,8 @@ SYSLINUX_TIMEOUT = "10"
         cmd = "%s %s ext4" % (self.cmd_common, self.machine)
         with runqemu(self.recipe, ssh=False, launch_cmd=cmd) as qemu:
             with open(qemu.qemurunnerlog) as f:
-                self.assertIn('rootfs.ext4', f.read(), "Failed: %s" % cmd)
+                regexp = r'\nROOTFS: .*\.ext4]\n'
+                self.assertRegex(f.read(), regexp, "Failed to find '%s' in '%s' after running '%s'" % (regexp, qemu.qemurunnerlog, cmd))
 
     @skipIfNotArch(['i586', 'i686', 'x86_64'])
     def test_boot_machine_iso(self):
@@ -68,7 +71,8 @@ SYSLINUX_TIMEOUT = "10"
         cmd = "%s %s iso" % (self.cmd_common, self.machine)
         with runqemu(self.recipe, ssh=False, launch_cmd=cmd) as qemu:
             with open(qemu.qemurunnerlog) as f:
-                self.assertIn('media=cdrom', f.read(), "Failed: %s" % cmd)
+                text_in = 'media=cdrom'
+                self.assertIn(text_in, f.read(), "Failed to find '%s' in '%s' after running '%s'" % (text_in, qemu.qemurunnerlog, cmd))
 
     def test_boot_recipe_image(self):
         """Test runqemu recipe-image"""
@@ -84,7 +88,8 @@ SYSLINUX_TIMEOUT = "10"
         cmd = "%s %s wic.vmdk" % (self.cmd_common, self.recipe)
         with runqemu(self.recipe, ssh=False, launch_cmd=cmd) as qemu:
             with open(qemu.qemurunnerlog) as f:
-                self.assertIn('format=vmdk', f.read(), "Failed: %s" % cmd)
+                text_in = 'format=vmdk'
+                self.assertIn(text_in, f.read(), "Failed to find '%s' in '%s' after running '%s'" % (text_in, qemu.qemurunnerlog, cmd))
 
     @skipIfNotMachine("qemux86-64", "tests are qemux86-64 specific currently")
     def test_boot_recipe_image_vdi(self):
@@ -92,7 +97,8 @@ SYSLINUX_TIMEOUT = "10"
         cmd = "%s %s wic.vdi" % (self.cmd_common, self.recipe)
         with runqemu(self.recipe, ssh=False, launch_cmd=cmd) as qemu:
             with open(qemu.qemurunnerlog) as f:
-                self.assertIn('format=vdi', f.read(), "Failed: %s" % cmd)
+                text_in = 'format=vdi'
+                self.assertIn(text_in, f.read(), "Failed to find '%s' in '%s' after running '%s'" % (text_in, qemu.qemurunnerlog, cmd))
 
     def test_boot_deploy(self):
         """Test runqemu deploy_dir_image"""
@@ -100,7 +106,6 @@ SYSLINUX_TIMEOUT = "10"
         with runqemu(self.recipe, ssh=False, launch_cmd=cmd) as qemu:
             with open(qemu.qemurunnerlog) as f:
                 self.assertTrue(qemu.runner.logged, "Failed: %s, %s" % (cmd, f.read()))
-
 
     @skipIfNotArch(['i586', 'i686', 'x86_64'])
     def test_boot_deploy_hddimg(self):
@@ -127,7 +132,7 @@ SYSLINUX_TIMEOUT = "10"
 
     def test_boot_qemu_boot(self):
         """Test runqemu /path/to/image.qemuboot.conf"""
-        qemuboot_conf = "%s-%s.qemuboot.conf" % (self.recipe, self.machine)
+        qemuboot_conf = "%s.qemuboot.conf" % (self.image_link_name)
         qemuboot_conf = os.path.join(self.deploy_dir_image, qemuboot_conf)
         if not os.path.exists(qemuboot_conf):
             self.skipTest("%s not found" % qemuboot_conf)
@@ -138,7 +143,7 @@ SYSLINUX_TIMEOUT = "10"
 
     def test_boot_rootfs(self):
         """Test runqemu /path/to/rootfs.ext4"""
-        rootfs = "%s-%s.ext4" % (self.recipe, self.machine)
+        rootfs = "%s.ext4" % (self.image_link_name)
         rootfs = os.path.join(self.deploy_dir_image, rootfs)
         if not os.path.exists(rootfs):
             self.skipTest("%s not found" % rootfs)
@@ -165,10 +170,11 @@ class QemuTest(OESelftestTestCase):
     def setUpClass(cls):
         super(QemuTest, cls).setUpClass()
         cls.recipe = 'core-image-minimal'
-        cls.machine =  get_bb_var('MACHINE')
-        cls.deploy_dir_image =  get_bb_var('DEPLOY_DIR_IMAGE')
+        cls.machine = get_bb_var('MACHINE')
+        cls.deploy_dir_image = get_bb_var('DEPLOY_DIR_IMAGE')
+        cls.image_link_name = get_bb_var('IMAGE_LINK_NAME', cls.recipe)
         cls.cmd_common = "runqemu nographic"
-        cls.qemuboot_conf = "%s-%s.qemuboot.conf" % (cls.recipe, cls.machine)
+        cls.qemuboot_conf = "%s.qemuboot.conf" % (cls.image_link_name)
         cls.qemuboot_conf = os.path.join(cls.deploy_dir_image, cls.qemuboot_conf)
         bitbake(cls.recipe)
 
@@ -199,22 +205,12 @@ class QemuTest(OESelftestTestCase):
             qemu_shutdown_succeeded = self._start_qemu_shutdown_check_if_shutdown_succeeded(qemu, shutdown_timeout)
             self.assertTrue(qemu_shutdown_succeeded, 'Failed: %s does not shutdown within timeout(%s)' % (self.machine, shutdown_timeout))
 
-    # Need to have portmap/rpcbind running to allow this test to work and
-    # current autobuilder setup does not have this.
-    def disabled_test_qemu_can_boot_nfs_and_shutdown(self):
-        self.assertExists(self.qemuboot_conf)
-        bitbake('meta-ide-support')
-        rootfs_tar = "%s-%s.tar.bz2" % (self.recipe, self.machine)
+    def test_qemu_can_boot_nfs_and_shutdown(self):
+        rootfs_tar = "%s.tar.bz2" % (self.image_link_name)
         rootfs_tar = os.path.join(self.deploy_dir_image, rootfs_tar)
         self.assertExists(rootfs_tar)
-        tmpdir = tempfile.mkdtemp(prefix='qemu_nfs')
-        tmpdir_nfs = os.path.join(tmpdir, 'nfs')
-        cmd_extract_nfs = 'runqemu-extract-sdk %s %s' % (rootfs_tar, tmpdir_nfs)
-        result = runCmd(cmd_extract_nfs)
-        self.assertEqual(0, result.status, "runqemu-extract-sdk didn't run as expected. %s" % result.output)
-        cmd = "%s nfs %s %s" % (self.cmd_common, self.qemuboot_conf, tmpdir_nfs)
+        cmd = "%s %s" % (self.cmd_common, rootfs_tar)
         shutdown_timeout = 120
         with runqemu(self.recipe, ssh=False, launch_cmd=cmd) as qemu:
             qemu_shutdown_succeeded = self._start_qemu_shutdown_check_if_shutdown_succeeded(qemu, shutdown_timeout)
             self.assertTrue(qemu_shutdown_succeeded, 'Failed: %s does not shutdown within timeout(%s)' % (self.machine, shutdown_timeout))
-        runCmd('rm -rf %s' % tmpdir)

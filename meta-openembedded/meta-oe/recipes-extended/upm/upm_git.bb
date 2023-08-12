@@ -10,12 +10,13 @@ DEPENDS = "libjpeg-turbo mraa"
 SRCREV = "5cf20df96c6b35c19d5b871ba4e319e96b4df72d"
 PV = "2.0.0+git${SRCPV}"
 
-SRC_URI = "git://github.com/eclipse/${BPN}.git;protocol=http;branch=master;protocol=https \
+SRC_URI = "git://github.com/eclipse/${BPN}.git;protocol=https;branch=master \
            file://0001-CMakeLists.txt-Use-SWIG_SUPPORT_FILES-to-find-the-li.patch \
            file://0001-Use-stdint-types.patch \
            file://0001-initialize-local-variables-before-use.patch \
            file://0001-cmake-Disable-Wno-misleading-indentation-with-clang-.patch \
            file://0001-cmake-Disable-using-Wno-maybe-uninitialized.patch \
+           file://0001-include-missing-cstdint.patch \
            "
 
 SRC_URI:append:toolchain-clang:x86 = " file://0001-nmea_gps-Link-with-latomic.patch "

@@ -1738,7 +1738,7 @@ events':
 
 The tool is pretty self-explanatory, but for more detailed information
 on navigating through the data, see the `kernelshark
-website <https://rostedt.homelinux.com/kernelshark/>`__.
+website <https://kernelshark.org/Documentation.html>`__.
 
 ftrace Documentation
 --------------------
@@ -1767,8 +1767,8 @@ There is a nice series of articles on using ftrace and trace-cmd at LWN:
 -  `trace-cmd: A front-end for
    Ftrace <https://lwn.net/Articles/410200/>`__
 
-There's more detailed documentation kernelshark usage here:
-`KernelShark <https://rostedt.homelinux.com/kernelshark/>`__
+See also `KernelShark's documentation <https://kernelshark.org/Documentation.html>`__
+for further usage details.
 
 An amusing yet useful README (a tracing mini-HOWTO) can be found in
 ``/sys/kernel/debug/tracing/README``.
@@ -1896,7 +1896,7 @@ manual, and boot the resulting target image.
 .. note::
 
    If you have a :term:`Build Directory` containing multiple machines, you need
-   to have the MACHINE you're connecting to selected in local.conf, and
+   to have the :term:`MACHINE` you're connecting to selected in local.conf, and
    the kernel in that machine's :term:`Build Directory` must match the kernel on
    the booted system exactly, or you'll get the above 'crosstap' message
    when you try to invoke a script.

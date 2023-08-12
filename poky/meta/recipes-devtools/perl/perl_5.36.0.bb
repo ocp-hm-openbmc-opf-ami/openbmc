@@ -109,6 +109,10 @@ do_configure:class-native() {
     -Ui_xlocale \
     -Alddlflags=' ${LDFLAGS}' \
     ${PACKAGECONFIG_CONFARGS}
+
+    # This prevents leakage of build paths into perl-native binaries, which
+    # causes non-deterministic troubles when those paths no longer exist or aren't accessible.
+    sed -i -e "s,${STAGING_LIBDIR},/completelyboguspath,g" config.h
 }
 
 do_configure:append() {
@@ -302,7 +306,7 @@ ALTERNATIVE_LINK_NAME[Thread.3] = "${mandir}/man3/Thread.3"
 ALLOW_EMPTY:${PN}-modules = "1"
 PACKAGES += "${PN}-modules "
 
-PACKAGESPLITFUNCS:prepend = "split_perl_packages "
+PACKAGESPLITFUNCS =+ "split_perl_packages"
 
 python split_perl_packages () {
     libdir = d.expand('${libdir}/perl5/${PV}')

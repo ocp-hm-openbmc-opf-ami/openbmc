@@ -19,11 +19,14 @@ SRC_URI = "${SAVANNAH_GNU_MIRROR}/acl/${BP}.tar.gz \
            file://run-ptest \
            file://0001-tests-do-not-hardcode-the-build-path-into-a-helper-l.patch \
            file://0001-test-patch-out-failing-bits.patch \
+           file://0001-chacl-Use-portable-version-of-dirent-and-readdir.patch \
            "
 
 SRC_URI[sha256sum] = "760c61c68901b37fdd5eefeeaf4c0c7a26bdfdd8ac747a1edff1ce0e243c11af"
 
 inherit autotools gettext ptest
+
+EXTRA_OECONF += "--enable-largefile"
 
 PACKAGES =+ "lib${BPN}"
 
@@ -58,10 +61,15 @@ do_install_ptest() {
         rm ${D}${PTEST_PATH}/.libs/libtestlookup.lai
 }
 
+do_install_ptest:append:libc-musl() {
+        sed -i -e '/test\/misc.test/d' ${D}${PTEST_PATH}/Makefile
+}
+
 RDEPENDS:${PN}-ptest = "acl \
                         bash \
                         coreutils \
                         perl \
+                        perl-module-constant \
                         perl-module-filehandle \
                         perl-module-getopt-std \
                         perl-module-posix \

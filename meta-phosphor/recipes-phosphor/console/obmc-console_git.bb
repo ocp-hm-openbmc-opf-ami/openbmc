@@ -6,17 +6,16 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=fa818a259cbed7ce8bc2a22d35a464fc"
 DEPENDS += "autoconf-archive-native \
             systemd \
            "
-SRCREV = "ed04991236db13e25bc50cd613c348cd94fe0a83"
-PACKAGECONFIG ??= "udev ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)}"
-PACKAGECONFIG[udev] = "--with-udevdir=`pkg-config --variable=udevdir udev`,\
-                       --without-udevdir,udev"
-PACKAGECONFIG[systemd] = "--with-systemdsystemunitdir=${systemd_system_unitdir}, \
-                          --without-systemdsystemunitdir"
+SRCREV = "bd992c9f62dbf127a21de26714662f92eabd0156"
+PACKAGECONFIG ??= "udev"
+PACKAGECONFIG[udev] = "-Dudev=enabled,-Dudev=disabled,udev"
+PACKAGECONFIG[concurrent-servers] = "-Dconcurrent-servers=true,-Dconcurrent-servers=false,"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
-SRC_URI += "git://github.com/openbmc/obmc-console;branch=master;protocol=https"
+SRC_URI = "git://github.com/openbmc/obmc-console;branch=master;protocol=https"
 SRC_URI += "file://${BPN}.conf"
+SRC_URI += "file://dropbear.env"
 
 S = "${WORKDIR}/git"
 SYSTEMD_SERVICE:${PN} += "obmc-console-ssh@.service \
@@ -24,13 +23,16 @@ SYSTEMD_SERVICE:${PN} += "obmc-console-ssh@.service \
                 obmc-console@.service \
                 "
 
-inherit autotools pkgconfig
+inherit meson pkgconfig
 inherit obmc-phosphor-discovery-service
 inherit systemd
 
 do_install:append() {
         # Install the server configuration
         install -m 0755 -d ${D}${sysconfdir}/${BPN}
+
+        install -m 0644 ${WORKDIR}/dropbear.env ${D}${sysconfdir}/${BPN}/
+
         # If the OBMC_CONSOLE_TTYS variable is used without the default OBMC_CONSOLE_HOST_TTY
         # the port specific config file should be provided. If it is just OBMC_CONSOLE_HOST_TTY,
         # use the old style which supports both port specific or obmc-console.conf method.
@@ -69,7 +71,7 @@ do_install:append() {
         fi
 }
 
-FILES:${PN} += "${systemd_system_unitdir}/obmc-console-ssh@.service.d/use-socket.conf"
+FILES:${PN} += "${systemd_system_unitdir}"
 
 TARGET_CFLAGS += "-fpic -O2"
 

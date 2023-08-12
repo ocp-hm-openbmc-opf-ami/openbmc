@@ -28,7 +28,9 @@ RDEPENDS:${PN}-chassis = " \
         "
 
 SUMMARY:${PN}-fans = "AMD Fans"
-RDEPENDS:${PN}-fans = ""
+RDEPENDS:${PN}-fans = " \
+        phosphor-pid-control \
+        "
 
 SUMMARY:${PN}-flash = "AMD Flash"
 RDEPENDS:${PN}-flash = " \
@@ -44,4 +46,5 @@ RDEPENDS:${PN}-system = " \
         ipmitool \
         phosphor-hostlogger \
         webui-vue \
+        srvcfg-manager \
         "

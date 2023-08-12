@@ -8,11 +8,11 @@ DEPENDS += " \
   fmt \
   liburing \
   "
-SRCREV = "6047970d6e13fba9914467b65fd9ec241c3a250b"
+SRCREV = "d1984ddc52ee588bc1d1f32c6b309a4c9a8f3be6"
 PV = "0.1+git${SRCPV}"
 PR = "r1"
 
-SRC_URI += "git://github.com/openbmc/stdplus;branch=master;protocol=https"
+SRC_URI = "git://github.com/openbmc/stdplus;branch=master;protocol=https"
 
 S = "${WORKDIR}/git"
 

@@ -40,7 +40,13 @@ Compatible Linux Distribution
 Make sure your :term:`Build Host` meets the
 following requirements:
 
--  50 Gbytes of free disk space
+-  At least &MIN_DISK_SPACE; Gbytes of free disk space, though
+   much more will help to run multiple builds and increase
+   performance by reusing build artifacts.
+
+-  At least &MIN_RAM; Gbytes of RAM, though a modern modern build host with as
+   much RAM and as many CPU cores as possible is strongly recommended to
+   maximize build performance.
 
 -  Runs a supported Linux distribution (i.e. recent releases of Fedora,
    openSUSE, CentOS, Debian, or Ubuntu). For a list of Linux
@@ -70,11 +76,9 @@ Build Host Packages
 
 You must install essential host packages on your build host. The
 following command installs the host packages based on an Ubuntu
-distribution:
+distribution::
 
-.. code-block:: shell
-
-  $ sudo apt install &UBUNTU_HOST_PACKAGES_ESSENTIAL;
+   $ sudo apt install &UBUNTU_HOST_PACKAGES_ESSENTIAL;
 
 .. note::
 
@@ -262,7 +266,7 @@ an entire Linux distribution, including the toolchain, from source.
    For information on using the ``bitbake`` command, see the
    :ref:`overview-manual/concepts:bitbake` section in the Yocto Project Overview and
    Concepts Manual, or see
-   :ref:`bitbake:bitbake-user-manual/bitbake-user-manual-intro:the bitbake command`
+   :ref:`bitbake-user-manual/bitbake-user-manual-intro:the bitbake command`
    in the BitBake User Manual.
 
 #. **Simulate Your Image Using QEMU:** Once this particular image is
@@ -361,7 +365,7 @@ Follow these steps to add a hardware layer:
 
    You can find
    more information on adding layers in the
-   :ref:`dev-manual/common-tasks:adding a layer using the \`\`bitbake-layers\`\` script`
+   :ref:`dev-manual/layers:adding a layer using the \`\`bitbake-layers\`\` script`
    section.
 
 Completing these steps has added the ``meta-altera`` layer to your Yocto
@@ -396,7 +400,7 @@ The following commands run the tool to create a layer named
 
 For more information
 on layers and how to create them, see the
-:ref:`dev-manual/common-tasks:creating a general layer using the \`\`bitbake-layers\`\` script`
+:ref:`dev-manual/layers:creating a general layer using the \`\`bitbake-layers\`\` script`
 section in the Yocto Project Development Tasks Manual.
 
 Where To Go Next

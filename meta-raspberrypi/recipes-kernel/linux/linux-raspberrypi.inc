@@ -3,7 +3,7 @@ SECTION = "kernel"
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
-COMPATIBLE_MACHINE = "^rpi$"
+COMPATIBLE_MACHINE ?= "^rpi$"
 
 PE = "1"
 PV = "${LINUX_VERSION}+git${SRCPV}"
@@ -16,6 +16,10 @@ SRC_URI += " \
     ${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", "file://vc4graphics.cfg", "", d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "wm8960", "file://wm8960.cfg", "", d)} \
     "
+
+SRC_URI:append:raspberrypi4 = " \
+    file://rpi4-nvmem.cfg \
+"
 
 KCONFIG_MODE = "--alldefconfig"
 KBUILD_DEFCONFIG:raspberrypi0-wifi ?= "bcmrpi_defconfig"

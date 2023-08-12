@@ -26,7 +26,6 @@ from   bb.fetch2 import FetchMethod
 from   bb.fetch2 import FetchError
 from   bb.fetch2 import logger
 from   bb.fetch2 import runfetchcmd
-from   bb.utils import export_proxies
 from   bs4 import BeautifulSoup
 from   bs4 import SoupStrainer
 
@@ -341,7 +340,8 @@ class Wget(FetchMethod):
             opener = urllib.request.build_opener(*handlers)
 
             try:
-                uri = ud.url.split(";")[0]
+                uri_base = ud.url.split(";")[0]
+                uri = "{}://{}{}".format(urllib.parse.urlparse(uri_base).scheme, ud.host, ud.path)
                 r = urllib.request.Request(uri)
                 r.get_method = lambda: "HEAD"
                 # Some servers (FusionForge, as used on Alioth) require that the
@@ -360,23 +360,16 @@ class Wget(FetchMethod):
 
                 try:
                     import netrc
-                    n = netrc.netrc()
-                    login, unused, password = n.authenticators(urllib.parse.urlparse(uri).hostname)
-                    add_basic_auth("%s:%s" % (login, password), r)
-                except (TypeError, ImportError, IOError, netrc.NetrcParseError):
+                    auth_data = netrc.netrc().authenticators(urllib.parse.urlparse(uri).hostname)
+                    if auth_data:
+                        login, _, password = auth_data
+                        add_basic_auth("%s:%s" % (login, password), r)
+                except (FileNotFoundError, netrc.NetrcParseError):
                     pass
 
                 with opener.open(r, timeout=30) as response:
                     pass
-            except urllib.error.URLError as e:
-                if try_again:
-                    logger.debug2("checkstatus: trying again")
-                    return self.checkstatus(fetch, ud, d, False)
-                else:
-                    # debug for now to avoid spamming the logs in e.g. remote sstate searches
-                    logger.debug2("checkstatus() urlopen failed: %s" % e)
-                    return False
-            except ConnectionResetError as e:
+            except (urllib.error.URLError, ConnectionResetError, TimeoutError) as e:
                 if try_again:
                     logger.debug2("checkstatus: trying again")
                     return self.checkstatus(fetch, ud, d, False)
@@ -644,10 +637,10 @@ class Wget(FetchMethod):
             # search for version matches on folders inside the path, like:
             # "5.7" in http://download.gnome.org/sources/${PN}/5.7/${PN}-${PV}.tar.gz
             dirver_regex = re.compile(r"(?P<dirver>[^/]*(\d+\.)*\d+([-_]r\d+)*)/")
-            m = dirver_regex.search(path)
+            m = dirver_regex.findall(path)
             if m:
                 pn = d.getVar('PN')
-                dirver = m.group('dirver')
+                dirver = m[-1][0]
 
                 dirver_pn_regex = re.compile(r"%s\d?" % (re.escape(pn)))
                 if not dirver_pn_regex.search(dirver):

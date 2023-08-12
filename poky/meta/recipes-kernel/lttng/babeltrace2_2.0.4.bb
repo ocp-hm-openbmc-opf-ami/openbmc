@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=a6a458c13f18385b7bc5069a6d7b176e"
 
 DEPENDS = "glib-2.0 util-linux popt bison-native flex-native"
 
-SRC_URI = "git://git.efficios.com/babeltrace.git;branch=stable-2.0 \
+SRC_URI = "git://git.efficios.com/babeltrace.git;branch=stable-2.0;protocol=https \
            file://run-ptest \
            file://0001-tests-do-not-run-test-applications-from-.libs.patch \
            file://0001-Make-manpages-multilib-identical.patch \
@@ -29,7 +29,8 @@ FILES:${PN} += "${libdir}/babeltrace2/plugins/*.so"
 
 ASNEEDED = ""
 
-RDEPENDS:${PN}-ptest += "bash gawk python3"
+# coreutils since we need full mktemp
+RDEPENDS:${PN}-ptest += "bash gawk python3 make grep coreutils findutils"
 
 do_compile_ptest () {
     make -C tests all

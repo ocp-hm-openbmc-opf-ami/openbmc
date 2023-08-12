@@ -33,13 +33,28 @@ function usage_uart() {
   echo "        display  --> "
 }
 
+function usage_rtc() {
+  echo " mori rtc [parameter]"
+  echo "        lock  --> disable host access to rtc"
+  echo "        unlock  --> enable host access to rtc"
+  echo "        status  --> get status of host accessibility to rtc"
+}
+
+function usage_gpio() {
+  echo " mori gpio [parameter]"
+  echo "        get [GPIO_LINE_NAME] --> get the gpio value of GPIO_LINE_NAME"
+  echo "        set [GPIO_LINE_NAME] [GPIO_VALUE] --> set the gpio of GPIO_LINE_NAME to the value of GPIO_VALUE"
+}
+
 function usage() {
   echo " mori BMC console system utilities"
   echo " mori [optional] [parameter]"
-  echo "   rst   --> reset traget device"
-  echo "   fw    --> get version"
-  echo "   uart  --> control the uart mux"
-  echo "   led   --> control the leds"
+  echo "   rst     --> reset target device"
+  echo "   fw      --> get version"
+  echo "   uart    --> control the uart mux"
+  echo "   led     --> control the leds"
+  echo "   rtc     --> control host access to rtc"
+  echo "   gpio    --> control the gpios"
 }
 
 function reset() {
@@ -110,8 +125,9 @@ function fw_rev() {
   echo " BMC PowerSequencer : ${cmd}"
   #only display with smbios exists
   if [[ -e /var/lib/smbios/smbios2 ]]; then
-    cmd=$(busctl introspect xyz.openbmc_project.Smbios.MDR_V2 \
-            /xyz/openbmc_project/inventory/system/chassis/motherboard/bios | grep Version | awk '{print $4}')
+    cmd=$(busctl get-property xyz.openbmc_project.Smbios.MDR_V2 \
+            /xyz/openbmc_project/inventory/system/chassis/motherboard/bios\
+            xyz.openbmc_project.Inventory.Decorator.Revision Version | awk '{print $2}')
     echo " Bios: $cmd"
   fi
 
@@ -246,6 +262,44 @@ function ledtoggle() {
     esac
 }
 
+function rtcctrl() {
+  case $1 in
+    lock)
+      # Disable host access to rtc
+      set_gpio_ctrl S0_RTC_LOCK 1
+      ;;
+    unlock)
+      # Enable host access to rtc
+      set_gpio_ctrl S0_RTC_LOCK 0
+      ;;
+    status)
+      cmd=$(get_gpio_ctrl S0_RTC_LOCK)
+      if [[ $cmd -eq 1 ]]; then
+        echo "locked"
+      else
+        echo "unlocked"
+      fi
+      ;;
+    *)
+      usage_rtc
+      ;;
+  esac
+}
+
+function gpioctrl() {
+  case $1 in
+    get)
+      get_gpio_ctrl "$2"
+      ;;
+    set)
+      set_gpio_ctrl "$2" "$3"
+      ;;
+    *)
+      usage_gpio
+      ;;
+  esac
+}
+
 case $1 in
   rst)
     reset "$2"
@@ -258,6 +312,12 @@ case $1 in
     ;;
   led)
     ledtoggle "$2" "$3"
+    ;;
+  rtc)
+    rtcctrl "$2"
+    ;;
+  gpio)
+    gpioctrl "$2" "$3" "$4"
     ;;
   *)
     usage

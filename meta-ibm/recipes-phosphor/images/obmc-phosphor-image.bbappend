@@ -1,4 +1,5 @@
 OBMC_IMAGE_EXTRA_INSTALL:append:ibm-ac-server = " mboxd max31785-msl phosphor-msl-verify liberation-fonts uart-render-controller first-boot-set-hostname"
+OBMC_IMAGE_EXTRA_INSTALL:remove:witherspoon-tacoma = " liberation-fonts uart-render-controller"
 OBMC_IMAGE_EXTRA_INSTALL:append:p10bmc = " mboxd"
 
 IMAGE_FEATURES:append = " obmc-dbus-monitor"
@@ -6,9 +7,6 @@ IMAGE_FEATURES:append = " obmc-dbus-monitor"
 # remove so things fit in available flash space
 IMAGE_FEATURES:remove:witherspoon = "obmc-user-mgmt-ldap"
 IMAGE_FEATURES:remove:witherspoon = "obmc-telemetry"
-
-# Remove unused rsyslog service in P10BMC
-IMAGE_FEATURES:remove:p10bmc = "obmc-remote-logging-mgmt"
 
 # Generic IPMI FRU vpd collection not needed on p10bmc
 IMAGE_FEATURES:remove:p10bmc = "obmc-fru-ipmi"

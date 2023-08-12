@@ -145,6 +145,9 @@ do_install() {
 
 	cp -a scripts $kerneldir/build
 
+	# for v6.1+ (otherwise we are missing multiple default targets)
+	cp -a --parents Kbuild $kerneldir/build 2>/dev/null || :
+
 	# if our build dir had objtool, it will also be rebuilt on target, so
 	# we copy what is required for that build
 	if [ -f ${B}/tools/objtool/objtool ]; then
@@ -170,6 +173,9 @@ do_install() {
 	    cp -a --parents arch/arm/include/asm/xen $kerneldir/build/
 	    # arch/arm64/include/asm/opcodes.h references arch/arm
 	    cp -a --parents arch/arm/include/asm/opcodes.h $kerneldir/build/
+
+	    # v6.1+
+	    cp -a --parents arch/arm64/kernel/asm-offsets.c $kerneldir/build/
 
             cp -a --parents arch/arm64/kernel/vdso/*gettimeofday.* $kerneldir/build/
             cp -a --parents arch/arm64/kernel/vdso/sigreturn.S $kerneldir/build/
@@ -206,6 +212,10 @@ do_install() {
 	    cp -a --parents arch/powerpc/kernel/vdso/*.S $kerneldir/build 2>/dev/null || :
 	    cp -a --parents arch/powerpc/kernel/vdso/*gettimeofday.* $kerneldir/build 2>/dev/null || :
 	    cp -a --parents arch/powerpc/kernel/vdso/gen_vdso*_offsets.sh $kerneldir/build/ 2>/dev/null || :
+
+	    # v6,1+
+	    cp -a --parents arch/powerpc/kernel/asm-offsets.c $kerneldir/build/ 2>/dev/null || :
+	    cp -a --parents arch/powerpc/kernel/head_booke.h $kerneldir/build/ 2>/dev/null || :
 	fi
 	if [ "${ARCH}" = "riscv" ]; then
             cp -a --parents arch/riscv/kernel/vdso/*gettimeofday.* $kerneldir/build/
@@ -234,6 +244,9 @@ do_install() {
             fi
 
             cp -a --parents arch/arm/kernel/module.lds $kerneldir/build/ 2>/dev/null || :
+            # v6.1+
+            cp -a --parents arch/arm/kernel/asm-offsets.c $kerneldir/build/ 2>/dev/null || :
+            cp -a --parents arch/arm/kernel/signal.h $kerneldir/build/ 2>/dev/null || :
 	fi
 
 	if [ -d arch/${ARCH}/include ]; then
@@ -282,15 +295,24 @@ do_install() {
 	    # objtool requires these files
 	    cp -a --parents arch/x86/lib/inat.c $kerneldir/build/ 2>/dev/null || :
 	    cp -a --parents arch/x86/lib/insn.c $kerneldir/build/ 2>/dev/null || :
+
+	    # v6.1+
+	    cp -a --parents arch/x86/kernel/asm-offsets* $kerneldir/build || :
+	    # for capabilities.h, vmx.h
+	    cp -a --parents arch/x86/kvm/vmx/*.h $kerneldir/build || :
+	    # for lapic.h, hyperv.h ....
+	    cp -a --parents arch/x86/kvm/*.h $kerneldir/build || :
 	fi
+
+	# moved from arch/mips to all arches for v6.1+
+	cp -a --parents kernel/time/timeconst.bc $kerneldir/build 2>/dev/null || :
+	cp -a --parents kernel/bounds.c $kerneldir/build 2>/dev/null || :
 
 	if [ "${ARCH}" = "mips" ]; then
 	    cp -a --parents arch/mips/Kbuild.platforms $kerneldir/build/
 	    cp --parents $(find	 -type f -name "Platform") $kerneldir/build
 	    cp --parents arch/mips/boot/tools/relocs* $kerneldir/build
 	    cp -a --parents arch/mips/kernel/asm-offsets.c $kerneldir/build
-	    cp -a --parents kernel/time/timeconst.bc $kerneldir/build
-	    cp -a --parents kernel/bounds.c $kerneldir/build
 	    cp -a --parents Kbuild $kerneldir/build
 	    cp -a --parents arch/mips/kernel/syscalls/*.sh $kerneldir/build 2>/dev/null || :
 	    cp -a --parents arch/mips/kernel/syscalls/*.tbl $kerneldir/build 2>/dev/null || :
@@ -307,6 +329,13 @@ do_install() {
     # Make sure the Makefile and version.h have a matching timestamp so that
     # external modules can be built
     touch -r $kerneldir/build/Makefile $kerneldir/build/include/generated/uapi/linux/version.h
+
+    # This fixes a warning that the compilers don't match when building a module
+    # Change: CONFIG_CC_VERSION_TEXT="x86_64-poky-linux-gcc (GCC) 12.2.0" to "gcc (GCC) 12.2.0"
+    #         #define CONFIG_CC_VERSION_TEXT "x86_64-poky-linux-gcc (GCC) 12.2.0" to "gcc (GCC) 12.2.0"
+    sed -i 's/CONFIG_CC_VERSION_TEXT=".*\(gcc.*\)"/CONFIG_CC_VERSION_TEXT="\1"/' "$kerneldir/build/.config"
+    sed -i 's/#define CONFIG_CC_VERSION_TEXT ".*\(gcc.*\)"/#define CONFIG_CC_VERSION_TEXT "\1"/' $kerneldir/build/include/generated/autoconf.h
+    sed -i 's/CONFIG_CC_VERSION_TEXT=".*\(gcc.*\)"/CONFIG_CC_VERSION_TEXT="\1"/' $kerneldir/build/include/config/auto.conf
 
     # make sure these are at least as old as the .config, or rebuilds will trigger
     touch -r $kerneldir/build/.config $kerneldir/build/include/generated/autoconf.h 2>/dev/null || :
@@ -348,11 +377,13 @@ do_install[lockfiles] = "${TMPDIR}/kernel-scripts.lock"
 FILES:${PN} = "${KERNEL_BUILD_ROOT} ${KERNEL_SRC_PATH}"
 FILES:${PN}-dbg += "${KERNEL_BUILD_ROOT}*/build/scripts/*/.debug/*"
 
-RDEPENDS:${PN} = "bc python3 flex bison ${TCLIBC}-utils"
+RDEPENDS:${PN} = "bc python3-core flex bison ${TCLIBC}-utils"
 # 4.15+ needs these next two RDEPENDS
 RDEPENDS:${PN} += "openssl-dev util-linux"
 # and x86 needs a bit more for 4.15+
 RDEPENDS:${PN} += "${@bb.utils.contains('ARCH', 'x86', 'elfutils-dev', '', d)}"
+# powerpc needs elfutils on 6.3+
+RDEPENDS:${PN} += "${@bb.utils.contains('ARCH', 'powerpc', 'elfutils-dev', '', d)}"
 # 5.8+ needs gcc-plugins libmpc-dev
 RDEPENDS:${PN} += "gcc-plugins libmpc-dev"
 # 5.13+ needs awk for arm64

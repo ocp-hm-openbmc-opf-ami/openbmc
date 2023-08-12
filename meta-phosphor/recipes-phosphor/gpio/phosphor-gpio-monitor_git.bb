@@ -12,11 +12,11 @@ DEPENDS += "boost"
 DEPENDS += "libgpiod"
 DEPENDS += "cli11"
 DEPENDS += "nlohmann-json"
-SRCREV = "b5bd88532ccef5e82810a1472af3d8a9213873ae"
+SRCREV = "39084b4a64eb5288677f23fdde84c0b69003faf5"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
-SRC_URI += "git://github.com/openbmc/phosphor-gpio-monitor;branch=master;protocol=https"
+SRC_URI = "git://github.com/openbmc/phosphor-gpio-monitor;branch=master;protocol=https"
 
 SYSTEMD_PACKAGES = "${GPIO_PACKAGES}"
 SYSTEMD_SERVICE:${PN}-monitor += "phosphor-multi-gpio-monitor.service"

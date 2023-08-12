@@ -7,6 +7,10 @@ PACKAGECONFIG:append:p10bmc = " openpower-dumps-extension"
 PACKAGECONFIG:append:witherspoon-tacoma = " openpower-dumps-extension"
 
 SYSTEMD_SERVICE:${PN}-manager:p10bmc += "clear_hostdumps_poweroff.service"
+SYSTEMD_SERVICE:${PN}-manager:witherspoon-tacoma += "clear_hostdumps_poweroff.service"
+
+EXTRA_OEMESON:append:p10bmc = " -DBMC_DUMP_TOTAL_SIZE=409600"
+EXTRA_OEMESON:append:p10bmc = " -DBMC_DUMP_MAX_SIZE=20480"
 
 install_ibm_plugins() {
     install ${S}/tools/dreport.d/ibm.d/plugins.d/* ${D}${dreport_plugin_dir}/
@@ -29,6 +33,6 @@ install_dreport_header() {
 }
 
 IBM_INSTALL_POSTFUNCS = "install_ibm_plugins link_ibm_plugins"
-IBM_INSTALL_POSTFUNCS:p10bmc += "install_dreport_header"
+IBM_INSTALL_POSTFUNCS:append:p10bmc = " install_dreport_header"
 
 do_install[postfuncs] += "${IBM_INSTALL_POSTFUNCS}"

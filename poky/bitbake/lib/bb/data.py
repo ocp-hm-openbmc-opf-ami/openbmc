@@ -28,11 +28,6 @@ the speed is more critical here.
 
 import sys, os, re
 import hashlib
-if sys.argv[0][-5:] == "pydoc":
-    path = os.path.dirname(os.path.dirname(sys.argv[1]))
-else:
-    path = os.path.dirname(os.path.dirname(sys.argv[0]))
-sys.path.insert(0, path)
 from itertools import groupby
 
 from bb import data_smart
@@ -119,8 +114,8 @@ def emit_var(var, o=sys.__stdout__, d = init(), all=False):
     if d.getVarFlag(var, 'python', False) and func:
         return False
 
-    export = d.getVarFlag(var, "export", False)
-    unexport = d.getVarFlag(var, "unexport", False)
+    export = bb.utils.to_boolean(d.getVarFlag(var, "export"))
+    unexport = bb.utils.to_boolean(d.getVarFlag(var, "unexport"))
     if not all and not export and not unexport and not func:
         return False
 
@@ -193,8 +188,8 @@ def emit_env(o=sys.__stdout__, d = init(), all=False):
 
 def exported_keys(d):
     return (key for key in d.keys() if not key.startswith('__') and
-                                      d.getVarFlag(key, 'export', False) and
-                                      not d.getVarFlag(key, 'unexport', False))
+                                      bb.utils.to_boolean(d.getVarFlag(key, 'export')) and
+                                      not bb.utils.to_boolean(d.getVarFlag(key, 'unexport')))
 
 def exported_vars(d):
     k = list(exported_keys(d))
@@ -266,9 +261,40 @@ def emit_func_python(func, o=sys.__stdout__, d = init()):
                newdeps |= set((d.getVarFlag(dep, "vardeps") or "").split())
         newdeps -= seen
 
-def build_dependencies(key, keys, shelldeps, varflagsexcl, ignored_vars, d):
+def build_dependencies(key, keys, mod_funcs, shelldeps, varflagsexcl, ignored_vars, d, codeparsedata):
+    def handle_contains(value, contains, exclusions, d):
+        newvalue = []
+        if value:
+            newvalue.append(str(value))
+        for k in sorted(contains):
+            if k in exclusions or k in ignored_vars:
+                continue
+            l = (d.getVar(k) or "").split()
+            for item in sorted(contains[k]):
+                for word in item.split():
+                    if not word in l:
+                        newvalue.append("\n%s{%s} = Unset" % (k, item))
+                        break
+                else:
+                    newvalue.append("\n%s{%s} = Set" % (k, item))
+        return "".join(newvalue)
+
+    def handle_remove(value, deps, removes, d):
+        for r in sorted(removes):
+            r2 = d.expandWithRefs(r, None)
+            value += "\n_remove of %s" % r
+            deps |= r2.references
+            deps = deps | (keys & r2.execs)
+        return value
+
     deps = set()
     try:
+        if key in mod_funcs:
+            exclusions = set()
+            moddep = bb.codeparser.modulecode_deps[key]
+            value = handle_contains("", moddep[3], exclusions, d)
+            return frozenset((moddep[0] | keys & moddep[1]) - ignored_vars), value
+
         if key[-1] == ']':
             vf = key[:-1].split('[')
             if vf[1] == "vardepvalueexclude":
@@ -276,48 +302,24 @@ def build_dependencies(key, keys, shelldeps, varflagsexcl, ignored_vars, d):
             value, parser = d.getVarFlag(vf[0], vf[1], False, retparser=True)
             deps |= parser.references
             deps = deps | (keys & parser.execs)
-            return deps, value
+            deps -= ignored_vars
+            return frozenset(deps), value
         varflags = d.getVarFlags(key, ["vardeps", "vardepvalue", "vardepsexclude", "exports", "postfuncs", "prefuncs", "lineno", "filename"]) or {}
         vardeps = varflags.get("vardeps")
         exclusions = varflags.get("vardepsexclude", "").split()
-
-        def handle_contains(value, contains, exclusions, d):
-            newvalue = []
-            if value:
-                newvalue.append(str(value))
-            for k in sorted(contains):
-                if k in exclusions or k in ignored_vars:
-                    continue
-                l = (d.getVar(k) or "").split()
-                for item in sorted(contains[k]):
-                    for word in item.split():
-                        if not word in l:
-                            newvalue.append("\n%s{%s} = Unset" % (k, item))
-                            break
-                    else:
-                        newvalue.append("\n%s{%s} = Set" % (k, item))
-            return "".join(newvalue)
-
-        def handle_remove(value, deps, removes, d):
-            for r in sorted(removes):
-                r2 = d.expandWithRefs(r, None)
-                value += "\n_remove of %s" % r
-                deps |= r2.references
-                deps = deps | (keys & r2.execs)
-            return value
 
         if "vardepvalue" in varflags:
             value = varflags.get("vardepvalue")
         elif varflags.get("func"):
             if varflags.get("python"):
-                value = d.getVarFlag(key, "_content", False)
+                value = codeparsedata.getVarFlag(key, "_content", False)
                 parser = bb.codeparser.PythonParser(key, logger)
                 parser.parse_python(value, filename=varflags.get("filename"), lineno=varflags.get("lineno"))
                 deps = deps | parser.references
                 deps = deps | (keys & parser.execs)
                 value = handle_contains(value, parser.contains, exclusions, d)
             else:
-                value, parsedvar = d.getVarFlag(key, "_content", False, retparser=True)
+                value, parsedvar = codeparsedata.getVarFlag(key, "_content", False, retparser=True)
                 parser = bb.codeparser.ShellParser(key, logger)
                 parser.parse_shell(parsedvar.value)
                 deps = deps | shelldeps
@@ -359,36 +361,43 @@ def build_dependencies(key, keys, shelldeps, varflagsexcl, ignored_vars, d):
 
         deps |= set((vardeps or "").split())
         deps -= set(exclusions)
+        deps -= ignored_vars
     except bb.parse.SkipRecipe:
         raise
     except Exception as e:
         bb.warn("Exception during build_dependencies for %s" % key)
         raise
-    return deps, value
+    return frozenset(deps), value
     #bb.note("Variable %s references %s and calls %s" % (key, str(deps), str(execs)))
     #d.setVarFlag(key, "vardeps", deps)
 
 def generate_dependencies(d, ignored_vars):
 
-    keys = set(key for key in d if not key.startswith("__"))
-    shelldeps = set(key for key in d.getVar("__exportlist", False) if d.getVarFlag(key, "export", False) and not d.getVarFlag(key, "unexport", False))
+    mod_funcs = set(bb.codeparser.modulecode_deps.keys())
+    keys = set(key for key in d if not key.startswith("__")) | mod_funcs
+    shelldeps = set(key for key in d.getVar("__exportlist", False) if bb.utils.to_boolean(d.getVarFlag(key, "export")) and not bb.utils.to_boolean(d.getVarFlag(key, "unexport")))
     varflagsexcl = d.getVar('BB_SIGNATURE_EXCLUDE_FLAGS')
+
+    codeparserd = d.createCopy()
+    for forced in (d.getVar('BB_HASH_CODEPARSER_VALS') or "").split():
+        key, value = forced.split("=", 1)
+        codeparserd.setVar(key, value)
 
     deps = {}
     values = {}
 
     tasklist = d.getVar('__BBTASKS', False) or []
     for task in tasklist:
-        deps[task], values[task] = build_dependencies(task, keys, shelldeps, varflagsexcl, ignored_vars, d)
+        deps[task], values[task] = build_dependencies(task, keys, mod_funcs, shelldeps, varflagsexcl, ignored_vars, d, codeparserd)
         newdeps = deps[task]
         seen = set()
         while newdeps:
-            nextdeps = newdeps - ignored_vars
+            nextdeps = newdeps
             seen |= nextdeps
             newdeps = set()
             for dep in nextdeps:
                 if dep not in deps:
-                    deps[dep], values[dep] = build_dependencies(dep, keys, shelldeps, varflagsexcl, ignored_vars, d)
+                    deps[dep], values[dep] = build_dependencies(dep, keys, mod_funcs, shelldeps, varflagsexcl, ignored_vars, d, codeparserd)
                 newdeps |=  deps[dep]
             newdeps -= seen
         #print "For %s: %s" % (task, str(deps[task]))
@@ -407,7 +416,6 @@ def generate_dependency_hash(tasklist, gendeps, lookupcache, ignored_vars, fn):
         else:
             data = [data]
 
-        gendeps[task] -= ignored_vars
         newdeps = gendeps[task]
         seen = set()
         while newdeps:
@@ -415,9 +423,6 @@ def generate_dependency_hash(tasklist, gendeps, lookupcache, ignored_vars, fn):
             seen |= nextdeps
             newdeps = set()
             for dep in nextdeps:
-                if dep in ignored_vars:
-                    continue
-                gendeps[dep] -= ignored_vars
                 newdeps |= gendeps[dep]
             newdeps -= seen
 
@@ -429,7 +434,7 @@ def generate_dependency_hash(tasklist, gendeps, lookupcache, ignored_vars, fn):
                 data.append(str(var))
         k = fn + ":" + task
         basehash[k] = hashlib.sha256("".join(data).encode("utf-8")).hexdigest()
-        taskdeps[task] = alldeps
+        taskdeps[task] = frozenset(seen)
 
     return taskdeps, basehash
 
