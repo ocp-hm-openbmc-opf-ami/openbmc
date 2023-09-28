@@ -4,7 +4,7 @@ interface /xyz/openbmc_project/state/boot/raw by snoopd daemon and save them \
 in a file under /var/lib for history."
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
-SRCREV = "a4c19b0032900982b4e8ae85791f4dbd498457a8"
+SRCREV = "5c75dd56c86b46fce6763bed11e16cadd4c461b0"
 PV = "1.0+git${SRCPV}"
 
 SRC_URI = "git://github.com/openbmc/phosphor-post-code-manager.git;branch=master;protocol=https"
@@ -13,10 +13,6 @@ S = "${WORKDIR}/git"
 
 inherit meson pkgconfig systemd
 
-def get_service(d):
-    return " ".join(["xyz.openbmc_project.State.Boot.PostCode@{}.service".format(x) for x in d.getVar('OBMC_HOST_INSTANCES').split()])
-
-SYSTEMD_SERVICE:${PN} = "${@get_service(d)}"
 DEPENDS += " \
     sdbusplus \
     phosphor-dbus-interfaces \
@@ -25,3 +21,22 @@ DEPENDS += " \
     "
 FILES:${PN}  += "${systemd_system_unitdir}/xyz.openbmc_project.State.Boot.PostCode@.service"
 FILES:${PN}  += "${systemd_system_unitdir}/xyz.openbmc_project.State.Boot.PostCode.service"
+
+pkg_postinst:${PN}:append() {
+    mkdir -p $D$systemd_system_unitdir/multi-user.target.wants
+    for i in ${OBMC_HOST_INSTANCES};
+    do
+        LINK="$D$systemd_system_unitdir/multi-user.target.wants/xyz.openbmc_project.State.Boot.PostCode@${i}.service"
+        TARGET="..//xyz.openbmc_project.State.Boot.PostCode@.service"
+        ln -s $TARGET $LINK
+    done
+}
+
+pkg_prerm:${PN}:append() {
+    for i in ${OBMC_HOST_INSTANCES};
+    do
+        LINK="$D$systemd_system_unitdir/multi-user.target.wants/xyz.openbmc_project.State.Boot.PostCode@${i}.service"
+        rm $LINK
+    done
+}
+

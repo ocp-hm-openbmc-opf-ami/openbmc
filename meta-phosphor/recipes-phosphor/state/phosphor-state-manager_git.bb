@@ -35,6 +35,19 @@ SYSTEMD_PACKAGES = "${PN}-discover \
                     ${PN}-systemd-target-monitor \
 "
 
+PACKAGECONFIG ??= "no-warm-reboot \
+                   only-run-apr-on-power-loss \
+                   only-allow-boot-when-bmc-ready"
+
+# Disable warm reboots of host
+PACKAGECONFIG[no-warm-reboot] = "-Dwarm-reboot=disabled,-Dwarm-reboot=enabled"
+
+# Only run auto power restore logic if system had ac loss
+PACKAGECONFIG[only-run-apr-on-power-loss] = "-Donly-run-apr-on-power-loss=true,-Donly-run-apr-on-power-loss=false"
+
+# Only allow boot operations when BMC is in Ready state
+PACKAGECONFIG[only-allow-boot-when-bmc-ready] = "-Donly-allow-boot-when-bmc-ready=true,-Donly-allow-boot-when-bmc-ready=false"
+
 # The host-check function will check if the host is running
 # after a BMC reset.
 # The reset-sensor-states function will reset the host
@@ -243,6 +256,6 @@ RESET_FMT_CTRL = "../${RESET_TMPL_CTRL}:${SYSD_TGT}.wants/${RESET_INSTFMT_CTRL}"
 SYSTEMD_LINK:${PN}-obmc-targets += "${@compose_list_zip(d, 'RESET_FMT_CTRL', 'OBMC_CHASSIS_INSTANCES')}"
 
 SRC_URI = "git://github.com/openbmc/phosphor-state-manager;branch=master;protocol=https"
-SRCREV = "57c0a893cd5cb987633d278e09f941f7899a81b0"
+SRCREV = "9beba5ab92268bc008e5f627546982f1f7d8ba93"
 
 S = "${WORKDIR}/git"

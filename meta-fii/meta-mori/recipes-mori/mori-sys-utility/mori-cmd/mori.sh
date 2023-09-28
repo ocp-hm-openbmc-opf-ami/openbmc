@@ -7,7 +7,6 @@ source /usr/libexec/mori-fw/mori-lib.sh
 
 function usage_rst() {
   echo " mori rst [parameter]"
-  echo "        hotswap  --> reset the whole mori node"
   echo "        system   --> reset the host"
   echo "        btn      --> trigger a power button event"
   echo "        shutdown --> send out shutdown signal to CPU"
@@ -59,16 +58,10 @@ function usage() {
 
 function reset() {
   case $1 in
-    hotswap)
-      # Virtual AC reset
-      echo "mori.sh rst hotswap occurred"
-      set_gpio_ctrl HOTSWAP 1
-      ;;
     system)
       # S0 system reset
-      set_gpio_ctrl S0_SYSRESET 0
-      sleep 1
-      set_gpio_ctrl S0_SYSRESET 1
+      echo "System has been reset, host will start booting in a few minutes"
+      ipmitool chassis power reset
       ;;
     btn)
       # virtual power button on
@@ -109,15 +102,13 @@ function fw_rev() {
   cmd=$(cat ${MB_CPLD_VER_FILE})
   echo " MB_CPLD: " "${cmd}"
 
-  major=$(ipmitool mc info | grep "Firmware Revision" | awk '{print $4}')
-  cmd=$(ipmitool mc info | tail -4 | tr -s '\t' ' ' | tr -s '\n' ' ')
+  # BMC Version
 
-  for hex in $cmd; do
-    minor="${hex:2}$minor";
-  done
-
-  minor=$(echo "obase=10; ibase=16; ${minor^^}" | bc)
-  echo " BMC        : " "${major}"."${minor}"
+  # Save VERSION_ID line in string "VERSION_ID=*-Major.Submajor.Minor.Subminor" and
+  # extract the substring after - sign "Major.Submajor.Minor.Subminor"
+  BMCVersion=$(awk '/VERSION_ID/' /etc/os-release | sed "s/.*-//g")
+  # BMCVersion="Major.Submajor.Minor"
+  echo " BMC: ${BMCVersion%.*}"
 
   #BMC PWR Sequencer
   i2cset -y -f -a "${I2C_BMC_PWRSEQ[0]}" 0x"${I2C_BMC_PWRSEQ[1]}" 0xfe 0x0000 w
@@ -131,8 +122,12 @@ function fw_rev() {
     echo " Bios: $cmd"
   fi
 
-  adm1266_ver "${I2C_MB_PWRSEQ[0]}" | grep REVISION
+  if [[ ! $(which mb_power_sequencer_version) ]]; then
+    echo "mb_power_sequencer_version utility not installed"
+    return
+  fi
 
+  mb_power_sequencer_version "${I2C_MB_PWRSEQ[0]}" | grep REVISION
 }
 
 function uartmux() {
@@ -262,6 +257,15 @@ function ledtoggle() {
     esac
 }
 
+function usblist() {
+  for i in {5..9}
+  do
+    cmd=$(devmem 0xf083"${i}"154)
+    printf "udc%d : 0xF083%d154-" "${i}" "${i}"
+    echo "$cmd"
+  done
+}
+
 function rtcctrl() {
   case $1 in
     lock)
@@ -309,6 +313,9 @@ case $1 in
     ;;
   uart)
     uartmux "$2"
+    ;;
+  usb)
+    usblist
     ;;
   led)
     ledtoggle "$2" "$3"

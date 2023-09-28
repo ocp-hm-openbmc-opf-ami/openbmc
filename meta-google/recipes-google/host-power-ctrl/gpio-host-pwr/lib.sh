@@ -17,23 +17,30 @@
 # Executing this directly will do nothing.
 [ -n "${host_pwr_init-}" ] && return
 
+# shellcheck source=meta-google/recipes-google/gpio/gpio-ctrl/lib.sh
 source /usr/share/gpio-ctrl/lib.sh || exit
 
 # Read by the tooling to determine if the machine is powered on or off
+# shellcheck disable=SC2034
 HOST_GPIO_PGOOD='unset'
 # Set according to whether the host is powered on or off
+# shellcheck disable=SC2034
 HOST_LED_PWR=''
 # Written by the tooling to assert the power button
+# shellcheck disable=SC2034
 HOST_GPIO_PWR_BTN='unset'
 # Written by the tooling to assert a cold reset
+# shellcheck disable=SC2034
 HOST_GPIO_COLD_RESET='unset'
 # Written by the tooling to assert a warm reset
+# shellcheck disable=SC2034
 HOST_GPIO_WARM_RESET='unset'
 
 # Load configurations from a known location in the filesystem to populate
 # named GPIOs
 shopt -s nullglob
 for conf in /usr/share/gpio-host-pwr/conf.d/*.sh; do
+  # shellcheck source=/dev/null
   source "$conf"
 done
 
@@ -64,6 +71,3 @@ host_pwr_start_watchdog() {
 }
 
 host_pwr_init=1
-return 0 2>/dev/null
-echo "gpio-host-pwr is a library, not executed directly" >&2
-exit 1

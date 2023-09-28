@@ -1289,6 +1289,8 @@ as described in the ":ref:`dev-manual/licenses:tracking license changes`"
 section in the Yocto Project Overview and Concepts Manual. You can quickly
 create Autotool-based recipes in a manner similar to the previous example.
 
+.. _ref-building-meson-package:
+
 Building a Meson Package
 ------------------------
 
@@ -1601,7 +1603,7 @@ in the BitBake User Manual.
    space. Also, the operator is applied after all the ``+=``, and ``=+``
    operators have been applied and after all ``=`` assignments have
    occurred. This means that if ``:append`` is used in a recipe, it can
-   only be overridden by another layer using the  special ``:remove``
+   only be overridden by another layer using the special ``:remove``
    operator, which in turn will prevent further layers from adding it back.
 
    The following example shows the space being explicitly added to the

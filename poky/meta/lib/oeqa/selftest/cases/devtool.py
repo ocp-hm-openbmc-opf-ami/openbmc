@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import glob
 import fnmatch
+import unittest
 
 from oeqa.selftest.case import OESelftestTestCase
 from oeqa.utils.commands import runCmd, bitbake, get_bb_var, create_temp_layer
@@ -40,6 +41,13 @@ def setUpModule():
             canonical_layerpath = os.path.realpath(canonical_layerpath) + '/'
             edited_layers.append(layerpath)
             oldmetapath = os.path.realpath(layerpath)
+
+            # when downloading poky from tar.gz some tests will be skipped (BUG 12389)
+            try:
+                runCmd('git rev-parse --is-inside-work-tree', cwd=canonical_layerpath)
+            except:
+                raise unittest.SkipTest("devtool tests require folder to be a git repo")
+
             result = runCmd('git rev-parse --show-toplevel', cwd=canonical_layerpath)
             oldreporoot = result.output.rstrip()
             newmetapath = os.path.join(corecopydir, os.path.relpath(oldmetapath, oldreporoot))
@@ -1461,6 +1469,7 @@ class DevtoolUpdateTests(DevtoolBase):
     def test_devtool_finish_modify_git_subdir(self):
         # Check preconditions
         testrecipe = 'dos2unix'
+        self.append_config('ERROR_QA:remove:pn-dos2unix = "patch-status"\n')
         bb_vars = get_bb_vars(['SRC_URI', 'S', 'WORKDIR', 'FILE'], testrecipe)
         self.assertIn('git://', bb_vars['SRC_URI'], 'This test expects the %s recipe to be a git recipe' % testrecipe)
         workdir_git = '%s/git/' % bb_vars['WORKDIR']

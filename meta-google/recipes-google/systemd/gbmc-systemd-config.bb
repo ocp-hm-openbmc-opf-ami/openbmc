@@ -24,7 +24,7 @@ FILES:${PN}:append = " \
   ${libdir}/sysctl.d/40-gbmc-sysctl.conf \
   ${libdir}/sysctl.d/40-gbmc-forward.conf \
   ${systemd_system_unitdir}/sysinit.target.wants/systemd-time-wait-sync.service \
-  ${systemd_system_unitdir}/systemd-time-wait-sync.d/10-gbmc.conf \
+  ${systemd_system_unitdir}/systemd-time-wait-sync.service.d/10-gbmc.conf \
   "
 
 FILES:${PN}:append:dev = " \
@@ -56,6 +56,9 @@ do_install() {
   mkdir -p ${D}${sysconfdir}/systemd/system
   ln -sv /dev/null ${D}${sysconfdir}/systemd/system/systemd-pstore.service
 
+  # mask networkd-wait-online.service to avoid waiting
+  ln -sv /dev/null ${D}/${sysconfdir}/systemd/system/systemd-networkd-wait-online.service
+
   install -d -m0755 ${D}${libdir}/sysctl.d
   install -m 0644 ${WORKDIR}/40-gbmc-forward.conf ${D}${libdir}/sysctl.d/
   install -m 0644 ${WORKDIR}/40-gbmc-sysctl.conf ${D}${libdir}/sysctl.d/
@@ -65,8 +68,8 @@ do_install() {
 
   mkdir -p ${D}${systemd_system_unitdir}/sysinit.target.wants/
   ln -sv ${systemd_system_unitdir}/systemd-time-wait-sync.service ${D}${systemd_system_unitdir}/sysinit.target.wants/
-  mkdir -p ${D}${systemd_system_unitdir}/systemd-time-wait-sync.d/
-  install -D -m0644 ${WORKDIR}/10-gbmc.conf ${D}${systemd_system_unitdir}/systemd-time-wait-sync.d/
+  mkdir -p ${D}${systemd_system_unitdir}/systemd-time-wait-sync.service.d/
+  install -D -m0644 ${WORKDIR}/10-gbmc.conf ${D}${systemd_system_unitdir}/systemd-time-wait-sync.service.d/
 }
 
 do_install:append:dev() {

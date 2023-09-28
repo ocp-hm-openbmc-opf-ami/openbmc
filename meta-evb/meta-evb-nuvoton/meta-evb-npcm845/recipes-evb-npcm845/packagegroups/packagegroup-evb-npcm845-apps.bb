@@ -40,8 +40,6 @@ RDEPENDS:${PN}-system = " \
         webui-vue \
         obmc-ikvm \
         iperf3 \
-	usb-emmc-storage \
-        usb-network \
         nmon \
         memtester \
         htop \
@@ -54,15 +52,6 @@ RDEPENDS:${PN}-system = " \
         rsyslog \
         loadsvf \
         pciutils \
-        cpfw \
-        dhrystone \
-        ent \
-        rw-perf \
-        phosphor-ecc \
-        i3c-tools \
-        phosphor-ipmi-blobs \
-        phosphor-image-signing \
-        program-vbios \
         dhrystone \
         phosphor-ecc \
         phosphor-ipmi-blobs \

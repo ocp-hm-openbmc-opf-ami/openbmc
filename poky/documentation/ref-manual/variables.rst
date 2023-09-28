@@ -1320,7 +1320,7 @@ system and gives an overview of their function and contents.
       This variable is specific to the :yocto_git:`GStreamer recipes
       </poky/tree/meta/recipes-multimedia/gstreamer/gstreamer1.0-meta-base.bb>`.
       It allows to build the GStreamer `"ugly"
-      <https://github.com/GStreamer/gst-plugins-ugly>`__  and
+      <https://github.com/GStreamer/gst-plugins-ugly>`__ and
       `"bad" <https://github.com/GStreamer/gst-plugins-bad>`__ audio plugins.
 
       See the :ref:`dev-manual/licenses:other variables related to commercial licenses`
@@ -1330,7 +1330,7 @@ system and gives an overview of their function and contents.
       This variable is specific to the :yocto_git:`GStreamer recipes
       </poky/tree/meta/recipes-multimedia/gstreamer/gstreamer1.0-meta-base.bb>`.
       It allows to build the GStreamer `"ugly"
-      <https://github.com/GStreamer/gst-plugins-ugly>`__  and
+      <https://github.com/GStreamer/gst-plugins-ugly>`__ and
       `"bad" <https://github.com/GStreamer/gst-plugins-bad>`__ video plugins.
 
       See the :ref:`dev-manual/licenses:other variables related to commercial licenses`
@@ -2200,6 +2200,11 @@ system and gives an overview of their function and contents.
       is included in the default value of
       :term:`OVERRIDES`.
 
+      Here is an example from :yocto_git:`meta-poky/conf/distro/poky-tiny.conf
+      </poky/tree/meta-poky/conf/distro/poky-tiny.conf>`::
+
+         DISTROOVERRIDES = "poky:poky-tiny"
+
    :term:`DL_DIR`
       The central download directory used by the build process to store
       downloads. By default, :term:`DL_DIR` gets files suitable for mirroring
@@ -2246,6 +2251,28 @@ system and gives an overview of their function and contents.
 
       For information on policies and on how to use this variable, see the
       comments in the ``meta/classes-recipe/compress_doc.bbclass`` file.
+
+   :term:`DT_FILES`
+      Space-separated list of device tree source files to compile using
+      a recipe that inherits the :ref:`ref-classes-devicetree` class. These
+      are relative to the :term:`DT_FILES_PATH`.
+
+      For convenience, both ``.dts`` and ``.dtb`` extensions can be used.
+
+      Use an empty string (default) to build all device tree sources within
+      the :term:`DT_FILES_PATH` directory.
+
+   :term:`DT_FILES_PATH`
+      When compiling out-of-tree device tree sources using a recipe that
+      inherits the :ref:`ref-classes-devicetree` class, this variable specifies
+      the path to the directory containing dts files to build.
+
+      Defaults to the :term:`S` directory.
+
+   :term:`DT_PADDING_SIZE`
+      When inheriting the :ref:`ref-classes-devicetree` class, this variable
+      specifies the size of padding appended to the device tree blob, used as
+      extra space typically for additional properties during boot.
 
    :term:`EFI_PROVIDER`
       When building bootable images (i.e. where ``hddimg``, ``iso``, or
@@ -2734,12 +2761,11 @@ system and gives an overview of their function and contents.
          FILES_SOLIBSDEV ?= "${base_libdir}/lib*${SOLIBSDEV} ${libdir}/lib*${SOLIBSDEV}"
 
    :term:`FILESEXTRAPATHS`
-      Extends the search path the OpenEmbedded build system uses when
-      looking for files and patches as it processes recipes and append
-      files. The default directories BitBake uses when it processes recipes
-      are initially defined by the :term:`FILESPATH`
-      variable. You can extend :term:`FILESPATH` variable by using
-      :term:`FILESEXTRAPATHS`.
+      A colon-separated list to extend the search path the OpenEmbedded build
+      system uses when looking for files and patches as it processes recipes
+      and append files. The default directories BitBake uses when it processes
+      recipes are initially defined by the :term:`FILESPATH` variable. You can
+      extend :term:`FILESPATH` variable by using :term:`FILESEXTRAPATHS`.
 
       Best practices dictate that you accomplish this by using
       :term:`FILESEXTRAPATHS` from within a ``.bbappend`` file and that you
@@ -2800,12 +2826,12 @@ system and gives an overview of their function and contents.
       recipe to correctly extend the path.
 
    :term:`FILESOVERRIDES`
-      A subset of :term:`OVERRIDES` used by the OpenEmbedded build system for
-      creating :term:`FILESPATH`. The :term:`FILESOVERRIDES` variable uses
-      overrides to automatically extend the :term:`FILESPATH` variable. For an
-      example of how that works, see the :term:`FILESPATH` variable
-      description. Additionally, you find more information on how overrides
-      are handled in the
+      A colon-separated list to specify a subset of :term:`OVERRIDES` used by
+      the OpenEmbedded build system for creating :term:`FILESPATH`. The
+      :term:`FILESOVERRIDES` variable uses overrides to automatically extend
+      the :term:`FILESPATH` variable. For an example of how that works, see the
+      :term:`FILESPATH` variable description. Additionally, you find more
+      information on how overrides are handled in the
       ":ref:`bitbake-user-manual/bitbake-user-manual-metadata:conditional syntax (overrides)`"
       section of the BitBake User Manual.
 
@@ -2820,8 +2846,8 @@ system and gives an overview of their function and contents.
          build system.
 
    :term:`FILESPATH`
-      The default set of directories the OpenEmbedded build system uses
-      when searching for patches and files.
+      A colon-separated list specifying the default set of directories the
+      OpenEmbedded build system uses when searching for patches and files.
 
       During the build process, BitBake searches each directory in
       :term:`FILESPATH` in the specified order when looking for files and
@@ -2899,14 +2925,13 @@ system and gives an overview of their function and contents.
       table file, examine the existing ``fs-perms.txt``.
 
    :term:`FIT_ADDRESS_CELLS`
-
       Specifies the value of the ``#address-cells`` value for the
-      description of the kernel FIT image.  
+      description of the FIT image.  
 
       The default value is set to "1" by the :ref:`ref-classes-kernel-fitimage`
       class, which corresponds to 32 bit addresses. 
 
-      For platforms who need to set 64 bit addresses in
+      For platforms that need to set 64 bit addresses, for example in
       :term:`UBOOT_LOADADDRESS` and :term:`UBOOT_ENTRYPOINT`, you need to
       set this value to "2", as two 32 bit values (cells) will be needed 
       to represent such addresses.
@@ -2919,67 +2944,82 @@ system and gives an overview of their function and contents.
       See `more details about #address-cells <https://elinux.org/Device_Tree_Usage#How_Addressing_Works>`__.
 
    :term:`FIT_CONF_DEFAULT_DTB`
-      Specifies the default device tree binary (dtb) file for a fitImage when
-      multiple are provided.
+      Specifies the default device tree binary (dtb) file for a FIT image
+      when multiple ones are provided.
+
+      This variable is used in the :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_DESC`
-      Specifies the description string encoded into a fitImage. The default
-      value is set by the :ref:`ref-classes-kernel-fitimage`
-      class as follows::
+      Specifies the description string encoded into a FIT image. The
+      default value is set by the :ref:`ref-classes-kernel-fitimage` class as
+      follows::
 
          FIT_DESC ?= "U-Boot fitImage for ${DISTRO_NAME}/${PV}/${MACHINE}"
 
    :term:`FIT_GENERATE_KEYS`
-      Decides whether to generate the keys for signing fitImage if they
-      don't already exist. The keys are created in :term:`UBOOT_SIGN_KEYDIR`.
-      The default value is 0.
+      Decides whether to generate the keys for signing the FIT image if
+      they don't already exist. The keys are created in
+      :term:`UBOOT_SIGN_KEYDIR`. The default value is set to "0"
+      by the :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_HASH_ALG`
-      Specifies the hash algorithm used in creating the FIT Image. For e.g. sha256.
+      Specifies the hash algorithm used in creating the FIT Image.
+      This variable is set by default to "sha256" by the
+      :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_KERNEL_COMP_ALG`
-      Compression algorithm to use for the kernel image inside the FIT Image.
+      The compression algorithm to use for the kernel image inside the FIT Image.
       At present, the only supported values are "gzip" (default), "lzo" or "none".
       If you set this variable to anything other than "none" you may also need
       to set :term:`FIT_KERNEL_COMP_ALG_EXTENSION`.
 
+      This variable is used in the :ref:`ref-classes-kernel-uboot` class.
+
    :term:`FIT_KERNEL_COMP_ALG_EXTENSION`
       File extension corresponding to :term:`FIT_KERNEL_COMP_ALG`. The default
-      value is ".gz". If you set :term:`FIT_KERNEL_COMP_ALG` to "lzo",
-      you may want to set this variable to ".lzo".
+      value is set ".gz" by the :ref:`ref-classes-kernel-uboot` class. If you
+      set :term:`FIT_KERNEL_COMP_ALG` to "lzo", you may want to set this
+      variable to ".lzo".
 
    :term:`FIT_KEY_GENRSA_ARGS`
-      Arguments to openssl genrsa for generating RSA private key for signing
-      fitImage. The default value is "-F4". i.e. the public exponent 65537 to
-      use.
+      Arguments to ``openssl genrsa`` for generating a RSA private key for
+      signing the FIT image. The default value is set to "-F4" by the
+      :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_KEY_REQ_ARGS`
-      Arguments to openssl req for generating certificate for signing fitImage.
-      The default value is "-batch -new". batch for non interactive mode
-      and new for generating new keys.
+      Arguments to ``openssl req`` for generating a certificate for signing
+      the FIT image. The default value is "-batch -new" by the
+      :ref:`ref-classes-kernel-fitimage` class, "batch" for
+      non interactive mode and "new" for generating new keys.
 
    :term:`FIT_KEY_SIGN_PKCS`
-      Format for public key certificate used in signing fitImage.
-      The default value is "x509".
+      Format for the public key certificate used for signing the FIT image.
+      The default value is set to "x509" by the
+      :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_SIGN_ALG`
       Specifies the signature algorithm used in creating the FIT Image.
-      For e.g. rsa2048.
+      This variable is set by default to "rsa2048" by the
+      :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_PAD_ALG`
       Specifies the padding algorithm used in creating the FIT Image.
-      The default value is "pkcs-1.5".
+      The default value is set to "pkcs-1.5" by the
+      :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FIT_SIGN_INDIVIDUAL`
       If set to "1", then the :ref:`ref-classes-kernel-fitimage`
       class will sign the kernel, dtb and ramdisk images individually in addition
-      to signing the fitImage itself. This could be useful if you are
+      to signing the FIT image itself. This could be useful if you are
       intending to verify signatures in another context than booting via
       U-Boot.
 
+      This variable is set to "0" by default.
+
    :term:`FIT_SIGN_NUMBITS`
-      Size of private key in number of bits used in fitImage. The default
-      value is "2048".
+      Size of the private key used in the FIT image, in number of bits.
+      The default value for this variable is set to "2048"
+      by the :ref:`ref-classes-kernel-fitimage` class.
 
    :term:`FONT_EXTRA_RDEPENDS`
       When inheriting the :ref:`ref-classes-fontcache` class,
@@ -4374,7 +4414,7 @@ system and gives an overview of their function and contents.
       :ref:`ref-classes-kernel` class should inherit. You typically
       append this variable to enable extended image types. An example is
       ":ref:`ref-classes-kernel-fitimage`", which enables
-      fitImage support and resides in ``meta/classes-recipe/kernel-fitimage.bbclass``.
+      FIT image support and resides in ``meta/classes-recipe/kernel-fitimage.bbclass``.
       You can register custom kernel image types with the
       :ref:`ref-classes-kernel` class using this variable.
 
@@ -4415,6 +4455,16 @@ system and gives an overview of their function and contents.
       In order to use this variable, the :ref:`ref-classes-kernel-devicetree`
       class must be inherited.
 
+   :term:`KERNEL_DEVICETREE_BUNDLE`
+      When set to "1", this variable allows to bundle the Linux kernel
+      and the Device Tree Binary together in a single file.
+
+      This feature is currently only supported on the "arm" (32 bit)
+      architecture.
+
+      This variable is set to "0" by default by the
+      :ref:`ref-classes-kernel-devicetree` class.
+
    :term:`KERNEL_DTB_LINK_NAME`
       The link name of the kernel device tree binary (DTB). This variable
       is set in the ``meta/classes-recipe/kernel-artifact-names.bbclass`` file as
@@ -4439,6 +4489,23 @@ system and gives an overview of their function and contents.
          KERNEL_DTB_NAME ?= "${KERNEL_ARTIFACT_NAME}"
 
       See :term:`KERNEL_ARTIFACT_NAME` for additional information.
+
+   :term:`KERNEL_DTBDEST`
+      This variable, used by the :ref:`ref-classes-kernel-devicetree`
+      class, allows to change the installation directory of the DTB
+      (Device Tree Binary) files.
+
+      It is set by default to "${KERNEL_IMAGEDEST}" by the
+      :ref:`ref-classes-kernel` class.
+
+   :term:`KERNEL_DTBVENDORED`
+      This variable, used by the :ref:`ref-classes-kernel-devicetree`,
+      allows to ignore vendor subdirectories when installing DTB
+      (Device Tree Binary) files, when it is set to "false".
+
+      To keep vendor subdirectories, set this variable to "true".
+
+      It is set by default to "false" by the :ref:`ref-classes-kernel` class.
 
    :term:`KERNEL_DTC_FLAGS`
       Specifies the ``dtc`` flags that are passed to the Linux kernel build
@@ -4587,6 +4654,14 @@ system and gives an overview of their function and contents.
       configuration for each of the modules. For information on how to
       provide those module configurations, see the
       :term:`module_conf_* <module_conf>` variable.
+
+   :term:`KERNEL_PACKAGE_NAME`
+      Specifies the base name of the kernel packages, such as "kernel"
+      in the kernel packages such as "kernel-modules", "kernel-image" and
+      "kernel-dbg".
+
+      The default value for this variable is set to "kernel" by the
+      :ref:`ref-classes-kernel` class.
 
    :term:`KERNEL_PATH`
       The location of the kernel sources. This variable is set to the value
@@ -5469,6 +5544,15 @@ system and gives an overview of their function and contents.
 
       For additional information on how this variable is used, see the
       initialization script.
+
+   :term:`OEQA_REPRODUCIBLE_TEST_TARGET`
+      Set build target for build reproducibility testing. By default
+      all available recipes are compiled with "bitbake world", see also :term:`EXCLUDE_FROM_WORLD`
+      and :doc:`/test-manual/reproducible-builds`.
+
+   :term:`OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS`
+      Set build targets which can be rebuilt using :ref:`shared state <overview-manual/concepts:shared state cache>`
+      when running build reproducibility tests. See :doc:`/test-manual/reproducible-builds`.
 
    :term:`OLDEST_KERNEL`
       Declares the oldest version of the Linux kernel that the produced
@@ -7497,9 +7581,10 @@ system and gives an overview of their function and contents.
          SKIP_RECIPE[myrecipe] = "Not supported by our organization."
 
    :term:`SOC_FAMILY`
-      Groups together machines based upon the same family of SOC (System On
-      Chip). You typically set this variable in a common ``.inc`` file that
-      you include in the configuration files of all the machines.
+      A colon-separated list grouping together machines based upon the same
+      family of SoC (System On Chip). You typically set this variable in a
+      common ``.inc`` file that you include in the configuration files of all
+      the machines.
 
       .. note::
 
@@ -7723,6 +7808,70 @@ system and gives an overview of their function and contents.
       section in the Yocto Project Board Support Package Developer's Guide
       for additional information.
 
+   :term:`SPL_MKIMAGE_DTCOPTS`
+      Options for the device tree compiler passed to ``mkimage -D`` feature
+      while creating a FIT image with the :ref:`ref-classes-uboot-sign`
+      class. If :term:`SPL_MKIMAGE_DTCOPTS` is not set then the
+      :ref:`ref-classes-uboot-sign` class will not pass the ``-D`` option
+      to ``mkimage``.
+
+      The default value is set to "" by the :ref:`ref-classes-uboot-config`
+      class.
+
+   :term:`SPL_SIGN_ENABLE`
+      Enable signing of the U-Boot FIT image. The default value is "0".
+      This variable is used by the :ref:`ref-classes-uboot-sign` class.
+
+   :term:`SPL_SIGN_KEYDIR`
+      Location of the directory containing the RSA key and certificate used for
+      signing the U-Boot FIT image, used by the :ref:`ref-classes-uboot-sign`
+      class.
+
+   :term:`SPL_SIGN_KEYNAME`
+      The name of keys used by the :ref:`ref-classes-kernel-fitimage` class
+      for signing U-Boot FIT image stored in the :term:`SPL_SIGN_KEYDIR`
+      directory. If we have for example a ``dev.key`` key and a ``dev.crt``
+      certificate stored in the :term:`SPL_SIGN_KEYDIR` directory, you will 
+      have to set :term:`SPL_SIGN_KEYNAME` to ``dev``.
+
+   :term:`SPLASH`
+      This variable, used by the :ref:`ref-classes-image` class, allows
+      to choose splashscreen applications. Set it to the names of packages
+      for such applications to use. This variable is set by default to
+      ``psplash``.
+
+   :term:`SPLASH_IMAGES`
+      This variable, used by the ``psplash`` recipe, allows to customize
+      the default splashscreen image.
+
+      Specified images in PNG format are converted to ``.h`` files by the recipe,
+      and are included in the ``psplash`` binary, so you won't find them in
+      the root filesystem.
+
+      To make such a change, it is recommended to customize the
+      ``psplash`` recipe in a custom layer. Here is an example structure for
+      an ``ACME`` board::
+
+          meta-acme/recipes-core/psplash
+          ├── files
+          │   └── logo-acme.png
+          └── psplash_%.bbappend
+
+      And here are the contents of the ``psplash_%.bbappend`` file in
+      this example::
+
+          SPLASH_IMAGES = "file://logo-acme.png;outsuffix=default"
+          FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+
+      You could even add specific configuration options for ``psplash``,
+      for example::
+
+          EXTRA_OECONF += "--disable-startup-msg --enable-img-fullscreen"
+
+      For information on append files, see the                                                                            
+      ":ref:`dev-manual/layers:appending other layers metadata with your layer`"
+      section.
+
    :term:`SRCREV_FORMAT`
       See :term:`bitbake:SRCREV_FORMAT` in the BitBake manual.
 
@@ -7807,7 +7956,7 @@ system and gives an overview of their function and contents.
       that if you want to build a fixed revision and you want to avoid
       performing a query on the remote repository every time BitBake parses
       your recipe, you should specify a :term:`SRCREV` that is a full revision
-      identifier and not just a tag.
+      identifier (e.g. the full SHA hash in git) and not just a tag.
 
       .. note::
 
@@ -9061,16 +9210,106 @@ system and gives an overview of their function and contents.
       creation, the :term:`UBOOT_ENTRYPOINT` variable is passed as a
       command-line parameter to the ``uboot-mkimage`` utility.
 
-      To pass a 64 bit address for FIT image creation, you will need to set
-      the :term:`FIT_ADDRESS_CELLS` variable too.
+      To pass a 64 bit address for FIT image creation, you will need to set:
+      -  The :term:`FIT_ADDRESS_CELLS` variable for FIT image creation.
+      -  The :term:`UBOOT_FIT_ADDRESS_CELLS` variable for U-Boot FIT image creation.
 
+      This variable is used by the :ref:`ref-classes-kernel-fitimage`,
+      :ref:`ref-classes-kernel-uimage`, :ref:`ref-classes-kernel`,
+      :ref:`ref-classes-uboot-config` and :ref:`ref-classes-uboot-sign`
+      classes.
+
+   :term:`UBOOT_FIT_ADDRESS_CELLS`
+      Specifies the value of the ``#address-cells`` value for the
+      description of the U-Boot FIT image.  
+
+      The default value is set to "1" by the :ref:`ref-classes-uboot-sign`
+      class, which corresponds to 32 bit addresses. 
+
+      For platforms that need to set 64 bit addresses in
+      :term:`UBOOT_LOADADDRESS` and :term:`UBOOT_ENTRYPOINT`, you need to
+      set this value to "2", as two 32 bit values (cells) will be needed
+      to represent such addresses.
+
+      Here is an example setting "0x400000000" as a load address::
+    
+         UBOOT_FIT_ADDRESS_CELLS = "2"
+         UBOOT_LOADADDRESS= "0x04 0x00000000"
+
+      See `more details about #address-cells <https://elinux.org/Device_Tree_Usage#How_Addressing_Works>`__.
+
+   :term:`UBOOT_FIT_DESC`
+      Specifies the description string encoded into a U-Boot fitImage. The default
+      value is set by the :ref:`ref-classes-uboot-sign` class as follows::
+
+         UBOOT_FIT_DESC ?= "U-Boot fitImage for ${DISTRO_NAME}/${PV}/${MACHINE}"
+
+   :term:`UBOOT_FIT_GENERATE_KEYS`
+      Decides whether to generate the keys for signing the U-Boot fitImage if
+      they don't already exist. The keys are created in :term:`SPL_SIGN_KEYDIR`.
+      The default value is "0".
+
+      Enable this as follows::
+
+         UBOOT_FIT_GENERATE_KEYS = "1"
+
+      This variable is used in the :ref:`ref-classes-uboot-sign` class.
+
+   :term:`UBOOT_FIT_HASH_ALG`
+      Specifies the hash algorithm used in creating the U-Boot FIT Image.
+      It is set by default to ``sha256`` by the :ref:`ref-classes-uboot-sign`
+      class.
+
+   :term:`UBOOT_FIT_KEY_GENRSA_ARGS`
+      Arguments to ``openssl genrsa`` for generating a RSA private key for
+      signing the U-Boot FIT image. The default value of this variable
+      is set to "-F4" by the :ref:`ref-classes-uboot-sign` class.
+
+   :term:`UBOOT_FIT_KEY_REQ_ARGS`
+      Arguments to ``openssl req`` for generating a certificate for signing
+      the U-Boot FIT image. The default value is "-batch -new" by the
+      :ref:`ref-classes-uboot-sign` class, "batch" for
+      non interactive mode and "new" for generating new keys.
+
+   :term:`UBOOT_FIT_KEY_SIGN_PKCS`
+      Format for the public key certificate used for signing the U-Boot FIT
+      image. The default value is set to "x509" by the
+      :ref:`ref-classes-uboot-sign` class.
+
+   :term:`UBOOT_FIT_SIGN_ALG`
+      Specifies the signature algorithm used in creating the U-Boot FIT Image.
+      This variable is set by default to "rsa2048" by the
+      :ref:`ref-classes-uboot-sign` class.
+
+   :term:`UBOOT_FIT_SIGN_NUMBITS`
+      Size of the private key used in signing the U-Boot FIT image, in number
+      of bits. The default value for this variable is set to "2048"
+      by the :ref:`ref-classes-uboot-sign` class.
+
+   :term:`UBOOT_FITIMAGE_ENABLE`
+      This variable allows to generate a FIT image for U-Boot, which is one
+      of the ways to implement a verified boot process.
+
+      Its default value is "0", so set it to "1" to enable this functionality::
+
+         UBOOT_FITIMAGE_ENABLE = "1"
+
+      See the :ref:`ref-classes-uboot-sign` class for details.
+      
    :term:`UBOOT_LOADADDRESS`
       Specifies the load address for the U-Boot image. During U-Boot image
       creation, the :term:`UBOOT_LOADADDRESS` variable is passed as a
       command-line parameter to the ``uboot-mkimage`` utility.
 
-      To pass a 64 bit address for FIT image creation, you will need to set
-      the :term:`FIT_ADDRESS_CELLS` variable too.
+      To pass a 64 bit address, you will also need to set:
+
+      -  The :term:`FIT_ADDRESS_CELLS` variable for FIT image creation.
+      -  The :term:`UBOOT_FIT_ADDRESS_CELLS` variable for U-Boot FIT image creation.
+
+      This variable is used by the :ref:`ref-classes-kernel-fitimage`,
+      :ref:`ref-classes-kernel-uimage`, :ref:`ref-classes-kernel`,
+      :ref:`ref-classes-uboot-config` and :ref:`ref-classes-uboot-sign`
+      classes.
 
    :term:`UBOOT_LOCALVERSION`
       Appends a string to the name of the local version of the U-Boot
@@ -9100,11 +9339,13 @@ system and gives an overview of their function and contents.
       script or function if desired. The default is "uboot-mkimage".
 
    :term:`UBOOT_MKIMAGE_DTCOPTS`
-      Options for the device tree compiler passed to mkimage '-D' feature while
-      creating FIT image in :ref:`ref-classes-kernel-fitimage` class. If
-      :term:`UBOOT_MKIMAGE_DTCOPTS` is not set then
-      :ref:`ref-classes-kernel-fitimage` will not pass the ``-D`` option to
-      mkimage.
+      Options for the device tree compiler passed to ``mkimage -D`` feature
+      while creating a FIT image with the :ref:`ref-classes-kernel-fitimage`
+      class. If :term:`UBOOT_MKIMAGE_DTCOPTS` is not set then the
+      :ref:`ref-classes-kernel-fitimage` class will not pass the ``-D`` option
+      to ``mkimage``.
+
+      This variable is also used by the :ref:`ref-classes-uboot-sign` class.
 
    :term:`UBOOT_MKIMAGE_KERNEL_TYPE`
       Specifies the type argument for the kernel as passed to ``uboot-mkimage``.
@@ -9137,15 +9378,21 @@ system and gives an overview of their function and contents.
    :term:`UBOOT_SIGN_ENABLE`
       Enable signing of FIT image. The default value is "0".
 
+      This variable is used by the :ref:`ref-classes-kernel-fitimage`,
+      :ref:`ref-classes-uboot-config` and :ref:`ref-classes-uboot-sign`
+      classes.
+
    :term:`UBOOT_SIGN_KEYDIR`
-      Location of the directory containing the RSA key and
-      certificate used for signing FIT image.
+      Location of the directory containing the RSA key and certificate used for
+      signing FIT image, used by the :ref:`ref-classes-kernel-fitimage` and
+      :ref:`ref-classes-uboot-sign` classes.
 
    :term:`UBOOT_SIGN_KEYNAME`
-      The name of keys used for signing U-Boot FIT image stored in
-      :term:`UBOOT_SIGN_KEYDIR` directory. For e.g. dev.key key and dev.crt
-      certificate stored in :term:`UBOOT_SIGN_KEYDIR` directory will have
-      :term:`UBOOT_SIGN_KEYNAME` set to "dev".
+      The name of keys used by the :ref:`ref-classes-kernel-fitimage` class
+      for signing U-Boot FIT image stored in the :term:`UBOOT_SIGN_KEYDIR`
+      directory. If we have for example a ``dev.key`` key and a ``dev.crt``
+      certificate stored in the :term:`UBOOT_SIGN_KEYDIR` directory, you will
+      have to set :term:`UBOOT_SIGN_KEYNAME` to ``dev``.
 
    :term:`UBOOT_SUFFIX`
       Points to the generated U-Boot extension. For example, ``u-boot.sb``

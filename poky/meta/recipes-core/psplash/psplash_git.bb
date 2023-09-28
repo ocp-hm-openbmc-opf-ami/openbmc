@@ -16,7 +16,7 @@ SRC_URI = "git://git.yoctoproject.org/${BPN};branch=master;protocol=https \
            ${SPLASH_IMAGES}"
 UPSTREAM_CHECK_COMMITS = "1"
 
-SPLASH_IMAGES = "file://psplash-poky-img.h;outsuffix=default"
+SPLASH_IMAGES = "file://psplash-poky-img.png;outsuffix=default"
 
 python __anonymous() {
     oldpkgs = d.getVar("PACKAGES").split()
@@ -65,9 +65,12 @@ S = "${WORKDIR}/git"
 
 inherit autotools pkgconfig update-rc.d update-alternatives systemd
 
-PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)}"
+PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} progress-bar fullscreen"
 
 PACKAGECONFIG[systemd] = "--with-systemd,--without-systemd,systemd"
+PACKAGECONFIG[fullscreen] = "--enable-img-fullscreen"
+PACKAGECONFIG[startup-msg] = ",--disable-startup-msg"
+PACKAGECONFIG[progress-bar] = ",--disable-progress-bar"
 
 ALTERNATIVE_PRIORITY = "100"
 ALTERNATIVE_LINK_NAME[psplash] = "${bindir}/psplash"

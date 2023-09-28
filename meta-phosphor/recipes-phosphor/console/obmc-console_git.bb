@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=fa818a259cbed7ce8bc2a22d35a464fc"
 DEPENDS += "autoconf-archive-native \
             systemd \
            "
-SRCREV = "bd992c9f62dbf127a21de26714662f92eabd0156"
+SRCREV = "dfda5afb4ff7c76c4df3ebebbf496fdbda0fbbae"
 PACKAGECONFIG ??= "udev"
 PACKAGECONFIG[udev] = "-Dudev=enabled,-Dudev=disabled,udev"
 PACKAGECONFIG[concurrent-servers] = "-Dconcurrent-servers=true,-Dconcurrent-servers=false,"
@@ -64,9 +64,9 @@ do_install:append() {
                         # Link the custom configuration to the required location
                         ln -sr ${D}${sysconfdir}/${BPN}.conf ${D}${sysconfdir}/${BPN}/server.${OBMC_CONSOLE_TTYS}.conf
                 else
-                        # Otherwise, remove socket-id from the shipped configuration to
+                        # Otherwise, remove console-id from the shipped configuration to
                         # align with the lack of a client configuration file
-                        sed -ri '/^socket-id =/d' ${D}${sysconfdir}/${BPN}/server.${OBMC_CONSOLE_TTYS}.conf
+                        sed -ri '/^console-id =/d' ${D}${sysconfdir}/${BPN}/server.${OBMC_CONSOLE_TTYS}.conf
                 fi
         fi
 }

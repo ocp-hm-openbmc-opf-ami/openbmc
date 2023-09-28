@@ -9,10 +9,11 @@ DEPENDS = " \
     gtest \
     nlohmann-json \
     libtinyxml2 \
+    nghttp2 \
     ${@bb.utils.contains('PTEST_ENABLED', '1', 'gtest', '', d)} \
     ${@bb.utils.contains('PTEST_ENABLED', '1', 'gmock', '', d)} \
 "
-SRCREV = "479e899d5f57a67647f83b7f615d2c8565290bcf"
+SRCREV = "1306101e16e574bbdbfbf4b594699396d4c80e08"
 PV = "1.0+git${SRCPV}"
 
 SRC_URI = "git://github.com/openbmc/bmcweb.git;branch=master;protocol=https"
@@ -26,6 +27,9 @@ SYSTEMD_SERVICE:${PN} += "bmcweb.service bmcweb.socket"
 inherit systemd
 inherit useradd
 inherit pkgconfig meson ptest
+
+PACKAGECONFIG ??= ""
+PACKAGECONFIG[insecure-redfish-expand]="-Dinsecure-enable-redfish-query=enabled"
 
 EXTRA_OEMESON = " \
     --buildtype=minsize \

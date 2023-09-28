@@ -2158,6 +2158,7 @@ class RunQueueExecute:
             bb.event.fire(startevent, self.cfgData)
 
             taskdep = self.rqdata.dataCaches[mc].task_deps[taskfn]
+            realfn = bb.cache.virtualfn2realfn(taskfn)[0]
             runtask = {
                 'fn' : taskfn,
                 'task' : task,
@@ -2166,6 +2167,7 @@ class RunQueueExecute:
                 'unihash' : self.rqdata.get_task_unihash(task),
                 'quieterrors' : True,
                 'appends' : self.cooker.collections[mc].get_file_appends(taskfn),
+                'layername' : self.cooker.collections[mc].calc_bbfile_priority(realfn)[2],
                 'taskdepdata' : self.sq_build_taskdepdata(task),
                 'dry_run' : False,
                 'taskdep': taskdep,
@@ -2251,6 +2253,7 @@ class RunQueueExecute:
                 bb.event.fire(startevent, self.cfgData)
 
             taskdep = self.rqdata.dataCaches[mc].task_deps[taskfn]
+            realfn = bb.cache.virtualfn2realfn(taskfn)[0]
             runtask = {
                 'fn' : taskfn,
                 'task' : task,
@@ -2259,6 +2262,7 @@ class RunQueueExecute:
                 'unihash' : self.rqdata.get_task_unihash(task),
                 'quieterrors' : False,
                 'appends' : self.cooker.collections[mc].get_file_appends(taskfn),
+                'layername' : self.cooker.collections[mc].calc_bbfile_priority(realfn)[2],
                 'taskdepdata' : self.build_taskdepdata(task),
                 'dry_run' : self.rqdata.setscene_enforce,
                 'taskdep': taskdep,
@@ -2351,7 +2355,8 @@ class RunQueueExecute:
                 taskhash = self.rqdata.runtaskentries[revdep].hash
                 unihash = self.rqdata.runtaskentries[revdep].unihash
                 deps = self.filtermcdeps(task, mc, deps)
-                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash]
+                hashfn = self.rqdata.dataCaches[mc].hashfn[taskfn]
+                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash, hashfn]
                 for revdep2 in deps:
                     if revdep2 not in taskdepdata:
                         additional.append(revdep2)
@@ -2691,7 +2696,8 @@ class RunQueueExecute:
                 provides = self.rqdata.dataCaches[mc].fn_provides[taskfn]
                 taskhash = self.rqdata.runtaskentries[revdep].hash
                 unihash = self.rqdata.runtaskentries[revdep].unihash
-                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash]
+                hashfn = self.rqdata.dataCaches[mc].hashfn[taskfn]
+                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash, hashfn]
                 for revdep2 in deps:
                     if revdep2 not in taskdepdata:
                         additional.append(revdep2)

@@ -1941,7 +1941,7 @@ Thanks to this, the depending tasks will keep a previously recorded
 task hash, and BitBake will be able to retrieve their output from
 the Shared State cache, instead of re-executing them. Similarly, the
 output of further downstream tasks can also be retrieved from Shared
-Shate.
+State.
 
 If the output hash is unknown, a new entry will be created on the Hash
 Equivalence server, matching the task hash to that output.
@@ -1989,7 +1989,7 @@ variables:
 -  :term:`BB_HASHSERVE_UPSTREAM`, when ``BB_HASHSERVE = "auto"``,
    allowing to connect the local server to an upstream one.
 
--  :term:`bitbake:BB_SIGNATURE_HANDLER`, which must be set  to ``OEEquivHash``.
+-  :term:`bitbake:BB_SIGNATURE_HANDLER`, which must be set to ``OEEquivHash``.
 
 Therefore, the default configuration in Poky corresponds to the
 below settings::

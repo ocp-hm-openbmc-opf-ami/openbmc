@@ -17,6 +17,7 @@ REQUIRED_DISTRO_FEATURES = "systemd"
 SRC_URI += " \
            file://touchscreen.rules \
            file://00-create-volatile.conf \
+           file://basic.conf.in \
            ${@bb.utils.contains('PACKAGECONFIG', 'polkit_hostnamed_fallback', 'file://org.freedesktop.hostname1_no_polkit.conf', '', d)} \
            ${@bb.utils.contains('PACKAGECONFIG', 'polkit_hostnamed_fallback', 'file://00-hostnamed-network-user.conf', '', d)} \
            file://init \
@@ -49,7 +50,6 @@ SRC_URI_MUSL = "\
                file://0023-Handle-missing-gshadow.patch \
                file://0024-missing_syscall.h-Define-MIPS-ABI-defines-for-musl.patch \
                file://0005-pass-correct-parameters-to-getdents64.patch \
-               file://0007-Add-sys-stat.h-for-S_IFDIR.patch \
                file://0001-Adjust-for-musl-headers.patch \
                file://0006-test-bus-error-strerror-is-assumed-to-be-GNU-specifi.patch \
                file://0003-errno-util-Make-STRERROR-portable-for-musl.patch \
@@ -252,6 +252,10 @@ EXTRA_OEMESON += "-Dkexec-path=${sbindir}/kexec \
 
 # The 60 seconds is watchdog's default vaule.
 WATCHDOG_TIMEOUT ??= "60"
+
+do_configure:prepend() {
+  sed s@:ROOT_HOME:@${ROOT_HOME}@g ${WORKDIR}/basic.conf.in > ${S}/sysusers.d/basic.conf.in
+}
 
 do_install() {
 	meson_do_install

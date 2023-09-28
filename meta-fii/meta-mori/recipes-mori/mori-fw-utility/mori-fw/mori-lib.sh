@@ -33,7 +33,7 @@ function get_gpio_num() {
             if [[ $(gpiofind "$1" | cut -d " " -f 1) == "$X" ]]; then
                 # Used to select the correct GPIO_BASE value
                 #shellcheck disable=SC2086
-                GPIO_BASE_DIR=$(echo ${GPIO_BASE_DIR} | cut -d " " -f $count)
+                GPIO_BASE_DIR=("$(echo ${GPIO_BASE_DIR} | cut -d " " -f $count)")
                 break
             fi
             count=$((count-1))
@@ -67,13 +67,56 @@ function get_gpio_ctrl() {
     echo "$GPIO_NUM" > /sys/class/gpio/unexport
 }
 
-# rst_bios_spi
-# Resets BIOS SPI EEPROM
-rst_bios_spi() {
-  echo "Reset BIOS SPI EEPROM"
-  set_gpio_ctrl RST_BIOS_EEPROM0_N 0
-  sleep 1
-  set_gpio_ctrl RST_BIOS_EEPROM0_N 1
+
+function Does_File_Exist() {
+  local FILE=$1
+
+  if [[ ! -f "${FILE}" ]]; then
+    echo "${FILE} file does not exist" >&2
+    return 1
+  fi
+}
+
+function cleanup_bios_access() {
+  # Run only if setup_bios_access was previously ran
+  if Does_File_Exist /run/bios_access &> /dev/null ; then
+    # switch the SPI mux from BMC to Host
+    if [ -d "${KERNEL_SYSFS_FIU}/${KERNEL_FIU_ID}" ]; then
+      echo "${KERNEL_FIU_ID}" > "${KERNEL_SYSFS_FIU}"/unbind
+    fi
+    set_gpio_ctrl FM_BIOS_FLASH_SPI_MUX_R_SEL 0
+
+    # Indicate to host that BMC is finished accessing SPI
+    set_gpio_ctrl S0_BMC_SPI_NOR_ACCESS 0
+
+    rm /run/bios_access
+  fi
+}
+
+function setup_bios_access() {
+  # Run only if setup_bios_access was not previously ran without cleanup
+  if ! Does_File_Exist /run/bios_access &> /dev/null ; then
+    echo "BMC is accessing BIOS" > /run/bios_access
+
+    # rescan the spi bus
+    if [ -d "${KERNEL_SYSFS_FIU}/${KERNEL_FIU_ID}" ]; then
+      echo "${KERNEL_FIU_ID}" > "${KERNEL_SYSFS_FIU}"/unbind
+      usleep 100
+    fi
+
+    # Wait until the host is finished accessing the SPI
+    while [[ $(get_gpio_ctrl S0_SOC_SPI_NOR_ACCESS) == 1 ]]
+    do
+      sleep 1
+    done
+    # Indicate to host that BMC is accessing SPI
+    set_gpio_ctrl S0_BMC_SPI_NOR_ACCESS 1
+
+    # switch the SPI mux from Host to BMC
+    set_gpio_ctrl FM_BIOS_FLASH_SPI_MUX_R_SEL 1
+
+    echo "${KERNEL_FIU_ID}" > "${KERNEL_SYSFS_FIU}"/bind
+  fi
 }
 
 # Start definitions
@@ -86,5 +129,11 @@ I2C_FANCTRL=(35 2c)
 I2C_BMC_PWRSEQ=(48 59)
 I2C_MB_PWRSEQ=(40 40)
 I2C_CPU_EEPROM=(19 50)
-I2C_STBUCK=(33 74)
-I2C_HOTSWAP_CTRL=(25 1f)
+
+# File Path Definition
+# File path used to prevent hotswapping
+RST_LOCK_FILE="/etc/FW_FLASH_ONGOING"
+
+# Device name and driver path used for BIOS SPI
+KERNEL_FIU_ID="c0000000.spi"
+KERNEL_SYSFS_FIU="/sys/bus/platform/drivers/NPCM-FIU"
