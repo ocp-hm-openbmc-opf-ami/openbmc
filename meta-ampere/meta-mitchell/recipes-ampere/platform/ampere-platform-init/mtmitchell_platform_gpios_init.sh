@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# shellcheck source=meta-ampere/meta-mitchell/recipes-ampere/platform/ampere-platform-init/gpio-lib.sh
-source /usr/sbin/gpio-lib.sh
+# shellcheck disable=SC2046
 
 function bind_rtc_driver() {
     # If rtc device can not present, bind the device
@@ -20,34 +19,16 @@ function post-platform-init() {
     # When BMC is rebooted, because PSON_L has pull up to P3V3_STB, it changes its
     # value to HIGH. Add code to check P3V3_STB and recover PSON_L to correct state
     # before setting BMC_RDY.
-    cnt=10
-    pgood=""
-    while [ $cnt -gt 0 ];
-    do
-        pgood=$(busctl get-property org.openbmc.control.Power /org/openbmc/control/power0 org.openbmc.control.Power pgood | cut -d' ' -f2)
-        if [[ "$pgood" != '' ]]; then
-            break;
-        fi
-        cnt=$(( cnt - 1 ))
-        sleep 1
-    done
-
+    pgood=$(gpioget $(gpiofind power-chassis-good))
     if [ "$pgood" == '1' ]; then
         echo "PSU is on. Setting PSON to 0"
-        gpio_name_set power-chassis-control 0
+        gpioset $(gpiofind power-chassis-control)=0
     else
-        echo "pgood D-Bus property response as 0. PSU is off."
-        # for unknown reason when stress reboot bmc power-control.exe detect power-chassis-good is 1 (power on)
-        # But "busctl get-property org.openbmc.control.Power /org/openbmc/control/power0 org.openbmc.control.Power pgood" responses 0 (power off)
-        # Add sleep 3 seconds after the pgood dbus reponse (power off) and recheck the power-chassis-good to confirm about the PSU power state
-        sleep 3
-        pgood=$(gpio_name_get power-chassis-good)
-        if [ "$pgood" == '0' ]; then
-            echo "power-chassis-good reponse as 0. Confirm PSU is off. Setting PSON to 1."
-            gpio_name_set power-chassis-control 1
-        fi
+        echo "PSU is off. Setting PSON to 1"
+        gpioset $(gpiofind power-chassis-control)=1
     fi
-    gpio_name_set host0-sysreset-n 1
+
+    gpioset $(gpiofind host0-sysreset-n)=1
 
     # gpio-leds is controlling bmc-ready, not by gpio
     echo 1 > /sys/class/leds/bmc-ready/brightness
@@ -127,7 +108,8 @@ export input_gpios_in_bmc_reboot=(
     "ps0-ac-loss-n"
     "ps1-ac-loss-n"
     "s1-ddr-save"
-    "sys-pgood"
+    "s0-fw-boot-ok"
+    "s1-pcp-pgood"
     "presence-cpu1"
     "s0-fault-alert"
     "s0-sys-auth-failure-n"

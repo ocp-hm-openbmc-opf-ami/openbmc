@@ -12,7 +12,6 @@ SRC_URI += " \
   file://-bmc-gbmcbrdummy.netdev \
   file://-bmc-gbmcbrdummy.network \
   file://+-bmc-gbmcbrusb.network \
-  file://ipmi.service.in \
   file://50-gbmc-br.rules \
   file://gbmc-br-ula.sh \
   file://gbmc-br-from-ra.sh \
@@ -37,7 +36,6 @@ FILES:${PN}:append = " \
   ${datadir}/gbmc-br-lib.sh \
   ${systemd_unitdir}/network \
   ${sysconfdir}/nftables \
-  ${sysconfdir}/avahi/services \
   "
 
 RDEPENDS:${PN}:append = " \
@@ -97,7 +95,8 @@ do_install() {
 
   if [ ! -z "${GBMC_BR_MAC_ADDR}" ]; then
     sfx='${@mac_to_eui64(GBMC_BR_MAC_ADDR)}'
-    addr="Address=${GBMC_ULA_PREFIX}:$sfx/64\nAddress=fe80::$sfx/64"
+    addr="[Address]\nAddress=${GBMC_ULA_PREFIX}:$sfx/64\nPreferredLifetime=0\n"
+    addr="$addr[Address]\nAddress=fe80::$sfx/64\nPreferredLifetime=0"
     sed -i "s,@ADDR@,$addr," ${WORKDIR}/-bmc-gbmcbr.network.in
   else
     sed -i '/@ADDR@/d' ${WORKDIR}/-bmc-gbmcbr.network.in
@@ -115,13 +114,6 @@ do_install() {
   install -d -m0755 "$nftables_dir"
   install -m0644 ${WORKDIR}/50-gbmc-br.rules $nftables_dir/
   install -m0644 ${WORKDIR}/50-gbmc-br-cn-redirect.rules $nftables_dir/
-
-  avahi_dir=${D}${sysconfdir}/avahi/services
-  install -d -m 0755 "$avahi_dir"
-  sed -i 's,@MACHINE@,${MACHINE},g' ${WORKDIR}/ipmi.service.in
-  sed -i 's,@EXTRA_ATTRS@,,g' ${WORKDIR}/ipmi.service.in
-  sed 's,@NAME@,bmc,g' ${WORKDIR}/ipmi.service.in >${avahi_dir}/bmc.ipmi.service
-  sed 's,@NAME@,${MACHINE}-bmc,g' ${WORKDIR}/ipmi.service.in >${avahi_dir}/${MACHINE}-bmc.ipmi.service
 
   mondir=${D}${datadir}/gbmc-ip-monitor
   install -d -m0755 "$mondir"

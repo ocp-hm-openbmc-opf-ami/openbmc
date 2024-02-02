@@ -12,13 +12,6 @@ inherit meson \
 
 require ${BPN}.inc
 
-SRC_URI += "file://occ-active.sh"
-do_install:append() {
-        install -d ${D}${bindir}
-        install -m 0755 ${WORKDIR}/occ-active.sh \
-            ${D}${bindir}/occ-active.sh
-}
-
 DBUS_SERVICE:${PN} += "org.open_power.OCC.Control.service"
 SYSTEMD_SERVICE:${PN} += "op-occ-enable@.service"
 SYSTEMD_SERVICE:${PN} += "op-occ-disable@.service"
@@ -29,7 +22,6 @@ DEPENDS += " \
         ${PYTHON_PN}-sdbus++-native \
         phosphor-logging \
         phosphor-dbus-interfaces \
-        autoconf-archive-native \
         systemd \
         ${PYTHON_PN}-native \
         ${PYTHON_PN}-pyyaml-native \
@@ -89,20 +81,5 @@ DEPENDS:remove:class-nativesdk = " \
         virtual/${PN}-config-native \
         "
 RDEPENDS:${PN}:remove:class-nativesdk = "phosphor-state-manager-obmc-targets"
-
-# Provide a means to enable/disable install_error_yaml feature
-PACKAGECONFIG ??= "install_error_yaml"
-PACKAGECONFIG[install_error_yaml] = "\
-        -Dinstall-error-yaml=enabled,\
-        -Dinstall-error-yaml=disabled,\
-        ,\
-        "
-
-# Enable install_error_yaml during native and native SDK build
-PACKAGECONFIG:add:class-native = "install_error_yaml"
-PACKAGECONFIG:add:class-nativesdk = "install_error_yaml"
-
-# Disable install_error_yaml during target build
-PACKAGECONFIG:remove:class-target = "install_error_yaml"
 
 BBCLASSEXTEND += "native nativesdk"

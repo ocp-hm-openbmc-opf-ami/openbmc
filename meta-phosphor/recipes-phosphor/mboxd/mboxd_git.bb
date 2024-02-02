@@ -6,7 +6,7 @@ DEPENDS += "autoconf-archive-native"
 DEPENDS += "systemd"
 DEPENDS += "phosphor-logging"
 PROVIDES += "mboxctl"
-SRCREV = "6a51e5f429c4d26545c8facaf95641a59459bf38"
+SRCREV = "68a24c9ea5ce11c87fab22a3f4648c7d88c98fee"
 # Enable virtual-pnor by DISTRO_FEATURE openpower-virtual-pnor.
 PACKAGECONFIG:append:df-openpower-virtual-pnor = " virtual-pnor"
 PACKAGECONFIG[virtual-pnor] = "--enable-virtual-pnor,--disable-virtual-pnor"
@@ -18,6 +18,7 @@ SRC_URI += "file://99-aspeed-lpc-ctrl.rules"
 
 S = "${WORKDIR}/git"
 SYSTEMD_SUBSTITUTIONS += "FLASH_SIZE:${MBOXD_FLASH_SIZE}:${PN}.service"
+SYSTEMD_SUBSTITUTIONS += "WINDOW_NUM:${MBOXD_WINDOW_NUM}:${PN}.service"
 SYSTEMD_SERVICE:${PN} += "mboxd.service"
 SYSTEMD_SERVICE:${PN} += "mboxd-reload@.service"
 SYSTEMD_LINK:${PN} += "${@compose_list(d, 'FMT', 'OBMC_HOST_INSTANCES')}"
@@ -31,6 +32,8 @@ do_install:append() {
 }
 
 MBOXD_FLASH_SIZE ??= "32M"
+# When 0, code will default to use the entire reserved memory region
+MBOXD_WINDOW_NUM ??= "0"
 TMPL = "mboxd-reload@.service"
 TGTFMT = "obmc-host-startmin@{0}.target"
 INSTFMT = "mboxd-reload@{0}.service"

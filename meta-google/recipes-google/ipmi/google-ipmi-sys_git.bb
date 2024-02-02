@@ -19,7 +19,7 @@ DEPENDS += " \
 
 S = "${WORKDIR}/git"
 SRC_URI = "git://github.com/openbmc/google-ipmi-sys;branch=master;protocol=https"
-SRCREV = "15d4d21c091cd57a0e25888a8d360ba3a32965ff"
+SRCREV = "40b2a0cc10cf188cb904282c2d4004e146a021b7"
 
 FILES:${PN} += "${libdir}/ipmid-providers"
 
@@ -34,5 +34,7 @@ SYSTEMD_SERVICE:${PN} += " \
 
 EXTRA_OEMESON += "-Dtests=disabled"
 
+GBMC_NCSI_IPMI_CHANNEL ??= "1"
+
 CXXFLAGS:append:gbmc = '${@"" if not d.getVar("GBMC_NCSI_IF_NAME") else \
-  " -DNCSI_IPMI_CHANNEL=1 -DNCSI_IF_NAME=" + d.getVar("GBMC_NCSI_IF_NAME")}'
+  " -DNCSI_IPMI_CHANNEL=" + d.getVar("GBMC_NCSI_IPMI_CHANNEL") + " -DNCSI_IF_NAME=" + d.getVar("GBMC_NCSI_IF_NAME")}'

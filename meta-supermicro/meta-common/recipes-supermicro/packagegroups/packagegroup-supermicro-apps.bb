@@ -38,9 +38,7 @@ RDEPENDS:${PN}-flash = " \
 
 SUMMARY:${PN}-system = "Supermicro System"
 RDEPENDS:${PN}-system = " \
-        bmcweb \
         entity-manager \
         dbus-sensors \
-        webui-vue \
         ipmitool \
         "

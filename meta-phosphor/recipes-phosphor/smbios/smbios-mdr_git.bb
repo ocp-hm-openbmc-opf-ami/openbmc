@@ -10,11 +10,11 @@ DEPENDS += " \
     phosphor-dbus-interfaces \
     phosphor-logging \
     "
-SRCREV = "6106d54a7a09769c41102306bb7904ab20ec4813"
+SRCREV = "badedf10910f5ea0a5563e461b47acf7cc45603d"
 PACKAGECONFIG ?= "cpuinfo"
-PACKAGECONFIG[smbios-no-dimm] = "-DDIMM_DBUS=OFF,-DDIMM_DBUS=ON"
-PACKAGECONFIG[cpuinfo] = "-DCPU_INFO=ON,-DCPU_INFO=OFF,libpeci i2c-tools"
-PACKAGECONFIG[smbios-ipmi-blob] = "-DIPMI_BLOB=ON,-DIPMI_BLOB=OFF,phosphor-ipmi-blobs"
+PACKAGECONFIG[smbios-no-dimm] = "-Ddimm-dbus=disabled,-Ddimm-dbus=enabled"
+PACKAGECONFIG[cpuinfo] = "-Dcpuinfo=enabled,-Dcpuinfo=disabled,libpeci i2c-tools"
+PACKAGECONFIG[smbios-ipmi-blob] = "-Dsmbios-ipmi-blob=enabled,-Dsmbios-ipmi-blob=disabled,phosphor-ipmi-blobs"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
@@ -24,13 +24,6 @@ S = "${WORKDIR}/git"
 SYSTEMD_SERVICE:${PN} += "smbios-mdrv2.service"
 SYSTEMD_SERVICE:${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'cpuinfo', 'xyz.openbmc_project.cpuinfo.service', '', d)}"
 
-inherit cmake pkgconfig systemd
-inherit obmc-phosphor-ipmiprovider-symlink
+inherit meson pkgconfig systemd
 
-EXTRA_OECMAKE = "-DYOCTO=ON"
-
-FILES:${PN}:append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
-FILES:${PN}:append = " ${libdir}/blob-ipmid/lib*${SOLIBS}"
-FILES:${PN}-dev:append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV}"
-
-BLOBIPMI_PROVIDER_LIBRARY += "${@bb.utils.contains('PACKAGECONFIG', 'smbios-ipmi-blob', 'libsmbiosstore.so', '', d)}"
+FILES:${PN} += "${libdir}/blob-ipmid"

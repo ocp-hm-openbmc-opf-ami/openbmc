@@ -14,7 +14,7 @@ DEPENDS += " \
   sdbusplus \
   systemd \
   "
-SRCREV = "fd1c3f186498a1cc6c00e4ac165ab9d10bd25292"
+SRCREV = "c68ea0522ac6630dbe50829845a11f335cf87800"
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[log-threshold] = "-Dlog-threshold=true,-Dlog-threshold=false,"
 PACKAGECONFIG[log-pulse] = "-Dlog-pulse=true,-Dlog-pulse=false,"
@@ -22,7 +22,6 @@ PACKAGECONFIG[log-watchdog] = "-Dlog-watchdog=true,-Dlog-watchdog=false,"
 PACKAGECONFIG[log-alarm] = "-Dlog-alarm=true,-Dlog-alarm=false,"
 PACKAGECONFIG[log-host] = "-Dlog-host=true,-Dlog-host=false,"
 PACKAGECONFIG[send-to-logger] = "-Dsend-to-logger=true,-Dsend-to-logger=false,phosphor-logging"
-PACKAGECONFIG[clears-sel] = "-Dclears-sel=true,-Dclears-sel=false"
 PV = "0.1+git${SRCPV}"
 
 SRC_URI = "git://github.com/openbmc/phosphor-sel-logger.git;protocol=https;branch=master"

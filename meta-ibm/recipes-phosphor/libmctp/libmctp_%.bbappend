@@ -1,7 +1,16 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI:append:p10bmc = " file://mctp"
-SRC_URI:append:witherspoon-tacoma = " file://mctp"
+install_mctp_configuration() {
+      install -d ${D}${sysconfdir}/default
+      install -m 0644 ${WORKDIR}/mctp ${D}${sysconfdir}/default/mctp
+}
 
-PACKAGECONFIG:append:p10bmc = " astlpc-raw-kcs"
-PACKAGECONFIG:append:witherspoon-tacoma = " astlpc-raw-kcs"
+SRC_URI:append:p10bmc = " file://mctp"
+do_install:append:p10bmc() {
+      install_mctp_configuration
+}
+
+SRC_URI:append:witherspoon-tacoma = " file://mctp"
+do_install:append:witherspoon-tacoma() {
+      install_mctp_configuration
+}

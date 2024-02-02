@@ -24,7 +24,6 @@ def ipmi_whitelists(d):
 PACKAGECONFIG ??= "allowlist i2c-allowlist boot-flag-safe-mode softoff libuserlayer entity-manager-decorators"
 PACKAGECONFIG[dynamic-sensors] = "-Ddynamic-sensors=enabled,-Ddynamic-sensors=disabled"
 PACKAGECONFIG[hybrid-sensors] = "-Dhybrid-sensors=enabled,-Dhybrid-sensors=disabled"
-PACKAGECONFIG[sel-logger-clears-sel] = "-Dsel-logger-clears-sel=enabled,-Dsel-logger-clears-sel=disabled"
 PACKAGECONFIG[allowlist] = "-Dipmi-whitelist=enabled,-Dipmi-whitelist=disabled"
 PACKAGECONFIG[i2c-allowlist] = "-Di2c-whitelist-check=enabled,-Di2c-whitelist-check=disabled"
 PACKAGECONFIG[transport-oem] = "-Dtransport-oem=enabled,-Dtransport-oem=disabled"
@@ -34,7 +33,7 @@ PACKAGECONFIG[update-functional-on-fail] = "-Dupdate-functional-on-fail=enabled,
 PACKAGECONFIG[libuserlayer] = "-Dlibuserlayer=enabled,-Dlibuserlayer=disabled"
 PACKAGECONFIG[sensors-cache] = "-Dsensors-cache=enabled,-Dsensors-cache=disabled"
 PACKAGECONFIG[entity-manager-decorators] = "-Dentity-manager-decorators=enabled,-Dentity-manager-decorators=disabled"
-
+PACKAGECONFIG[dynamic-storages-only] = "-Ddynamic-storages-only=enabled,-Ddynamic-storages-only=disabled"
 
 DEPENDS += "nlohmann-json"
 DEPENDS += "openssl"

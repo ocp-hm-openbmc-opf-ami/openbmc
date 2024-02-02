@@ -19,16 +19,17 @@ fi
 rmdir /oldroot 2>/dev/null
 
 # Move /oldroot/run to /mnt in case it has the underlying rofs loop mounted.
-# Ordered before /oldroot the overlay is unmounted before the loop mount
+# Reverse sort order will ensure the overlay is unmounted before the loop mount
 mkdir -p /mnt
 mount --move /oldroot/run /mnt
 
-set -x
-awk '/oldroot|mnt/ { print $2 }' < /proc/mounts | sort -r | while IFS= read -r f
+# Unmount paths with /oldroot /mnt under / and those ending with ro or rw
+# Use . to match any single character because busybox awk doesn't handle [/]
+awk '$2 ~ /^.oldroot|^.mnt|.r[ow]$/ { print $2 }' < /proc/mounts | sort -r | while IFS= read -r f
 do
+	echo "Unmounting $f"
 	umount "$f"
 done
-set +x
 
 update=/run/initramfs/update
 image=/run/initramfs/image-
@@ -65,7 +66,8 @@ then
 			if test -n "$wdrst"
 			then
 				echo "Resetting watchdog timeouts to $wdrst"
-				watchdog "$wdrst" -F /dev/watchdog &
+				# shellcheck disable=SC2086
+				watchdog $wdrst -F /dev/watchdog &
 				sleep 1
 				# Kill the watchdog daemon, setting a timeout
 				# for the remaining shutdown work
@@ -99,5 +101,5 @@ fi
 
 echo "Execute ${1-reboot} -f if all unmounted ok, or exec /init"
 
-export PS1=shutdown-sh#\
+export PS1="shutdown-sh# "
 exec /bin/sh

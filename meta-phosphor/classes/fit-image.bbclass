@@ -2,8 +2,8 @@ inherit uboot-config
 
 CONVERSIONTYPES += "fitImage"
 
-CONVERSION_CMD:fitImage = "run_assemble_fitimage ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}"
-INITRAMFS_IMAGE="${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.cpio.${INITRAMFS_CTYPE}"
+CONVERSION_CMD:fitImage = "run_assemble_fitimage ${IMAGE_NAME}.${type}"
+INITRAMFS_IMAGE="${IMAGE_NAME}.cpio.${INITRAMFS_CTYPE}"
 KERNEL_OUTPUT_DIR="${DEPLOY_DIR_IMAGE}"
 
 do_image_cpio[depends] += "virtual/kernel:do_deploy"
@@ -539,6 +539,11 @@ fitimage_assemble() {
             # Skip ${DTB} if it's also provided in ${EXTERNAL_KERNEL_DEVICETREE}
             if [ -n "${EXTERNAL_KERNEL_DEVICETREE}" ] && [ -s ${EXTERNAL_KERNEL_DEVICETREE}/${DTB} ]; then
                 continue
+            fi
+
+            # For non-vendored DTBs, we need to strip off the vendor path.
+            if "${@'false' if oe.types.boolean(d.getVar('KERNEL_DTBVENDORED')) else 'true'}"; then
+                DTB=`basename $DTB`
             fi
 
             DTB_PATH="${KERNEL_OUTPUT_DIR}/dts/$DTB"

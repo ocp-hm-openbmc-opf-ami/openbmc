@@ -1,9 +1,10 @@
 header:
-  version: 11
+  version: 14
   includes:
     - ci/base.yml
     - ci/meta-openembedded.yml
     - ci/poky-tiny.yml
+    - ci/meta-secure-core.yml
 
 local_conf_header:
     extrapackages: |

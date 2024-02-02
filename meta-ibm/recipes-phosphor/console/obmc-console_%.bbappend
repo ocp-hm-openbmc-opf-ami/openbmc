@@ -1,7 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI:remove = "file://${BPN}.conf"
-SRC_URI += "file://server.ttyVUART0.conf"
+SRC_URI:remove:df-openpower = "file://${BPN}.conf"
+SRC_URI:append:df-openpower = " file://server.ttyVUART0.conf"
 
 install_concurrent_console_config() {
         # Install configuration for the servers and clients. Keep commandline
@@ -62,3 +62,6 @@ EXTRA_OECONF:append:witherspoon-tacoma = " --enable-concurrent-servers"
 do_install:append:witherspoon-tacoma() {
         install_concurrent_console_config
 }
+
+SRC_URI:append:sbp1 = " file://server.ttyVUART0.conf"
+SRC_URI:append:system1 = " file://server.ttyVUART0.conf"

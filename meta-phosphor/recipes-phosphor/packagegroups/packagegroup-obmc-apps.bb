@@ -32,6 +32,7 @@ PACKAGES = " \
         ${PN}-user-mgmt \
         ${PN}-user-mgmt-ldap \
         ${PN}-dmtf-pmci \
+        ${PN}-webui \
         "
 
 SUMMARY:${PN}-bmc-state-mgmt = "BMC state management"
@@ -137,24 +138,9 @@ RDEPENDS:${PN}-remote-logging = " \
         phosphor-rsyslog-config \
         "
 
-SUMMARY:${PN}-rng = "Random Number Generator support"
-RDEPENDS:${PN}-rng = " \
-        rng-tools \
-        "
-
 SUMMARY:${PN}-sensors = "Sensor applications"
 RDEPENDS:${PN}-sensors = " \
         ${VIRTUAL-RUNTIME_obmc-sensors-hwmon} \
-        "
-
-${PN}-software-extras = ""
-
-${PN}-software-extras:df-obmc-ubi-fs = " \
-        phosphor-software-manager-updater-ubi \
-        "
-
-${PN}-software-extras:df-phosphor-mmc = " \
-        phosphor-software-manager-updater-mmc \
         "
 
 SUMMARY:${PN}-software = "Software applications"
@@ -162,7 +148,12 @@ RDEPENDS:${PN}-software = " \
         phosphor-software-manager-download-mgr \
         phosphor-software-manager-updater \
         phosphor-software-manager-version \
-        ${${PN}-software-extras} \
+        "
+RDEPENDS:${PN}-software:append:df-obmc-ubi-fs = " \
+        phosphor-software-manager-updater-ubi \
+        "
+RDEPENDS:${PN}-software:append:df-phosphor-mmc = " \
+        phosphor-software-manager-updater-mmc \
         "
 
 SUMMARY:${PN}-debug-collector = "BMC debug collector"
@@ -204,6 +195,10 @@ RDEPENDS:${PN}-user-mgmt-ldap = " \
         "
 
 SUMMARY:${PN}-dmtf-pmci = "DMTF PMCI Protocol Implementations"
-RDEPENDS:${PN}-dmtf-pmci = " \
-        ${@bb.utils.contains('DISTRO_FEATURES', 'mctp', 'mctp', '', d)} \
-        "
+RDEPENDS:${PN}-dmtf-pmci = ""
+RDEPENDS:${PN}-dmtf-pmci:append:df-pldm = " pldm"
+RDEPENDS:${PN}-dmtf-pmci:append:df-mctp = " mctp"
+
+SUMMARY:${PN}-webui = "Web User Interface support"
+RDEPENDS:${PN}-webui = "webui-vue"
+RDEPENDS:${PN}-webui:df-phosphor-no-webui = ""

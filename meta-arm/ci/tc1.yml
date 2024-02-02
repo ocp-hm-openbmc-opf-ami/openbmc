@@ -1,5 +1,5 @@
 header:
-  version: 11
+  version: 14
   includes:
     - ci/base.yml
     - ci/fvp.yml
@@ -9,4 +9,3 @@ machine: tc1
 
 target:
   - core-image-minimal
-  - trusted-firmware-m

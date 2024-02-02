@@ -30,7 +30,6 @@ IMAGE_FEATURES += " \
         obmc-leds \
         obmc-logging-mgmt \
         obmc-remote-logging-mgmt \
-        obmc-rng \
         obmc-net-ipmi \
         obmc-sensors \
         obmc-software \
@@ -46,6 +45,7 @@ IMAGE_FEATURES += " \
         obmc-settings-mgmt \
         obmc-telemetry \
         obmc-dmtf-pmci \
+        obmc-webui \
         "
 # The shadow recipe provides the binaries(like useradd, usermod) needed by the
 # phosphor-user-manager.
