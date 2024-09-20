@@ -4,5 +4,8 @@ SRC_URI:append = " \
         "
 SRC_URI:append:df-mctp = " \
         file://mctp/mctp.scc \
-        file://mctp/mctp.cfg \
+        "
+SRC_URI:append:df-nfs = " \
+        file://nfs/nfs.scc \
+        file://nfs/nfs.cfg \
         "

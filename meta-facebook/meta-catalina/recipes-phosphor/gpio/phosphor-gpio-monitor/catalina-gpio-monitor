@@ -1,0 +1,91 @@
+#!/bin/bash
+# shellcheck source=meta-facebook/recipes-fb/obmc_functions/files/fb-common-functions
+source /usr/libexec/fb-common-functions
+
+GPIO_HIGH=1
+GPIO_LOW=0
+
+LINENAME="$1"
+STATE="$2"
+
+logging()
+{
+    MESSAGE="$1"
+    SEVERITY="$2"
+    busctl call \
+        xyz.openbmc_project.Logging /xyz/openbmc_project/logging \
+        xyz.openbmc_project.Logging.Create Create "ssa{ss}" \
+        "$MESSAGE" "$SEVERITY" 0
+}
+
+log_error()
+{
+    logging "$1" "xyz.openbmc_project.Logging.Entry.Level.Error"
+}
+
+log_info()
+{
+    logging "$1" "xyz.openbmc_project.Logging.Entry.Level.Informational"
+}
+
+
+do_RUN_POWER_PG_change()
+{
+    if [ "$STATE" = "assert" ]; then
+        set_gpio "PCI_MUX_SEL" "$GPIO_HIGH"
+        busctl set-property xyz.openbmc_project.State.Host0 /xyz/openbmc_project/state/host0 xyz.openbmc_project.State.Host CurrentHostState s xyz.openbmc_project.State.Host.HostState.Running
+    else
+        set_gpio "PCI_MUX_SEL" "$GPIO_LOW"
+        busctl set-property xyz.openbmc_project.State.Host0 /xyz/openbmc_project/state/host0 xyz.openbmc_project.State.Host CurrentHostState s xyz.openbmc_project.State.Host.HostState.Off
+    fi
+}
+
+do_ID_RST_BTN_BMC_N_change()
+{
+    if [ "$STATE" = "assert" ]; then
+        set_gpio "RST_BMC_RSTBTN_OUT_N" "$GPIO_HIGH"
+    else
+        set_gpio "RST_BMC_RSTBTN_OUT_N" "$GPIO_LOW"
+    fi
+}
+
+do_leak_detect_change()
+{
+    if [ "$STATE" = "assert" ]; then
+        LOG_MSG="leak has been detected"
+    else
+        LOG_MSG="leak has been recoverd"
+    fi
+
+    case "$LINENAME" in
+        "LEAK0_DETECT_R" | "LEAK2_DETECT_R")
+            LOG_MSG="A large $LOG_MSG at location $LINENAME"
+            ;;
+        "LEAK1_DETECT_R" | "LEAK3_DETECT_R")
+            LOG_MSG="A small $LOG_MSG at location $LINENAME"
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+
+    if [ "$STATE" = "assert" ]; then
+        log_error "$LOG_MSG"
+    else
+        log_info "$LOG_MSG"
+    fi
+}
+
+case $LINENAME in
+    "RUN_POWER_PG" | "ID_RST_BTN_BMC_N")
+        FUNC_NAME="do_${LINENAME}_change"
+        "$FUNC_NAME"
+        ;;
+    "LEAK0_DETECT_R" | "LEAK1_DETECT_R" | "LEAK2_DETECT_R" | "LEAK3_DETECT_R")
+        do_leak_detect_change
+        ;;
+    *)
+        echo "Unknown LINENAME = $LINENAME"
+        exit 1
+        ;;
+esac

@@ -4,7 +4,7 @@ EXTRA_OEMESON:append = " \
                          -Dwarm-reboot=enabled \
                        "
 
-PACKAGECONFIG:append = "no-warm-reboot"
+PACKAGECONFIG:append = " no-warm-reboot"
 PACKAGECONFIG:remove = "only-run-apr-on-power-loss"
 
 HOST_DEFAULT_TARGETS:remove = " \
@@ -43,6 +43,7 @@ SRC_URI:append = " \
     file://host-powerreset \
     file://power-cmd \
     file://wait-until-mctp-connection-done \
+    file://rescan-cxl-eid \
     "
 
 RDEPENDS:${PN}:append = " bash"
@@ -61,6 +62,7 @@ do_install:append() {
     install -m 0755 ${WORKDIR}/host-powerreset ${D}${libexecdir}/${PN}/
     install -m 0755 ${WORKDIR}/power-cmd ${D}${libexecdir}/${PN}/
     install -m 0755 ${WORKDIR}/wait-until-mctp-connection-done ${D}${libexecdir}/${PN}/
+    install -m 0755 ${WORKDIR}/rescan-cxl-eid ${D}${libexecdir}/${PN}/
 }
 
 FILES:${PN} += " ${systemd_system_unitdir}/*.service"

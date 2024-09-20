@@ -17,10 +17,15 @@ SRC_URI += " \
   file://gbmc-br-from-ra.sh \
   file://gbmc-br-ensure-ra.sh \
   file://gbmc-br-ensure-ra.service \
+  file://gbmc-br-hostname.sh \
+  file://gbmc-br-hostname.service \
+  file://gbmc-ip-from-ra.sh \
+  file://gbmc-br-ip-from-ra.sh.in \
+  file://gbmc-br-ip-from-ra.service \
   file://gbmc-br-gw-src.sh \
   file://gbmc-br-nft.sh \
   file://gbmc-br-dhcp.sh \
-  file://50-gbmc-psu-hardreset.sh \
+  file://50-gbmc-psu-hardreset.sh.in \
   file://gbmc-br-dhcp.service \
   file://gbmc-br-dhcp-term.sh \
   file://gbmc-br-dhcp-term.service \
@@ -34,6 +39,7 @@ FILES:${PN}:append = " \
   ${datadir}/gbmc-ip-monitor \
   ${datadir}/gbmc-br-dhcp \
   ${datadir}/gbmc-br-lib.sh \
+  ${datadir}/gbmc-ip-from-ra.sh \
   ${systemd_unitdir}/network \
   ${sysconfdir}/nftables \
   "
@@ -49,17 +55,29 @@ RDEPENDS:${PN}:append = " \
 
 SYSTEMD_SERVICE:${PN} += " \
   gbmc-br-ensure-ra.service \
+  gbmc-br-hostname.service \
   gbmc-br-dhcp.service \
   gbmc-br-dhcp-term.service \
   gbmc-br-load-ip.service \
+  ${@"gbmc-br-ip-from-ra.service" if d.getVar('GBMC_BR_FIXED_OFFSET') != "" else ""} \
   "
 
 GBMC_BR_MAC_ADDR ?= ""
+
+# Enables the assignment of IP address and hostname by discovering the
+# machine name and BMC prefix from another BMC on the bridge network.
+# This is intended only to be used when there is a single expansion tray
+# on the BMC network. If more than one machine uses this feature with the
+# same offset in the same machine network, it will collide with others.
+GBMC_BR_FIXED_OFFSET ?= ""
 
 # Generated via https://cd34.com/rfc4193/ based on a MAC from a machine I own
 # and we allocated it downstream. Intended to only be used within a complete
 # system of multiple network endpoints.
 GBMC_ULA_PREFIX = "fdb5:0481:10ce:0"
+
+# coordinated powercycle
+GBMC_COORDINATED_POWERCYCLE ?= "true"
 
 def mac_to_eui64(mac):
   if not mac:
@@ -123,20 +141,31 @@ do_install() {
 
   install -d -m0755 ${D}${libexecdir}
   install -m0755 ${WORKDIR}/gbmc-br-ensure-ra.sh ${D}${libexecdir}/
+  install -m0755 ${WORKDIR}/gbmc-br-hostname.sh ${D}${libexecdir}/
   install -m0755 ${WORKDIR}/gbmc-br-dhcp.sh ${D}${libexecdir}/
   install -m0755 ${WORKDIR}/gbmc-br-dhcp-term.sh ${D}${libexecdir}/
   install -d -m0755 ${D}${systemd_system_unitdir}
   install -m0644 ${WORKDIR}/gbmc-br-ensure-ra.service ${D}${systemd_system_unitdir}/
+  install -m0644 ${WORKDIR}/gbmc-br-hostname.service ${D}${systemd_system_unitdir}/
   install -m0644 ${WORKDIR}/gbmc-br-dhcp.service ${D}${systemd_system_unitdir}/
   install -m0644 ${WORKDIR}/gbmc-br-dhcp-term.service ${D}${systemd_system_unitdir}/
   install -m0644 ${WORKDIR}/gbmc-br-load-ip.service ${D}${systemd_system_unitdir}/
   install -d -m0755 ${D}${datadir}/gbmc-br-dhcp
+
+  sed 's,@COORDINATED_POWERCYCLE@,${GBMC_COORDINATED_POWERCYCLE},' ${WORKDIR}/50-gbmc-psu-hardreset.sh.in >${WORKDIR}/50-gbmc-psu-hardreset.sh
   install -m0644 ${WORKDIR}/50-gbmc-psu-hardreset.sh ${D}${datadir}/gbmc-br-dhcp/
 
   install -m0644 ${WORKDIR}/gbmc-br-lib.sh ${D}${datadir}/
+  install -m0644 ${WORKDIR}/gbmc-ip-from-ra.sh ${D}${datadir}/
 
   install -d ${D}/${bindir}
   install -m0755 ${WORKDIR}/gbmc-start-dhcp.sh ${D}${bindir}/
+
+  if [ -n "${GBMC_BR_FIXED_OFFSET}" ]; then
+    sed 's,@IP_OFFSET@,${GBMC_BR_FIXED_OFFSET},' ${WORKDIR}/gbmc-br-ip-from-ra.sh.in >${WORKDIR}/gbmc-br-ip-from-ra.sh
+    install -m0755 ${WORKDIR}/gbmc-br-ip-from-ra.sh ${D}${libexecdir}/
+    install -m0644 ${WORKDIR}/gbmc-br-ip-from-ra.service ${D}${systemd_system_unitdir}/
+  fi
 }
 
 do_rm_work:prepend() {

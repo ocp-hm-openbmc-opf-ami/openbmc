@@ -10,7 +10,7 @@ DEPENDS = " \
          sdbusplus \
          openssl \
          "
-SRCREV = "64c18b07e867920ec53e47bf387f2d5e5b08ca0e"
+SRCREV = "bab5ed998f9ee7097692baafd66a3cdaca83f790"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 

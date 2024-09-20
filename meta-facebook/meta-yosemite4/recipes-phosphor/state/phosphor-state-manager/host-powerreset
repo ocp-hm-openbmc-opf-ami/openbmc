@@ -3,7 +3,7 @@
 # shellcheck disable=SC2120
 
 # Provide source directive to shellcheck.
-# shellcheck source=meta-facebook/meta-greatlakes/recipes-phosphor/state/phosphor-state-manager/power-cmd
+# shellcheck source=meta-facebook/meta-yosemite4/recipes-phosphor/state/phosphor-state-manager/power-cmd
 source /usr/libexec/phosphor-state-manager/power-cmd
 
 # TODO: check power status before do power reset
@@ -11,7 +11,9 @@ source /usr/libexec/phosphor-state-manager/power-cmd
 EID=$(($1*10))
 if ! pldmtool raw -d 0x80 0x02 0x39 0x00 0x00 0x01 0x00 0x04 -m "$EID"
 then
-    echo "Failed to set host$1 power reset"
+    msg="Failed to set host$1 power reset"
+    echo "${msg}"
+    add_sel "${msg}"
 else
-    echo "Host is power reset"
+    echo "Host$1 is power reset"
 fi

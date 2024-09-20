@@ -9,7 +9,7 @@ DEPENDS += "phosphor-dbus-interfaces"
 DEPENDS += "boost"
 DEPENDS += "nss-pam-ldapd"
 DEPENDS += "systemd"
-SRCREV = "d9adc73a09cc17253ed8774dd72362ba5083d578"
+SRCREV = "16c2b681dd3ce7c2d71a150c11138fd65c6c4f21"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
@@ -23,6 +23,10 @@ inherit obmc-phosphor-dbus-service
 inherit useradd
 
 EXTRA_OEMESON = "-Dtests=disabled"
+
+PACKAGECONFIG ?= "root-user-mgmt"
+PACKAGECONFIG[root-user-mgmt] = "-Droot_user_mgmt=enabled, -Droot_user_mgmt=disabled"
+
 
 do_install:append() {
   install -d ${D}${libexecdir}
