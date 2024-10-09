@@ -10,6 +10,9 @@ as servers, top of rack switches or RAID appliances. It uses
 [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/) to allow easy
 customization for your platform.
 
+### Important Information
+- After Stable release features migrated into the main branch, the tag "OneTree-X.X" is created in the main repositories. The tag is just providing the information "when the milestone New feature/feature enhancement migration Finished" Only. The latest main branch always provides the latest Bug fixed and Feature enhancement. **Please take the latest main Branch for the project development.**
+
 ## Setting up your OpenBMC project
 
 ### 1) Prerequisite
