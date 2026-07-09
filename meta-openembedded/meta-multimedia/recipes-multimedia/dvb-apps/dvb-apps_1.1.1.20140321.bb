@@ -17,7 +17,7 @@ S = "${WORKDIR}/${BPN}-3d43b280298c"
 
 inherit perlnative
 
-export enable_static="no"
+export enable_static = "no"
 
 export PERL_USE_UNSAFE_INC = "1"
 
@@ -33,7 +33,7 @@ do_install() {
     chmod a+rx ${D}/${libdir}/*.so*
     cp -R --no-dereference --preserve=mode,links ${S}/util/szap/channels-conf* ${D}/${docdir}/dvb-apps/szap/
     cp -R --no-dereference --preserve=mode,links ${S}/util/szap/README   ${D}/${docdir}/dvb-apps/szap/
-    cp -R --no-dereference --preserve=mode,links ${WORKDIR}/dvb-scan-table/* ${D}/usr/share/dvb
+    cp -R --no-dereference --preserve=mode,links ${UNPACKDIR}/dvb-scan-table/* ${D}/usr/share/dvb
 }
 
 PACKAGES =+ "dvb-evtest dvb-evtest-dbg \

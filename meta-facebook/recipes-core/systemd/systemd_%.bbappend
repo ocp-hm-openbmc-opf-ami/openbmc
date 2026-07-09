@@ -6,18 +6,28 @@ SRC_URI:append = " \
     file://systemd-networkd-only-wait-for-one.conf \
 "
 
+SRC_URI:append:fb-compute = " \
+    file://serial-getty@.conf \
+"
+
 do_install:append() {
 
     install -m 644 -D \
-        ${WORKDIR}/journald-size-policy-10MB.conf \
+        ${UNPACKDIR}/journald-size-policy-10MB.conf \
         ${D}${systemd_unitdir}/journald.conf.d/journald-size-policy-10MB.conf
 
     install -m 644 -D \
-        ${WORKDIR}/journald-storage-policy.conf \
+        ${UNPACKDIR}/journald-storage-policy.conf \
         ${D}/${systemd_unitdir}/journald.conf.d/journald-storage-policy.conf
 
     install -m 644 -D \
-        ${WORKDIR}/systemd-networkd-only-wait-for-one.conf \
+        ${UNPACKDIR}/systemd-networkd-only-wait-for-one.conf \
         ${D}${systemd_system_unitdir}/systemd-networkd-wait-online.service.d/systemd-networkd-only-wait-for-one.conf
+}
 
+do_install:append:fb-compute() {
+
+    install -m 644 -D \
+        ${UNPACKDIR}/serial-getty@.conf \
+        ${D}${systemd_system_unitdir}/serial-getty@.service.d/serial-getty@.conf
 }

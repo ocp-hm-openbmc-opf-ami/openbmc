@@ -18,7 +18,9 @@ RPI_KERNEL_DEVICETREE_OVERLAYS ?= " \
     overlays/overlay_map.dtb \
     overlays/at86rf233.dtbo \
     overlays/disable-bt.dtbo \
+    overlays/disable-bt-pi5.dtbo \
     overlays/disable-wifi.dtbo \
+    overlays/disable-wifi-pi5.dtbo \
     overlays/dwc2.dtbo \
     overlays/gpio-ir.dtbo \
     overlays/gpio-ir-tx.dtbo \
@@ -58,15 +60,28 @@ RPI_KERNEL_DEVICETREE_OVERLAYS ?= " \
     overlays/pps-gpio.dtbo \
     overlays/rpi-ft5406.dtbo \
     overlays/rpi-poe.dtbo \
+    overlays/uart0.dtbo \
+    overlays/uart0-pi5.dtbo \
+    overlays/uart1.dtbo \
+    overlays/uart1-pi5.dtbo \
+    overlays/uart2.dtbo \
+    overlays/uart2-pi5.dtbo \
+    overlays/uart3.dtbo \
+    overlays/uart3-pi5.dtbo \
+    overlays/uart4.dtbo \
+    overlays/uart4-pi5.dtbo \
+    overlays/uart5.dtbo \
     overlays/vc4-fkms-v3d.dtbo \
     overlays/vc4-fkms-v3d-pi4.dtbo \
     overlays/vc4-kms-v3d.dtbo \
     overlays/vc4-kms-v3d-pi4.dtbo \
     overlays/vc4-kms-v3d-pi5.dtbo \
     overlays/vc4-kms-dsi-7inch.dtbo \
+    overlays/vc4-kms-dsi-ili9881-7inch.dtbo \
     overlays/w1-gpio.dtbo \
     overlays/w1-gpio-pullup.dtbo \
     overlays/wm8960-soundcard.dtbo \
+    overlays/bcm2712d0.dtbo \
     "
 
 RPI_KERNEL_DEVICETREE ?= " \
@@ -86,7 +101,6 @@ RPI_KERNEL_DEVICETREE ?= " \
     broadcom/bcm2710-rpi-cm3.dtb \
     broadcom/bcm2711-rpi-cm4.dtb \
     broadcom/bcm2711-rpi-cm4s.dtb \
-    broadcom/bcm2712-rpi-5-b.dtb \
     "
 
 KERNEL_DEVICETREE ??= " \

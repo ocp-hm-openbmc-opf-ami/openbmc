@@ -222,19 +222,19 @@ class Partition():
         if (pseudo_dir):
             # Canonicalize the ignore paths. This corresponds to
             # calling oe.path.canonicalize(), which is used in bitbake.conf.
-            ignore_paths = [rootfs] + (get_bitbake_var("PSEUDO_IGNORE_PATHS") or "").split(",")
+            include_paths = [rootfs_dir] + (get_bitbake_var("PSEUDO_INCLUDE_PATHS") or "").split(",")
             canonical_paths = []
-            for path in ignore_paths:
+            for path in include_paths:
                 if "$" not in path:
                     trailing_slash = path.endswith("/") and "/" or ""
                     canonical_paths.append(os.path.realpath(path) + trailing_slash)
-            ignore_paths = ",".join(canonical_paths)
+            include_paths = ",".join(canonical_paths)
 
             pseudo = "export PSEUDO_PREFIX=%s;" % p_prefix
             pseudo += "export PSEUDO_LOCALSTATEDIR=%s;" % pseudo_dir
             pseudo += "export PSEUDO_PASSWD=%s;" % rootfs_dir
             pseudo += "export PSEUDO_NOSYMLINKEXP=1;"
-            pseudo += "export PSEUDO_IGNORE_PATHS=%s;" % ignore_paths
+            pseudo += "export PSEUDO_INCLUDE_PATHS=%s;" % include_paths
             pseudo += "%s " % get_bitbake_var("FAKEROOTCMD")
         else:
             pseudo = None
@@ -244,7 +244,7 @@ class Partition():
             # from bitbake variable
             rsize_bb = get_bitbake_var('ROOTFS_SIZE')
             rdir = get_bitbake_var('IMAGE_ROOTFS')
-            if rsize_bb and rdir == rootfs_dir:
+            if rsize_bb and (rdir == rootfs_dir or (rootfs_dir.split('/')[-2] == "tmp-wic" and rootfs_dir.split('/')[-1][:6] == "rootfs")):
                 # Bitbake variable ROOTFS_SIZE is calculated in
                 # Image._get_rootfs_size method from meta/lib/oe/image.py
                 # using IMAGE_ROOTFS_SIZE, IMAGE_ROOTFS_ALIGNMENT,
@@ -284,19 +284,8 @@ class Partition():
 
         extraopts = self.mkfs_extraopts or "-F -i 8192"
 
-        if os.getenv('SOURCE_DATE_EPOCH'):
-            sde_time = int(os.getenv('SOURCE_DATE_EPOCH'))
-            if pseudo:
-                pseudo = "export E2FSPROGS_FAKE_TIME=%s;%s " % (sde_time, pseudo)
-            else:
-                pseudo = "export E2FSPROGS_FAKE_TIME=%s; " % sde_time
-
-            # Set hash_seed to generate deterministic directory indexes
-            namespace = uuid.UUID("e7429877-e7b3-4a68-a5c9-2f2fdf33d460")
-            if self.fsuuid:
-                namespace = uuid.UUID(self.fsuuid)
-            hash_seed = str(uuid.uuid5(namespace, str(sde_time)))
-            extraopts += " -E hash_seed=%s" % hash_seed
+        # use hash_seed to generate reproducible ext4 images
+        (extraopts, pseudo) = self.get_hash_seed_ext4(extraopts, pseudo)
 
         label_str = ""
         if self.label:
@@ -343,6 +332,23 @@ class Partition():
             exec_native_cmd(debugfs_cmd, native_sysroot)
 
         self.check_for_Y2038_problem(rootfs, native_sysroot)
+
+    def get_hash_seed_ext4(self, extraopts, pseudo):
+        if os.getenv('SOURCE_DATE_EPOCH'):
+            sde_time = int(os.getenv('SOURCE_DATE_EPOCH'))
+            if pseudo:
+                pseudo = "export E2FSPROGS_FAKE_TIME=%s;%s " % (sde_time, pseudo)
+            else:
+                pseudo = "export E2FSPROGS_FAKE_TIME=%s; " % sde_time
+
+            # Set hash_seed to generate deterministic directory indexes
+            namespace = uuid.UUID("e7429877-e7b3-4a68-a5c9-2f2fdf33d460")
+            if self.fsuuid:
+                namespace = uuid.UUID(self.fsuuid)
+            hash_seed = str(uuid.uuid5(namespace, str(sde_time)))
+            extraopts += " -E hash_seed=%s" % hash_seed
+
+        return (extraopts, pseudo)
 
     def prepare_rootfs_btrfs(self, rootfs, cr_workdir, oe_builddir, rootfs_dir,
                              native_sysroot, pseudo):
@@ -437,13 +443,16 @@ class Partition():
 
         extraopts = self.mkfs_extraopts or "-i 8192"
 
+        # use hash_seed to generate reproducible ext4 images
+        (extraopts, pseudo) = self.get_hash_seed_ext4(extraopts, None)
+
         label_str = ""
         if self.label:
             label_str = "-L %s" % self.label
 
         mkfs_cmd = "mkfs.%s -F %s %s -U %s %s" % \
             (self.fstype, extraopts, label_str, self.fsuuid, rootfs)
-        exec_native_cmd(mkfs_cmd, native_sysroot)
+        exec_native_cmd(mkfs_cmd, native_sysroot, pseudo=pseudo)
 
         self.check_for_Y2038_problem(rootfs, native_sysroot)
 

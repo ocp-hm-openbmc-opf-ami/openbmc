@@ -1,0 +1,199 @@
+#!/bin/bash
+
+# shellcheck source=meta-facebook/recipes-fb/obmc_functions/files/fb-common-functions
+source /usr/libexec/fb-common-functions
+
+phosphor_log() {
+    busctl call \
+        xyz.openbmc_project.Logging \
+        /xyz/openbmc_project/logging \
+        xyz.openbmc_project.Logging.Create \
+        Create "ssa{ss}" "$1" "$2" 0
+}
+
+phosphor_log_err() {
+    local msg=$1
+    local logErr="xyz.openbmc_project.Logging.Entry.Level.Error"
+    phosphor_log "$msg" "$logErr"
+}
+
+phosphor_log_info() {
+    local msg=$1
+    local logInfo="xyz.openbmc_project.Logging.Entry.Level.Informational"
+    phosphor_log "$msg" "$logInfo"
+}
+
+is_rmc_main_power_disable()
+{
+    local reg_val=""
+
+    if ! reg_val="$(i2ctransfer -y -f 14 w1@0x12 0x01 r1)"; then
+        # failed to get rmc main power state from cpld ioexp
+        # assume rmc main power is enabled
+        echo "[DEBUG] failed to get rmc main power state from cpld ioexp"
+        return 1
+    fi
+
+    # check bit[1]
+    # 0: rmc main power disabled
+    # 1: rmc main power enabled
+    if (( (reg_val & 0x02) == 0x02 )); then
+        echo "[DEBUG] rmc main power is enabled"
+        return 1
+    fi
+
+    echo "[DEBUG] rmc main power is disabled"
+    return 0
+}
+
+chassis_power_cycle_button()
+{
+    if ! host_force_power_off; then
+        return 1
+    fi
+
+    sleep 5
+
+    if [ "$(host_power_status)" == "off" ]; then
+        press_host_power_button "on" 1
+        if ! wait_host_power_change "on" 20; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+chassis_power_cycle()
+{
+    # Following the recommended AC power down sequence:
+    # Force shutdown of the host before cutting the HSC power.
+    # If turn HSC power off while main power is up (and not doing a proper shutdown
+    # before removing standby power), then the FPGA would see this as a power fault.
+    if [ "$(host_power_status)" == "on" ]; then
+        set_gpio "shdn_force_l_cpld" 0
+        if ! wait_host_power_change "off" 5; then
+            echo "[DEBUG] force-off host failed in power cycle"
+        fi
+    fi
+    # There are HSCs(LM5066i) on the PDB board, and BMC configure the HPM board's Bianca IO Expander
+    # then it starts standby-AC power cycling for the tray.
+    # This behavior equal i2ctransfer -f -y 2 w2@0x20 0x06 0xd7 from NV.
+    set_gpio "BMC_STBY_CYCLE-O" 1
+    return 0
+}
+
+chassis_power_on()
+{
+    # MB standy power should enabled by before BMC ready
+    # So only do checking here.
+    if [ "$(chassis_power_status)" != "on" ]; then
+        return 1
+    fi
+    return 0
+}
+
+chassis_power_status()
+{
+    if [ "$(get_gpio "STBY_POWER_PG_3V3")" -eq 1 ]; then
+        echo "on"
+    else
+        echo "off"
+    fi
+}
+
+host_power_on()
+{
+    if is_rmc_main_power_disable; then
+        # Sleep for 10 seconds to avoid rapid consecutive retries
+        sleep 10
+        return 2
+    fi
+
+    if [ "$(host_power_status)" == "off" ]; then
+        press_host_power_button "on" 1
+        if ! wait_host_power_change "on" 20; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+host_force_power_off()
+{
+    if [ "$(host_power_status)" == "on" ]; then
+        press_host_power_button "off" 8
+        if ! wait_host_power_change "off" 20; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+host_graceful_power_off()
+{
+    if [ "$(host_power_status)" == "on" ]; then
+        press_host_power_button "off" 1
+        if ! wait_host_power_change "off" 30; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+host_power_reset()
+{
+    if [ "$(host_power_status)" == "on" ]; then
+        set_gpio "RST_BMC_RSTBTN_OUT_N" 1
+        set_gpio "RST_BMC_RSTBTN_OUT_N" 0
+        sleep 1
+        set_gpio "RST_BMC_RSTBTN_OUT_N" 1
+    fi
+    return 0
+}
+
+host_power_status()
+{
+    if [ "$(get_gpio "host0-ready")" -eq 1 ]; then
+        echo "on"
+    else
+        echo "off"
+    fi
+}
+
+press_host_power_button()
+{
+    local exp_val="$1"
+    local max_check_cnt="$2"
+    local count=0
+
+    set_gpio "SYS_BMC_PWRBTN_R_N" 1
+    set_gpio "SYS_BMC_PWRBTN_R_N" 0
+
+    until [ $count -ge "$max_check_cnt" ]
+    do
+        sleep 1
+        if [ "$(host_power_status)" == "$exp_val" ]; then
+            break
+        fi
+        ((count++))
+    done
+
+    set_gpio "SYS_BMC_PWRBTN_R_N" 1
+}
+
+wait_host_power_change()
+{
+    local exp_val="$1"
+    local max_check_cnt="$2"
+    local count=0
+    until [ $count -gt "$max_check_cnt" ]
+    do
+        sleep 1
+        if [ "$(host_power_status)" == "$exp_val" ]; then
+            return 0
+        fi
+        ((count++))
+    done
+
+    return 1
+}

@@ -316,7 +316,9 @@ def multiprocess_launch_mp(target, items, max_process, extraargs=None):
     items = list(items)
     while (items and not errors) or launched:
         if not errors and items and len(launched) < max_process:
-            args = (items.pop(),)
+            args = items.pop()
+            if not type(args) is tuple:
+                args = (args,)
             if extraargs is not None:
                 args = args + extraargs
             p = ProcessLaunch(target=target, args=args)
@@ -481,19 +483,6 @@ def get_multilib_datastore(variant, d):
         localdata.setVar("OVERRIDES", overrides)
         localdata.setVar("MLPREFIX", "")
     return localdata
-
-class ImageQAFailed(Exception):
-    def __init__(self, description, name=None, logfile=None):
-        self.description = description
-        self.name = name
-        self.logfile=logfile
-
-    def __str__(self):
-        msg = 'Function failed: %s' % self.name
-        if self.description:
-            msg = msg + ' (%s)' % self.description
-
-        return msg
 
 def sh_quote(string):
     import shlex

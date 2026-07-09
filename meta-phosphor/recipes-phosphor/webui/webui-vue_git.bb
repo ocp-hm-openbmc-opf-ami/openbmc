@@ -9,7 +9,7 @@
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 DEPENDS:prepend = "nodejs-native "
-SRCREV = "db2940a8ea63aeaf2f31dcb45a1c17a622a726c5"
+SRCREV = "313d15cf9f14e8a264f97a3370c3be4e494e5e0d"
 PV = "1.0+git${SRCPV}"
 # This recipe requires online access to build, as it uses NPM for dependency
 # management and resolution.
@@ -29,6 +29,7 @@ inherit python3native
 RDEPENDS:${PN}:append = " bmcweb"
 
 EXTRA_OENPM ?= ""
+NPM_CONFIG_CACHE ?= "${WORKDIR}/npm-cache"
 
 export CXX = "${BUILD_CXX}"
 export CC = "${BUILD_CC}"
@@ -41,9 +42,12 @@ export CXXFLAGS = "${BUILD_CXXFLAGS}"
 # https://git.yoctoproject.org/poky/tree/documentation/migration-guides/migration-3.5.rst#n25
 do_compile[network] = "1"
 do_compile () {
+    export NPM_CONFIG_CACHE="${NPM_CONFIG_CACHE}"
     cd ${S}
     rm -rf node_modules
     npm --loglevel info --proxy=${http_proxy} --https-proxy=${https_proxy} install
+    # vue-cli-plugin-i18n isn't needed in build and causes a segv in node 22.12.
+    npm uninstall vue-cli-plugin-i18n
     npm run build ${EXTRA_OENPM}
 }
 do_install () {

@@ -113,160 +113,8 @@ The following figure and list overviews the build process:
 Building Images for Multiple Targets Using Multiple Configurations
 ==================================================================
 
-You can use a single ``bitbake`` command to build multiple images or
-packages for different targets where each image or package requires a
-different configuration (multiple configuration builds). The builds, in
-this scenario, are sometimes referred to as "multiconfigs", and this
-section uses that term throughout.
-
-This section describes how to set up for multiple configuration builds
-and how to account for cross-build dependencies between the
-multiconfigs.
-
-Setting Up and Running a Multiple Configuration Build
------------------------------------------------------
-
-To accomplish a multiple configuration build, you must define each
-target's configuration separately using a parallel configuration file in
-the :term:`Build Directory` or configuration directory within a layer, and you
-must follow a required file hierarchy. Additionally, you must enable the
-multiple configuration builds in your ``local.conf`` file.
-
-Follow these steps to set up and execute multiple configuration builds:
-
--  *Create Separate Configuration Files*: You need to create a single
-   configuration file for each build target (each multiconfig).
-   The configuration definitions are implementation dependent but often
-   each configuration file will define the machine and the
-   temporary directory BitBake uses for the build. Whether the same
-   temporary directory (:term:`TMPDIR`) can be shared will depend on what is
-   similar and what is different between the configurations. Multiple MACHINE
-   targets can share the same (:term:`TMPDIR`) as long as the rest of the
-   configuration is the same, multiple :term:`DISTRO` settings would need separate
-   (:term:`TMPDIR`) directories.
-
-   For example, consider a scenario with two different multiconfigs for the same
-   :term:`MACHINE`: "qemux86" built
-   for two distributions such as "poky" and "poky-lsb". In this case,
-   you would need to use the different :term:`TMPDIR`.
-
-   Here is an example showing the minimal statements needed in a
-   configuration file for a "qemux86" target whose temporary build
-   directory is ``tmpmultix86``::
-
-      MACHINE = "qemux86"
-      TMPDIR = "${TOPDIR}/tmpmultix86"
-
-   The location for these multiconfig configuration files is specific.
-   They must reside in the current :term:`Build Directory` in a sub-directory of
-   ``conf`` named ``multiconfig`` or within a layer's ``conf`` directory
-   under a directory named ``multiconfig``. Here is an example that defines
-   two configuration files for the "x86" and "arm" multiconfigs:
-
-   .. image:: figures/multiconfig_files.png
-      :align: center
-      :width: 50%
-
-   The usual :term:`BBPATH` search path is used to locate multiconfig files in
-   a similar way to other conf files.
-
--  *Add the BitBake Multi-configuration Variable to the Local
-   Configuration File*: Use the
-   :term:`BBMULTICONFIG`
-   variable in your ``conf/local.conf`` configuration file to specify
-   each multiconfig. Continuing with the example from the previous
-   figure, the :term:`BBMULTICONFIG` variable needs to enable two
-   multiconfigs: "x86" and "arm" by specifying each configuration file::
-
-      BBMULTICONFIG = "x86 arm"
-
-   .. note::
-
-      A "default" configuration already exists by definition. This
-      configuration is named: "" (i.e. empty string) and is defined by
-      the variables coming from your ``local.conf``
-      file. Consequently, the previous example actually adds two
-      additional configurations to your build: "arm" and "x86" along
-      with "".
-
--  *Launch BitBake*: Use the following BitBake command form to launch
-   the multiple configuration build::
-
-      $ bitbake [mc:multiconfigname:]target [[[mc:multiconfigname:]target] ... ]
-
-   For the example in this section, the following command applies::
-
-      $ bitbake mc:x86:core-image-minimal mc:arm:core-image-sato mc::core-image-base
-
-   The previous BitBake command builds a ``core-image-minimal`` image
-   that is configured through the ``x86.conf`` configuration file, a
-   ``core-image-sato`` image that is configured through the ``arm.conf``
-   configuration file and a ``core-image-base`` that is configured
-   through your ``local.conf`` configuration file.
-
-.. note::
-
-   Support for multiple configuration builds in the Yocto Project &DISTRO;
-   (&DISTRO_NAME;) Release does not include Shared State (sstate)
-   optimizations. Consequently, if a build uses the same object twice
-   in, for example, two different :term:`TMPDIR`
-   directories, the build either loads from an existing sstate cache for
-   that build at the start or builds the object fresh.
-
-Enabling Multiple Configuration Build Dependencies
---------------------------------------------------
-
-Sometimes dependencies can exist between targets (multiconfigs) in a
-multiple configuration build. For example, suppose that in order to
-build a ``core-image-sato`` image for an "x86" multiconfig, the root
-filesystem of an "arm" multiconfig must exist. This dependency is
-essentially that the
-:ref:`ref-tasks-image` task in the
-``core-image-sato`` recipe depends on the completion of the
-:ref:`ref-tasks-rootfs` task of the
-``core-image-minimal`` recipe.
-
-To enable dependencies in a multiple configuration build, you must
-declare the dependencies in the recipe using the following statement
-form::
-
-   task_or_package[mcdepends] = "mc:from_multiconfig:to_multiconfig:recipe_name:task_on_which_to_depend"
-
-To better show how to use this statement, consider the example scenario
-from the first paragraph of this section. The following statement needs
-to be added to the recipe that builds the ``core-image-sato`` image::
-
-   do_image[mcdepends] = "mc:x86:arm:core-image-minimal:do_rootfs"
-
-In this example, the `from_multiconfig` is "x86". The `to_multiconfig` is "arm". The
-task on which the :ref:`ref-tasks-image` task in the recipe depends is the
-:ref:`ref-tasks-rootfs` task from the ``core-image-minimal`` recipe associated
-with the "arm" multiconfig.
-
-Once you set up this dependency, you can build the "x86" multiconfig
-using a BitBake command as follows::
-
-   $ bitbake mc:x86:core-image-sato
-
-This command executes all the tasks needed to create the
-``core-image-sato`` image for the "x86" multiconfig. Because of the
-dependency, BitBake also executes through the :ref:`ref-tasks-rootfs` task for the
-"arm" multiconfig build.
-
-Having a recipe depend on the root filesystem of another build might not
-seem that useful. Consider this change to the statement in the
-``core-image-sato`` recipe::
-
-   do_image[mcdepends] = "mc:x86:arm:core-image-minimal:do_image"
-
-In this case, BitBake must
-create the ``core-image-minimal`` image for the "arm" build since the
-"x86" build depends on it.
-
-Because "x86" and "arm" are enabled for multiple configuration builds
-and have separate configuration files, BitBake places the artifacts for
-each build in the respective temporary build directories (i.e.
-:term:`TMPDIR`).
+See the :doc:`multiconfig` section of the Yocto Project Development Tasks
+Manual.
 
 Building an Initial RAM Filesystem (Initramfs) Image
 ====================================================
@@ -280,7 +128,9 @@ Follow these steps to create an :term:`Initramfs` image:
 #. *Create the Initramfs Image Recipe:* You can reference the
    ``core-image-minimal-initramfs.bb`` recipe found in the
    ``meta/recipes-core`` directory of the :term:`Source Directory`
-   as an example from which to work.
+   as an example from which to work. The ``core-image-minimal-initramfs`` recipe
+   is based on the :ref:`initramfs-framework <dev-manual/building:Customizing an
+   Initramfs using \`\`initramfs-framework\`\`>` recipe described below.
 
 #. *Decide if You Need to Bundle the Initramfs Image Into the Kernel
    Image:* If you want the :term:`Initramfs` image that is built to be bundled
@@ -307,6 +157,86 @@ Follow these steps to create an :term:`Initramfs` image:
    dependency of the kernel image, the :term:`Initramfs` image is built as well
    and bundled with the kernel image if you used the
    :term:`INITRAMFS_IMAGE_BUNDLE` variable described earlier.
+
+Customizing an Initramfs using ``initramfs-framework``
+------------------------------------------------------
+
+The ``core-image-minimal-initramfs.bb`` recipe found in
+:oe_git:`meta/recipes-core/images
+</openembedded-core/tree/meta/recipes-core/images>` uses the
+:oe_git:`initramfs-framework_1.0.bb
+</openembedded-core/tree/meta/recipes-core/initrdscripts/initramfs-framework_1.0.bb>`
+recipe as its base component. The goal of the ``initramfs-framework`` recipe is
+to provide the building blocks to build a customized :term:`Initramfs`.
+
+The ``initramfs-framework`` recipe relies on shell initialization scripts
+defined in :oe_git:`meta/recipes-core/initrdscripts/initramfs-framework
+</openembedded-core/tree/meta/recipes-core/initrdscripts/initramfs-framework>`. Since some of
+these scripts do not apply for all use cases, the ``initramfs-framework`` recipe
+defines different packages:
+
+-  ``initramfs-framework-base``: this package installs the basic components of
+   an :term:`Initramfs`, such as the ``init`` script or the ``/dev/console``
+   character special file. As this package is a runtime dependency of all
+   modules listed below, it is automatically pulled in when one of the modules
+   is installed in the image.
+-  ``initramfs-module-exec``: support for execution of applications.
+-  ``initramfs-module-mdev``: support for `mdev
+   <https://wiki.gentoo.org/wiki/Mdev>`__.
+-  ``initramfs-module-udev``: support for :wikipedia:`Udev <Udev>`.
+-  ``initramfs-module-e2fs``: support for :wikipedia:`ext4/ext3/ext2
+   <Extended_file_system>` filesystems.
+-  ``initramfs-module-nfsrootfs``: support for locating and mounting the root
+   partition via :wikipedia:`NFS <Network_File_System>`.
+-  ``initramfs-module-rootfs``: support for locating and mounting the root
+   partition.
+-  ``initramfs-module-debug``: dynamic debug support.
+-  ``initramfs-module-lvm``: :wikipedia:`LVM <Logical_volume_management>` rootfs support.
+-  ``initramfs-module-overlayroot``: support for mounting a read-write overlay
+   on top of a read-only root filesystem.
+
+In addition to the packages defined by the ``initramfs-framework`` recipe
+itself, the following packages are defined by the recipes present in
+:oe_git:`meta/recipes-core/initrdscripts </openembedded-core/tree/meta/recipes-core/initrdscripts>`:
+
+-  ``initramfs-module-install``: module to create and install a partition layout
+   on a selected block device.
+-  ``initramfs-module-install-efi``: module to create and install an EFI
+   partition layout on a selected block device.
+-  ``initramfs-module-setup-live``: module to start a shell in the
+   :term:`Initramfs` if ``root=/dev/ram0`` in passed in the `Kernel command-line
+   <https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html>`__
+   or the ``root=`` parameter was not passed.
+
+To customize the :term:`Initramfs`, you can add or remove packages listed
+earlier from the :term:`PACKAGE_INSTALL` variable with a :ref:`bbappend
+<dev-manual/layers:Appending Other Layers Metadata With Your Layer>` on the
+``core-image-minimal-initramfs`` recipe, or create a custom recipe for the
+:term:`Initramfs` taking ``core-image-minimal-initramfs`` as example.
+
+Custom scripts can be added to the :term:`Initramfs` by writing your own
+recipes. The recipes are conventionally named ``initramfs-module-<module name>``
+where ``<module name>`` is the name of the module. The recipe should set its
+:term:`RDEPENDS` package-specific variables to include
+``initramfs-framework-base`` and the other packages on which the module depends
+at runtime.
+
+The recipe must install shell initialization scripts in :term:`${D} <D>`\
+``/init.d`` and must follow the ``<number>-<script name>`` naming scheme where:
+
+-  ``<number>`` is a *two-digit* number that affects the execution order of the
+   script compared to others. For example, the script ``80-setup-live`` would be
+   executed after ``01-udev`` because 80 is greater than 01.
+
+   This number being two-digits is important here as the scripts are executed
+   alphabetically. For example, the script ``10-script`` would be executed
+   before the script ``8-script``, because ``1`` is inferior to ``8``.
+   Therefore, the script should be named ``08-script``.
+
+-  ``<script name>`` is the script name which you can choose freely.
+
+   If two script use the same ``<number>``, they are sorted alphabetically based
+   on ``<script name>``.
 
 Bundling an Initramfs Image From a Separate Multiconfig
 -------------------------------------------------------

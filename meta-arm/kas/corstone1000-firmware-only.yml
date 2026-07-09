@@ -4,11 +4,13 @@ header:
 
 local_conf_header:
   firmwarebuild: |
+    BBMULTICONFIG:remove = "firmware"
+
     # Need to ensure the rescue linux options are selected
     OVERRIDES .= ":firmware"
 
     # Need to ensure we build with a small libc
-    TCLIBC="musl"
+    TCLIBC = "musl"
 
   mass-storage: |
     # Ensure the Mass Storage device is absent

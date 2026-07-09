@@ -15,6 +15,7 @@ import atexit
 import re
 from collections import OrderedDict, defaultdict
 from functools import partial
+from contextlib import contextmanager
 
 import bb.cache
 import bb.cooker
@@ -188,11 +189,19 @@ class TinfoilCookerAdapter:
             self._cache[name] = attrvalue
             return attrvalue
 
+    class TinfoilSkiplistByMcAdapter:
+        def __init__(self, tinfoil):
+            self.tinfoil = tinfoil
+
+        def __getitem__(self, mc):
+            return self.tinfoil.get_skipped_recipes(mc)
+
     def __init__(self, tinfoil):
         self.tinfoil = tinfoil
         self.multiconfigs = [''] + (tinfoil.config_data.getVar('BBMULTICONFIG') or '').split()
         self.collections = {}
         self.recipecaches = {}
+        self.skiplist_by_mc = self.TinfoilSkiplistByMcAdapter(tinfoil)
         for mc in self.multiconfigs:
             self.collections[mc] = self.TinfoilCookerCollectionAdapter(tinfoil, mc)
             self.recipecaches[mc] = self.TinfoilRecipeCacheAdapter(tinfoil, mc)
@@ -201,8 +210,6 @@ class TinfoilCookerAdapter:
         # Grab these only when they are requested since they aren't always used
         if name in self._cache:
             return self._cache[name]
-        elif name == 'skiplist':
-            attrvalue = self.tinfoil.get_skipped_recipes()
         elif name == 'bbfile_config_priorities':
             ret = self.tinfoil.run_command('getLayerPriorities')
             bbfile_config_priorities = []
@@ -514,12 +521,12 @@ class Tinfoil:
         """
         return defaultdict(list, self.run_command('getOverlayedRecipes', mc))
 
-    def get_skipped_recipes(self):
+    def get_skipped_recipes(self, mc=''):
         """
         Find recipes which were skipped (i.e. SkipRecipe was raised
         during parsing).
         """
-        return OrderedDict(self.run_command('getSkippedRecipes'))
+        return OrderedDict(self.run_command('getSkippedRecipes', mc))
 
     def get_all_providers(self, mc=''):
         return defaultdict(list, self.run_command('allProviders', mc))
@@ -533,6 +540,7 @@ class Tinfoil:
     def get_runtime_providers(self, rdep):
         return self.run_command('getRuntimeProviders', rdep)
 
+    # TODO: teach this method about mc
     def get_recipe_file(self, pn):
         """
         Get the file name for the specified recipe/target. Raises
@@ -541,6 +549,7 @@ class Tinfoil:
         """
         best = self.find_best_provider(pn)
         if not best or (len(best) > 3 and not best[3]):
+            # TODO: pass down mc
             skiplist = self.get_skipped_recipes()
             taskdata = bb.taskdata.TaskData(None, skiplist=skiplist)
             skipreasons = taskdata.get_reasons(pn)
@@ -633,6 +642,29 @@ class Tinfoil:
         fn = self.get_recipe_file(pn)
         return self.parse_recipe_file(fn)
 
+    @contextmanager
+    def _data_tracked_if_enabled(self):
+        """
+        A context manager to enable data tracking for a code segment if data
+        tracking was enabled for this tinfoil instance.
+        """
+        if self.tracking:
+            # Enable history tracking just for the operation
+            self.run_command('enableDataTracking')
+
+        # Here goes the operation with the optional data tracking
+        yield
+
+        if self.tracking:
+            self.run_command('disableDataTracking')
+
+    def finalizeData(self):
+        """
+        Run anonymous functions and expand keys
+        """
+        with self._data_tracked_if_enabled():
+            return self._reconvert_type(self.run_command('finalizeData'), 'DataStoreConnectionHandle')
+
     def parse_recipe_file(self, fn, appends=True, appendlist=None, config_data=None):
         """
         Parse the specified recipe file (with or without bbappends)
@@ -645,10 +677,7 @@ class Tinfoil:
             appendlist: optional list of bbappend files to apply, if you
                         want to filter them
         """
-        if self.tracking:
-            # Enable history tracking just for the parse operation
-            self.run_command('enableDataTracking')
-        try:
+        with self._data_tracked_if_enabled():
             if appends and appendlist == []:
                 appends = False
             if config_data:
@@ -660,9 +689,6 @@ class Tinfoil:
                 return self._reconvert_type(dscon, 'DataStoreConnectionHandle')
             else:
                 return None
-        finally:
-            if self.tracking:
-                self.run_command('disableDataTracking')
 
     def build_file(self, buildfile, task, internal=True):
         """

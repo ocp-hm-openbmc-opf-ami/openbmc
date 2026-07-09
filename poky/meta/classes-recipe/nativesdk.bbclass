@@ -32,6 +32,7 @@ RECIPE_SYSROOT = "${WORKDIR}/recipe-sysroot"
 #
 PACKAGE_ARCH = "${SDK_ARCH}-${SDKPKGSUFFIX}"
 PACKAGE_ARCHS = "${SDK_PACKAGE_ARCHS}"
+TUNE_PKGARCH = "${SDK_ARCH}"
 
 #
 # We need chrpath >= 0.14 to ensure we can deal with 32 and 64 bit
@@ -65,11 +66,6 @@ TARGET_LDFLAGS = "${BUILDSDK_LDFLAGS}"
 TARGET_FPU = ""
 EXTRA_OECONF_GCC_FLOAT = ""
 TUNE_FEATURES = ""
-
-CPPFLAGS = "${BUILDSDK_CPPFLAGS}"
-CFLAGS = "${BUILDSDK_CFLAGS}"
-CXXFLAGS = "${BUILDSDK_CXXFLAGS}"
-LDFLAGS = "${BUILDSDK_LDFLAGS}"
 
 # Change to place files in SDKPATH
 base_prefix = "${SDKPATHNATIVE}"
@@ -108,6 +104,7 @@ python () {
     clsextend.rename_package_variables((d.getVar("PACKAGEVARS") or "").split())
 
     clsextend.map_depends_variable("DEPENDS")
+    clsextend.map_depends_variable("PACKAGE_WRITE_DEPS")
     clsextend.map_packagevars()
     clsextend.map_variable("PROVIDES")
     clsextend.map_regexp_variable("PACKAGES_DYNAMIC")

@@ -1,3 +1,3 @@
-EXTRA_OECMAKE:append:npcm8xx = " \
+EXTRA_OECMAKE:append = " \
     -DRPMB_EMU=OFF \
     "

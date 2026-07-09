@@ -3,7 +3,7 @@ FILESEXTRAPATHS:prepend:romulus := "${THISDIR}/${PN}:"
 EXTRA_OEMESON:append:romulus = " -Dnegative-errno-on-fail=true"
 
 CHIPS = " \
-        bus@1e78a000/i2c-bus@440/w83773g@4c \
+        bus@1e78a000/i2c@440/w83773g@4c \
         pwm-tacho-controller@1e786000 \
         "
 ITEMSFMT = "ahb/apb/{0}.conf"

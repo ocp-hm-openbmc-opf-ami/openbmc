@@ -58,22 +58,22 @@ then
     fi
 elif [ "$1" = "bind" ]
 then
-    if [ -e $platform_path/1e78a140.i2c-bus/i2c-4/4-0070 ]
+    if [ -e $platform_path/1e78a140.i2c/i2c-4/4-0070 ]
     then
         bind_driver "4-0070"
     fi
 
-    if [ -e $platform_path/1e78a140.i2c-bus/i2c-4/4-0071 ]
+    if [ -e $platform_path/1e78a140.i2c/i2c-4/4-0071 ]
     then
         bind_driver "4-0071"
     fi
 
-    if [ -e $platform_path/1e78a180.i2c-bus/i2c-5/5-0070 ]
+    if [ -e $platform_path/1e78a180.i2c/i2c-5/5-0070 ]
     then
         bind_driver "5-0070"
     fi
 
-    if [ -e $platform_path/1e78a180.i2c-bus/i2c-5/5-0071 ]
+    if [ -e $platform_path/1e78a180.i2c/i2c-5/5-0071 ]
     then
         bind_driver "5-0071"
     fi

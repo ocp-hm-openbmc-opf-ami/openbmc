@@ -39,12 +39,12 @@ DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'libpam', '', d)}"
 RDEPENDS:${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'pam-plugin-listfile', '', d)}"
 PAMLIB = "${@bb.utils.contains('DISTRO_FEATURES', 'pam', '-L${STAGING_BASELIBDIR} -lpam', '', d)}"
 WRAPLIB = "${@bb.utils.contains('PACKAGECONFIG', 'tcp-wrappers', '-lwrap', '', d)}"
-NOPAM_SRC ="${@bb.utils.contains('PACKAGECONFIG', 'tcp-wrappers', 'file://nopam-with-tcp_wrappers.patch', 'file://nopam.patch', d)}"
+NOPAM_SRC = "${@bb.utils.contains('PACKAGECONFIG', 'tcp-wrappers', 'file://nopam-with-tcp_wrappers.patch', 'file://nopam.patch', d)}"
 
 inherit update-rc.d useradd systemd
 
 CONFFILES:${PN} = "${sysconfdir}/vsftpd.conf"
-LDFLAGS:append =" -lcrypt -lcap"
+LDFLAGS:append = " -lcrypt -lcap"
 CFLAGS:append:libc-musl = " -D_GNU_SOURCE -D_LARGEFILE64_SOURCE -include fcntl.h"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
@@ -65,14 +65,14 @@ do_install() {
     install -d ${D}${mandir}/man5
     oe_runmake 'DESTDIR=${D}' install
     install -d ${D}${sysconfdir}
-    install -m 600 ${WORKDIR}/vsftpd.conf ${D}${sysconfdir}/vsftpd.conf
+    install -m 600 ${UNPACKDIR}/vsftpd.conf ${D}${sysconfdir}/vsftpd.conf
     install -d ${D}${sysconfdir}/init.d/
-    install -m 755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/vsftpd
+    install -m 755 ${UNPACKDIR}/init ${D}${sysconfdir}/init.d/vsftpd
     install -d ${D}/${sysconfdir}/default/volatiles
-    install -m 644 ${WORKDIR}/volatiles.99_vsftpd ${D}/${sysconfdir}/default/volatiles/99_vsftpd
+    install -m 644 ${UNPACKDIR}/volatiles.99_vsftpd ${D}/${sysconfdir}/default/volatiles/99_vsftpd
 
-    install -m 600 ${WORKDIR}/vsftpd.ftpusers ${D}${sysconfdir}/
-    install -m 600 ${WORKDIR}/vsftpd.user_list ${D}${sysconfdir}/
+    install -m 600 ${UNPACKDIR}/vsftpd.ftpusers ${D}${sysconfdir}/
+    install -m 600 ${UNPACKDIR}/vsftpd.user_list ${D}${sysconfdir}/
     if ! test -z "${PAMLIB}" ; then
         install -d ${D}${sysconfdir}/pam.d/
         cp ${S}/RedHat/vsftpd.pam ${D}${sysconfdir}/pam.d/vsftpd
@@ -87,7 +87,7 @@ do_install() {
 
     # Install systemd unit files
     install -d ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/vsftpd.service ${D}${systemd_unitdir}/system
+    install -m 0644 ${UNPACKDIR}/vsftpd.service ${D}${systemd_unitdir}/system
     sed -i -e 's#@SBINDIR@#${sbindir}#g' ${D}${systemd_unitdir}/system/vsftpd.service
 }
 

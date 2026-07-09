@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://version.h;beginline=1;endline=6;md5=2e7c59cb9e57e356a
 
 DEPENDS += "groff-native"
 
-inherit autotools-brokensep
+inherit autotools-brokensep sourceforge-releases
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/setserial/${BPN}-${PV}.tar.gz \
            file://add_stdlib.patch \
@@ -16,7 +16,6 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/setserial/${BPN}-${PV}.tar.gz \
            file://0001-setserial.c-Add-needed-system-headers-for-ioctl-and-.patch \
            "
 
-SRC_URI[md5sum] = "c4867d72c41564318e0107745eb7a0f2"
 SRC_URI[sha256sum] = "7e4487d320ac31558563424189435d396ddf77953bb23111a17a3d1487b5794a"
 
 do_install() {

@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# shellcheck source=meta-facebook/meta-catalina/recipes-phosphor/state/phosphor-state-manager/power-cmd
+# shellcheck source=meta-facebook/meta-catalina/recipes-phosphor/state/phosphor-state-manager/catalina/power-cmd
 source /usr/libexec/phosphor-state-manager/power-cmd
 
-if ! host_power_on; then
-   phosphor_log_err "host power on failed"
+host_power_on
+ret=$?
+
+if [ $ret -ne 0 ]; then
+   log_msg="host power on failed"
+   if [ $ret -eq 2 ]; then
+      log_msg+=", rmc main power is disabled"
+   fi
+   phosphor_log_err "$log_msg"
    exit 1
 fi
 
-phosphor_log_info "host power on success"
 exit 0

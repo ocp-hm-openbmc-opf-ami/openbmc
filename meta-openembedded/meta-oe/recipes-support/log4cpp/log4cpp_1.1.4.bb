@@ -12,6 +12,8 @@ S = "${WORKDIR}/${BPN}"
 
 inherit autotools pkgconfig
 
+EXTRA_AUTORECONF += "-I m4"
+
 EXTRA_OECONF = "\
     --enable-doxygen=no \
     --enable-dot=no \
@@ -20,3 +22,7 @@ EXTRA_OECONF = "\
 "
 
 CXXFLAGS += "-std=c++14"
+
+do_install:append() {
+	sed -i -e 's|${DEBUG_PREFIX_MAP}||g; s|--sysroot=${STAGING_DIR_TARGET}||g' ${D}${bindir}/log4cpp-config
+}

@@ -1,4 +1,4 @@
-From 0bf4b0ac18d1ea41b32ad781d214b295ca1998f3 Mon Sep 17 00:00:00 2001
+From 85bff993087cd7367ffc35de525c2bf6162398d2 Mon Sep 17 00:00:00 2001
 From: Aneesh Bansal <aneesh.bansal@freescale.com>
 Date: Mon, 21 Nov 2011 17:31:39 +0530
 Subject: [PATCH] Added support for PPC instructions mfatbu, mfatbl.
@@ -11,17 +11,16 @@ Upstream-Status: Submitted [https://bugs.kde.org/show_bug.cgi?id=289836]
 
 Signed-off-by: Aneesh Bansal <aneesh.bansal@freescale.com>
 ---
-
- VEX/priv/guest_ppc_defs.h    |    2 ++
- VEX/priv/guest_ppc_helpers.c |   18 ++++++++++++++++++
- VEX/priv/guest_ppc_toIR.c    |   22 ++++++++++++++++++++++
- 3 files changed, 42 insertions(+), 0 deletions(-)
+ VEX/priv/guest_ppc_defs.h    |  2 ++
+ VEX/priv/guest_ppc_helpers.c | 18 ++++++++++++++++++
+ VEX/priv/guest_ppc_toIR.c    | 22 ++++++++++++++++++++++
+ 3 files changed, 42 insertions(+)
 
 diff --git a/VEX/priv/guest_ppc_defs.h b/VEX/priv/guest_ppc_defs.h
-index dd3c62e..11a34aa 100644
+index 220fbf1..cd259f3 100644
 --- a/VEX/priv/guest_ppc_defs.h
 +++ b/VEX/priv/guest_ppc_defs.h
-@@ -146,6 +146,8 @@ extern UInt ppc32g_dirtyhelper_MFSPR_268_269 ( UInt );
+@@ -233,6 +233,8 @@ extern UInt ppc32g_dirtyhelper_MFSPR_268_269 ( UInt );
  
  extern UInt ppc32g_dirtyhelper_MFSPR_287 ( void );
  
@@ -31,10 +30,10 @@ index dd3c62e..11a34aa 100644
                                       UInt vD_idx, UInt sh,
                                       UInt shift_right );
 diff --git a/VEX/priv/guest_ppc_helpers.c b/VEX/priv/guest_ppc_helpers.c
-index 11aa428..b49ea3f 100644
+index 2611e52..72c349b 100644
 --- a/VEX/priv/guest_ppc_helpers.c
 +++ b/VEX/priv/guest_ppc_helpers.c
-@@ -119,6 +119,24 @@ UInt ppc32g_dirtyhelper_MFSPR_287 ( void )
+@@ -118,6 +118,24 @@ UInt ppc32g_dirtyhelper_MFSPR_287 ( void )
  #  endif
  }
  
@@ -60,10 +59,10 @@ index 11aa428..b49ea3f 100644
  /* CALLED FROM GENERATED CODE */
  /* DIRTY HELPER (reads guest state, writes guest mem) */
 diff --git a/VEX/priv/guest_ppc_toIR.c b/VEX/priv/guest_ppc_toIR.c
-index f8d220d..37c8974 100644
+index 18716dd..b2e72a0 100644
 --- a/VEX/priv/guest_ppc_toIR.c
 +++ b/VEX/priv/guest_ppc_toIR.c
-@@ -5657,6 +5657,28 @@ static Bool dis_proc_ctl ( VexAbiInfo* vbi, UInt theInstr )
+@@ -11875,6 +11875,28 @@ static Bool dis_proc_ctl ( const VexAbiInfo* vbi, UInt prefix, UInt theInstr )
           break;
        }
  
@@ -92,5 +91,3 @@ index f8d220d..37c8974 100644
        default:
           vex_printf("dis_proc_ctl(ppc)(mfspr,SPR)(0x%x)\n", SPR);
           return False;
--- 
-1.7.0.4

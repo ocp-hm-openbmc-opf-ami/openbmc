@@ -1,5 +1,6 @@
 [Unit]
 Description=power off chassis:%i
+OnFailure=check-i3c-hub@%i.service
 
 [Service]
 Type=oneshot

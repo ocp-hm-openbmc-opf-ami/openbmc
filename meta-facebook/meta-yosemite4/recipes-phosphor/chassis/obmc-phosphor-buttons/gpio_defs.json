@@ -1,10 +1,200 @@
 {
     "gpio_definitions": [
         {
+            "name": "POWER_BUTTON1",
+            "pin": "Q0",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON2",
+            "pin": "Q1",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON3",
+            "pin": "Q2",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON4",
+            "pin": "Q3",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON5",
+            "pin": "B1",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON6",
+            "pin": "M5",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON7",
+            "pin": "R0",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
+            "name": "POWER_BUTTON8",
+            "pin": "O0",
+            "direction": "both",
+            "multi-action": [
+                {
+                    "duration": 0,
+                    "action": "chassis-on"
+                },
+                {
+                    "duration": 4000,
+                    "action": "chassis-cycle"
+                },
+                {
+                    "duration": 8000,
+                    "action": "chassis-off"
+                }
+            ]
+        },
+        {
             "name": "HOST_SELECTOR",
-            "group_gpio_config": [],
-            "max_position": 9,
-            "host_selector_map": {}
+            "virtual_button": true,
+            "polling_mode": true,
+            "polling_interval_ms": 2000,
+            "group_gpio_config": [
+                {
+                "name": "host_select_sel_0",
+                "num": 2340,
+                "direction": "in",
+                "polarity": "active_low"
+                },
+                {
+                "name": "host_select_sel_1",
+                "num": 2341,
+                "direction": "in",
+                "polarity": "active_low"
+                },
+                {
+                "name": "host_select_sel_2",
+                "num": 2342,
+                "direction": "in",
+                "polarity": "active_low"
+                },
+                {
+                "name": "host_select_sel_3",
+                "num": 2343,
+                "direction": "in",
+                "polarity": "active_low"
+                }
+            ],
+            "max_position": 8,
+            "host_selector_map": {
+                "0": 0,
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8
+            }
         }
     ]
 }

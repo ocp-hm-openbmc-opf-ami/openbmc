@@ -108,7 +108,7 @@ class ClearCase(FetchMethod):
                                                 ud.module.replace("/", "."),
                                                 ud.label.replace("/", "."))
 
-        ud.viewname         = "%s-view%s" % (ud.identifier, d.getVar("DATETIME", d, True))
+        ud.viewname         = "%s-view%s" % (ud.identifier, d.getVar("DATETIME"))
         ud.csname           = "%s-config-spec" % (ud.identifier)
         ud.ccasedir         = os.path.join(d.getVar("DL_DIR"), ud.type)
         ud.viewdir          = os.path.join(ud.ccasedir, ud.viewname)
@@ -129,8 +129,6 @@ class ClearCase(FetchMethod):
         self.debug("viewname        = %s" % ud.viewname)
         self.debug("configspecfile  = %s" % ud.configspecfile)
         self.debug("localfile       = %s" % ud.localfile)
-
-        ud.localfile = os.path.join(d.getVar("DL_DIR"), ud.localfile)
 
     def _build_ccase_command(self, ud, command):
         """
@@ -196,7 +194,7 @@ class ClearCase(FetchMethod):
 
     def need_update(self, ud, d):
         if ("LATEST" in ud.label) or (ud.customspec and "LATEST" in ud.customspec):
-            ud.identifier += "-%s" % d.getVar("DATETIME",d, True)
+            ud.identifier += "-%s" % d.getVar("DATETIME")
             return True
         if os.path.exists(ud.localpath):
             return False

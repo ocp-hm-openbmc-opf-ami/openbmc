@@ -26,9 +26,9 @@ ourversion = None
 if len(sys.argv) == 2:
     ourversion = sys.argv[1]
 
-activereleases = ["nanbield", "kirkstone", "dunfell"]
-devbranch = "scarthgap"
-ltsseries = ["kirkstone", "dunfell"]
+activereleases = ["walnascar", "scarthgap", "kirkstone"]
+devbranch = "whinlatter"
+ltsseries = ["scarthgap", "kirkstone"]
 
 # used by run-docs-builds to get the default page
 if ourversion == "getlatest":
@@ -36,6 +36,9 @@ if ourversion == "getlatest":
     sys.exit(0)
 
 release_series = collections.OrderedDict()
+release_series["whinlatter"] = "5.3"
+release_series["walnascar"] = "5.2"
+release_series["styhead"] = "5.1"
 release_series["scarthgap"] = "5.0"
 release_series["nanbield"] = "4.3"
 release_series["mickledore"] = "4.2"
@@ -68,6 +71,9 @@ release_series["laverne"] = "0.9"
 
 
 bitbake_mapping = {
+    "whinlatter" : "2.14",
+    "walnascar" : "2.12",
+    "styhead" : "2.10",
     "scarthgap" : "2.8",
     "nanbield" : "2.6",
     "mickledore" : "2.4",
@@ -95,12 +101,12 @@ docconfver = None
 
 # Test tags exist and inform the user to fetch if not
 try:
-    subprocess.run(["git", "show", "yocto-%s" % release_series[activereleases[0]]], capture_output=True, check=True)
+    subprocess.run(["git", "show", "yocto-%s" % release_series[activereleases[0]]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 except subprocess.CalledProcessError:
     sys.exit("Please run 'git fetch --tags' before building the documentation")
 
 # Try and figure out what we are
-tags = subprocess.run(["git", "tag", "--points-at", "HEAD"], capture_output=True, text=True).stdout
+tags = subprocess.run(["git", "tag", "--points-at", "HEAD"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout
 for t in tags.split():
     if t.startswith("yocto-"):
         ourversion = t[6:]
@@ -118,7 +124,7 @@ if ourversion:
                 bitbakeversion = bitbake_mapping[i]
 else:
     # We're floating on a branch
-    branch = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
+    branch = subprocess.run(["git", "branch", "--show-current"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout.strip()
     ourbranch = branch
     if branch != "master" and branch not in release_series:
         # We're not on a known release branch so we have to guess. Compare the numbers of commits
@@ -126,7 +132,7 @@ else:
         possible_branch = None
         branch_count = 0
         for b in itertools.chain(release_series.keys(), ["master"]):
-            result = subprocess.run(["git", "log", "--format=oneline",  "HEAD..origin/" + b], capture_output=True, text=True)
+            result = subprocess.run(["git", "log", "--format=oneline",  "HEAD..origin/" + b], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             if result.returncode == 0:
                 count = result.stdout.count('\n')
                 if not possible_branch or count < branch_count:
@@ -149,9 +155,9 @@ else:
     else:
         sys.exit("Unknown series for branch %s" % branch)
 
-    previoustags = subprocess.run(["git", "tag", "--merged", "HEAD"], capture_output=True, text=True).stdout
+    previoustags = subprocess.run(["git", "tag", "--merged", "HEAD"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout
     previoustags = [t[6:] for t in previoustags.split() if t.startswith("yocto-" + release_series[ourseries])]
-    futuretags = subprocess.run(["git", "tag", "--merged", ourbranch], capture_output=True, text=True).stdout
+    futuretags = subprocess.run(["git", "tag", "--merged", ourbranch], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout
     futuretags = [t[6:] for t in futuretags.split() if t.startswith("yocto-" + release_series[ourseries])]
 
     # Append .999 against the last known version
@@ -166,17 +172,29 @@ series = [k for k in release_series]
 previousseries = series[series.index(ourseries)+1:] or [""]
 lastlts = [k for k in previousseries if k in ltsseries] or "dunfell"
 
+latestreltag = subprocess.run(["git", "describe", "--abbrev=0", "--tags", "--match", "yocto-*"], capture_output=True, text=True).stdout
+latestreltag = latestreltag.strip()
+if latestreltag:
+    if latestreltag.startswith("yocto-"):
+        latesttag = latestreltag[6:]
+else:
+    # fallback on the calculated version
+    print("Did not find a tag with 'git describe', falling back to %s" % ourversion)
+    latestreltag = "yocto-" + ourversion
+    latesttag = ourversion
+
 print("Version calculated to be %s" % ourversion)
+print("Latest release tag found is %s" % latestreltag)
 print("Release series calculated to be %s" % ourseries)
 
 replacements = {
     "DISTRO" : ourversion,
+    "DISTRO_LATEST_TAG": latesttag,
     "DISTRO_NAME_NO_CAP" : ourseries,
     "DISTRO_NAME" : ourseries.capitalize(),
     "DISTRO_NAME_NO_CAP_MINUS_ONE" : previousseries[0],
     "DISTRO_NAME_NO_CAP_LTS" : lastlts[0],
     "YOCTO_DOC_VERSION" : ourversion,
-    "DISTRO_REL_TAG" : "yocto-" + ourversion,
     "DOCCONF_VERSION" : docconfver,
     "BITBAKE_SERIES" : bitbakeversion,
 }
@@ -224,7 +242,7 @@ with open("sphinx-static/switchers.js.in", "r") as r, open("sphinx-static/switch
             for branch in activereleases + ([ourseries] if ourseries not in activereleases else []):
                 if branch == devbranch:
                     continue
-                branch_versions = subprocess.run('git tag --list yocto-%s*' % (release_series[branch]), shell=True, capture_output=True, text=True).stdout.split()
+                branch_versions = subprocess.run('git tag --list yocto-%s*' % (release_series[branch]), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout.split()
                 branch_versions = sorted([v.replace("yocto-" +  release_series[branch] + ".", "").replace("yocto-" +  release_series[branch], "0") for v in branch_versions], key=int)
                 if not branch_versions:
                     continue
@@ -269,7 +287,7 @@ def tag_to_semver_like(v):
     v_maj, v_min, v_patch = v_semver.groups('0')
     return int("{:0>2}{:0>2}{:0>2}".format(v_maj, v_min, v_patch), 10)
 
-yocto_tags = subprocess.run(["git", "tag", "--list", "--sort=version:refname", "yocto-*"], capture_output=True, text=True).stdout
+yocto_tags = subprocess.run(["git", "tag", "--list", "--sort=version:refname", "yocto-*"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout
 yocto_tags = sorted(yocto_tags.split() + missing_tags, key=tag_to_semver_like)
 tags = [tag[6:] for tag in yocto_tags]
 
@@ -314,3 +332,5 @@ with open('releases.rst', 'w') as f:
             if tag == release_series[series] or tag.startswith('%s.' % release_series[series]):
                 f.write('- :yocto_docs:`%s Documentation </%s>`\n' % (tag, tag))
         f.write('\n')
+
+

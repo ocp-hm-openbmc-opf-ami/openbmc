@@ -12,16 +12,17 @@ python do_compile_ptest_cargo() {
     import subprocess
     import json
 
-    cargo = bb.utils.which(d.getVar("PATH"), d.getVar("CARGO", True))
-    cargo_build_flags = d.getVar("CARGO_BUILD_FLAGS", True)
-    rust_flags = d.getVar("RUSTFLAGS", True)
-    manifest_path = d.getVar("CARGO_MANIFEST_PATH", True)
+    cargo = bb.utils.which(d.getVar("PATH"), d.getVar("CARGO"))
+    cargo_build_flags = d.getVar("CARGO_BUILD_FLAGS")
+    packageconfig_confargs = d.getVar("PACKAGECONFIG_CONFARGS")
+    rust_flags = d.getVar("RUSTFLAGS")
+    manifest_path = d.getVar("CARGO_MANIFEST_PATH")
     project_manifest_path = os.path.normpath(manifest_path)
     manifest_dir = os.path.dirname(manifest_path)
 
     env = os.environ.copy()
     env['RUSTFLAGS'] = rust_flags
-    cmd = f"{cargo} build --tests --message-format json {cargo_build_flags}"
+    cmd = f"{cargo} build --tests --message-format json {cargo_build_flags} {packageconfig_confargs}"
     bb.note(f"Building tests with cargo ({cmd})")
 
     try:
@@ -66,7 +67,7 @@ python do_compile_ptest_cargo() {
     if not test_bins:
         bb.fatal("Unable to find any test binaries")
 
-    cargo_test_binaries_file = d.getVar('CARGO_TEST_BINARIES_FILES', True)
+    cargo_test_binaries_file = d.getVar('CARGO_TEST_BINARIES_FILES')
     bb.note(f"Found {len(test_bins)} tests, write their paths into {cargo_test_binaries_file}")
     with open(cargo_test_binaries_file, "w") as f:
         for test_bin in test_bins:
@@ -76,11 +77,12 @@ python do_compile_ptest_cargo() {
 
 python do_install_ptest_cargo() {
     import shutil
+    import textwrap
 
-    dest_dir = d.getVar("D", True)
-    pn = d.getVar("PN", True)
-    ptest_path = d.getVar("PTEST_PATH", True)
-    cargo_test_binaries_file = d.getVar('CARGO_TEST_BINARIES_FILES', True)
+    dest_dir = d.getVar("D")
+    pn = d.getVar("PN")
+    ptest_path = d.getVar("PTEST_PATH")
+    cargo_test_binaries_file = d.getVar('CARGO_TEST_BINARIES_FILES')
     rust_test_args = d.getVar('RUST_TEST_ARGS') or ""
 
     ptest_dir = os.path.join(dest_dir, ptest_path.lstrip('/'))
@@ -97,17 +99,29 @@ python do_install_ptest_cargo() {
         test_paths.append(os.path.join(ptest_path, os.path.basename(test_bin)))
 
     ptest_script = os.path.join(ptest_dir, "run-ptest")
-    if os.path.exists(ptest_script):
-        with open(ptest_script, "a") as f:
-            f.write(f"\necho \"\"\n")
-            f.write(f"echo \"## starting to run rust tests ##\"\n")
-            for test_path in test_paths:
-                f.write(f"{test_path} {rust_test_args}\n")
-    else:
-        with open(ptest_script, "a") as f:
+    script_exists = os.path.exists(ptest_script)
+    with open(ptest_script, "a") as f:
+        if not script_exists:
             f.write("#!/bin/sh\n")
-            for test_path in test_paths:
-                f.write(f"{test_path} {rust_test_args}\n")
+            f.write("rc=0\n")                
+        else:
+            f.write(f"\necho \"\"\n")
+            f.write(f"echo \"## starting to run rust tests ##\"\n")               
+        for test_path in test_paths:
+            script = textwrap.dedent(f"""\
+                if ! {test_path} {rust_test_args}
+                then
+                    rc=1
+                    echo "FAIL: {test_path}"
+                else
+                    echo "PASS: {test_path}"
+                fi
+            """)
+            f.write(script)
+        
+        f.write("exit $rc\n")
+
+    if not script_exists:
         os.chmod(ptest_script, 0o755)
 
     # this is chown -R root:root ${D}${PTEST_PATH}

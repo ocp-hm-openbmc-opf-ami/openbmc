@@ -4,10 +4,10 @@ The `runfvp` tool in meta-arm makes it easy to run Yocto Project disk images ins
 
 ## Running images with `runfvp`
 
-To build images with the FVP integration, the `fvpboot` class needs to be inherited.  If the machine does not do this explicitly it can be done in `local.conf`:
+To build images with the FVP integration, the `fvpboot` image class needs to be inherited.  If the machine does not do this explicitly it can be done in `local.conf`:
 
 ```
-INHERIT += "fvpboot"
+IMAGE_CLASSES += "fvpboot"
 ```
 
 The class will download the correct FVP and write a `.fvpconf` configuration file when an image is built.
@@ -58,6 +58,16 @@ The name of the recipe that provides the FVP executable set in `FVP_EXE`, for ex
 There are recipes for common FVPs in meta-arm already, and writing new recipes is trivial.  For FVPs which are free to download `fvp-base-a-aem.bb` is a good example. Some FVPs must be downloaded separately as they need an account on Arm's website.
 
 If `FVP_PROVIDER` is not set then it is assumed that `FVP_EXE` is installed on the host already.
+
+### `FVP_BINDIR`
+
+Optional parameter to configure the path of the FVP binary. For example, `fvp-base` uses path from the build host by default. This path can be customized by configuring like below.
+
+```
+FVP_BINDIR ?= "utilities/fvp/usr/bin"
+```
+
+Potential use case for this parameter configuration is to execute `runfvp` script without the need for bitbake environment initialization.
 
 ### `FVP_CONFIG`
 

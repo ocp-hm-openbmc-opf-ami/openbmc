@@ -1,0 +1,21 @@
+#!/bin/bash
+
+INTF_NAME="$1"
+NET_CONFIG_FILE="/etc/systemd/network/00-bmc-${INTF_NAME}.network"
+DHCPv6_SETTING_ADD="ClientIdentifier=duid\nIAID=0\nDUIDType=link-layer"
+
+if [ -f "$NET_CONFIG_FILE" ]; then
+    if ! grep -q "^DUIDType=" "$NET_CONFIG_FILE"; then
+        sed -i "/^\[DHCPv6\]/a $DHCPv6_SETTING_ADD" "$NET_CONFIG_FILE"
+        echo "Added LL settings to network configuration file."
+        echo "Restarting systemd-networkd service..."
+        systemctl restart systemd-networkd.service
+    else
+        echo "'DUIDType' already exists in $NET_CONFIG_FILE. Exiting..."
+    fi
+else
+    echo "File $NET_CONFIG_FILE not present."
+    exit 1
+fi
+
+exit 0

@@ -1,0 +1,8 @@
+[Unit]
+Description=mmc recovery service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/phosphor-gpio-monitor/mmc-recovery
+
+SyslogIdentifier=mmc-recovery

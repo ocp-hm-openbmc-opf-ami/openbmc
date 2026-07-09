@@ -1,9 +1,18 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-PACKAGECONFIG = " \
-    adcsensor \
-    hwmontempsensor \
-    psusensor \
-    nvmesensor \
-    fansensor \
+inherit obmc-phosphor-dbus-service
+
+FACEBOOK_REMOVED_DBUS_SENSORS:remove = " \
+    external \
 "
+
+PACKAGECONFIG:append = " \
+    nvmesensor \
+    smbpbi \
+"
+
+SYSTEMD_OVERRIDE:${PN}:append = "\
+    wait-host0-state-ready.conf:xyz.openbmc_project.hwmontempsensor.service.d/wait-host0-state-ready.conf \
+    wait-host0-state-ready.conf:xyz.openbmc_project.psusensor.service.d/wait-host0-state-ready.conf \
+    wait-host0-state-ready.conf:xyz.openbmc_project.smbpbisensor.service.d/wait-host0-state-ready.conf \
+    "

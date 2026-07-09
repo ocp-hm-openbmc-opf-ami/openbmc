@@ -12,14 +12,15 @@ BB_BRANCH ?= "main"
 SRC_URI = " \
     git://github.com/Nuvoton-Israel/npcm8xx-bootblock;branch=${BB_BRANCH};protocol=https"
 
-export CROSS_COMPILE="${TARGET_PREFIX}"
+export CROSS_COMPILE = "${TARGET_PREFIX}"
 CFLAGS[unexport] = "1"
 LDFLAGS[unexport] = "1"
 AS[unexport] = "1"
 LD[unexport] = "1"
 do_configure[noexec] = "1"
+OPTIONAL_FLAGS = ""
 
-EXTRA_OEMAKE += "CROSS_COMPILER_INC=${STAGING_DIR_HOST}${includedir}"
+EXTRA_OEMAKE += "CROSS_COMPILER_INC=${STAGING_DIR_HOST}${includedir} OPTIONAL_FLAGS=${OPTIONAL_FLAGS}"
 
 TIP = "${@'tip' if d.getVar("TIP_IMAGE") == 'True' else 'no_tip'}"
 BOOTBLOCK = "arbel_a35_bootblock"

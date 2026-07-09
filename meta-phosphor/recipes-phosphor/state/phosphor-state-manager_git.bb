@@ -36,8 +36,12 @@ SYSTEMD_PACKAGES = "${PN}-discover \
 "
 
 # Set the common defaults
-PACKAGECONFIG ??= "only-run-apr-on-power-loss \
-                   only-allow-boot-when-bmc-ready"
+PACKAGECONFIG ??= " \
+    only-run-apr-on-power-loss \
+    only-allow-boot-when-bmc-ready \
+    run-apr-on-software-reset \
+    install-utils \
+    "
 
 # Disable warm reboots of host
 PACKAGECONFIG[no-warm-reboot] = "-Dwarm-reboot=disabled,-Dwarm-reboot=enabled"
@@ -51,8 +55,24 @@ PACKAGECONFIG[only-run-apr-on-power-loss] = "-Donly-run-apr-on-power-loss=true,-
 # Only allow boot operations when BMC is in Ready state
 PACKAGECONFIG[only-allow-boot-when-bmc-ready] = "-Donly-allow-boot-when-bmc-ready=true,-Donly-allow-boot-when-bmc-ready=false"
 
+# Allow run APR when BMC has been rebooted due to pinhole action
+PACKAGECONFIG[run-apr-on-pinhole-reset] = "-Drun-apr-on-pinhole-reset=true,-Drun-apr-on-pinhole-reset=false"
+
+# Allow run APR when BMC has been rebooted due to watchdog
+PACKAGECONFIG[run-apr-on-watchdog-reset] = "-Drun-apr-on-watchdog-reset=true,-Drun-apr-on-watchdog-reset=false"
+
+# Allow run APR when BMC has been rebooted due to software request
+PACKAGECONFIG[run-apr-on-software-reset] = "-Drun-apr-on-software-reset=true,-Drun-apr-on-software-reset=false"
+
 # Enable host state GPIO
 PACKAGECONFIG[host-gpio] = "-Dhost-gpios=enabled,-Dhost-gpios=disabled,gpioplus"
+
+# Check firmware updating before do BMC/Chassis/Host transition
+PACKAGECONFIG[check-fwupdate-before-do-transition] = "-Dcheck-fwupdate-before-do-transition=enabled,-Dcheck-fwupdate-before-do-transition=disabled"
+
+PACKAGECONFIG[install-utils] = "-Dinstall-utils=enabled, -Dinstall-utils=disabled"
+
+PACKAGECONFIG[auto-reboot-on-bmc-quiesce] = "-Dauto-reboot-on-bmc-quiesce=enabled,-Dauto-reboot-on-bmc-quiesce=disabled"
 
 # The host-check function will check if the host is running
 # after a BMC reset.
@@ -115,6 +135,9 @@ FILES:${PN}-bmc += "${sysconfdir}/phosphor-systemd-target-monitor/phosphor-servi
 FILES:${PN}-bmc += "${bindir}/obmcutil"
 DBUS_SERVICE:${PN}-bmc += "xyz.openbmc_project.State.BMC.service"
 DBUS_SERVICE:${PN}-bmc += "obmc-bmc-service-quiesce@.target"
+SYSTEMD_SERVICE:${PN}-bmc += "phosphor-bmc-quiesce-reboot.service"
+FILES:${PN}-bmc += "${@bb.utils.contains('PACKAGECONFIG', 'auto-reboot-on-bmc-quiesce', '${systemd_system_unitdir}/obmc-bmc-service-quiesce@0.target.wants', '', d)}"
+FILES:${PN}-bmc += "${@bb.utils.contains('PACKAGECONFIG', 'auto-reboot-on-bmc-quiesce', '${systemd_system_unitdir}/obmc-bmc-service-quiesce@0.target.wants/phosphor-bmc-quiesce-reboot.service', '', d)}"
 
 FILES:${PN}-secure-check = "${bindir}/phosphor-secure-boot-check"
 SYSTEMD_SERVICE:${PN}-secure-check += "phosphor-bmc-security-check.service"
@@ -266,6 +289,6 @@ SYSTEMD_LINK:${PN}-obmc-targets += "${@compose_list_zip(d, 'RESET_FMT_CTRL', 'OB
 SYSTEMD_LINK[vardeps] += "OBMC_CHASSIS_INSTANCES OBMC_HOST_INSTANCES"
 
 SRC_URI = "git://github.com/openbmc/phosphor-state-manager;branch=master;protocol=https"
-SRCREV = "2eb6029cd9696b1db92c59e85a6752ac4ba4a5a0"
+SRCREV = "b26e5096b595a35015387f470330991fb2ebf1dc"
 
 S = "${WORKDIR}/git"

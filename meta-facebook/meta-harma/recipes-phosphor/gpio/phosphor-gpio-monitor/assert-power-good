@@ -1,7 +1,44 @@
 #!/bin/bash
 
-# Set Host Power Status Off
-busctl set-property xyz.openbmc_project.State.Host0 /xyz/openbmc_project/state/host0 xyz.openbmc_project.State.Host CurrentHostState s xyz.openbmc_project.State.Host.HostState.Off
+# shellcheck source=meta-facebook/meta-harma/recipes-phosphor/state/phosphor-state-manager/power-cmd
+source /usr/libexec/phosphor-state-manager/power-cmd
 
+# Check SGPIO validity
+if ! check_valid_sgpio; then
+    exit 0
+fi
+
+# Sync Led status to on
 systemctl start obmc-led-group-stop@power_on.service
+
+# Get current host state
+current_state=$(busctl get-property \
+    xyz.openbmc_project.State.Host0 \
+    /xyz/openbmc_project/state/host0 \
+    xyz.openbmc_project.State.Host \
+    CurrentHostState | awk '{print $2}' | tr -d '"')
+
+# Exit if host is already transitioning off
+if [ "$current_state" = "xyz.openbmc_project.State.Host.HostState.TransitioningToOff" ]; then
+    exit 0
+fi
+
+# List of services that block power_off_sync
+block_services=(
+    host-graceful-poweroff@0.service
+    host-force-poweroff@0.service
+    host-powerreset@0.service
+)
+
+# Exit if any blocking service is not inactive
+for svc in "${block_services[@]}"; do
+    if [ "$(systemctl is-active "$svc")" != "inactive" ]; then
+        exit 0
+    fi
+done
+
+# Safe to power off
+# Wait 3 seconds, checking every second
+power_off_sync 3 1
+
 exit 0

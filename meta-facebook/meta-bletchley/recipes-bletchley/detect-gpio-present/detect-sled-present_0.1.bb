@@ -6,6 +6,9 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 
 inherit obmc-phosphor-systemd
 
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
+
 DEPENDS += "systemd"
 RDEPENDS:${PN} += " bash phosphor-gpio-monitor-presence"
 
@@ -17,24 +20,24 @@ SRC_URI = " file://detect-sled-present \
 
 do_install() {
     install -d ${D}${bindir}
-    install -m 0755 ${WORKDIR}/detect-sled-present ${D}${bindir}/
+    install -m 0755 ${UNPACKDIR}/detect-sled-present ${D}${bindir}/
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/detect-sled-present@.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/bletchley-sled-insertion@.target ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/bletchley-sled-removal@.target ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/detect-sled-present@.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/bletchley-sled-insertion@.target ${D}${systemd_system_unitdir}
+    install -m 0644 ${UNPACKDIR}/bletchley-sled-removal@.target ${D}${systemd_system_unitdir}
 }
 
 TGT = "${SYSTEMD_DEFAULT_TARGET}"
 
-SLED_PRESENT_INSTFMT="../detect-sled-present@.service:${TGT}.wants/detect-sled-present@{0}.service"
+SLED_PRESENT_INSTFMT = "../detect-sled-present@.service:${TGT}.wants/detect-sled-present@{0}.service"
 SYSTEMD_SERVICE:${PN} += "detect-sled-present@.service"
 SYSTEMD_LINK:${PN} += "${@compose_list(d, 'SLED_PRESENT_INSTFMT', 'OBMC_HOST_INSTANCES')}"
 
-SLED_INSERT_INSTFMT="../bletchley-sled-insertion@.target:${TGT}.wants/bletchley-sled-insertion@{0}.target"
+SLED_INSERT_INSTFMT = "../bletchley-sled-insertion@.target:${TGT}.wants/bletchley-sled-insertion@{0}.target"
 SYSTEMD_SERVICE:${PN} += "bletchley-sled-insertion@.target"
 SYSTEMD_LINK:${PN} += "${@compose_list(d, 'SLED_INSERT_INSTFMT', 'OBMC_HOST_INSTANCES')}"
 
-SLED_REMOVE_INSTFMT="bletchley-sled-removal@.target:bletchley-sled-removal@{0}.target"
+SLED_REMOVE_INSTFMT = "bletchley-sled-removal@.target:bletchley-sled-removal@{0}.target"
 SYSTEMD_SERVICE:${PN} += "bletchley-sled-removal@.target"
 SYSTEMD_LINK:${PN} += "${@compose_list(d, 'SLED_REMOVE_INSTFMT', 'OBMC_HOST_INSTANCES')}"

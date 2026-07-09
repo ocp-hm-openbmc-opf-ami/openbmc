@@ -13,7 +13,6 @@ PACKAGES = " \
         ${PN}-extras \
         ${PN}-devtools \
         ${PN}-fan-control \
-        ${PN}-fru-ipmi \
         ${PN}-health-monitor \
         ${PN}-host-state-mgmt \
         ${PN}-ikvm \
@@ -33,6 +32,7 @@ PACKAGES = " \
         ${PN}-user-mgmt-ldap \
         ${PN}-dmtf-pmci \
         ${PN}-webui \
+        ${PN}-tpm \
         "
 
 SUMMARY:${PN}-bmc-state-mgmt = "BMC state management"
@@ -91,11 +91,6 @@ SUMMARY:${PN}-fan-control = "Fan control"
 RDEPENDS:${PN}-fan-control = " \
         ${VIRTUAL-RUNTIME_obmc-fan-control} \
         phosphor-fan-monitor \
-        "
-
-SUMMARY:${PN}-fru-ipmi = "Support for EEPROMS with IPMI FRU"
-RDEPENDS:${PN}-fru-ipmi = " \
-        fru-device \
         "
 
 SUMMARY:${PN}-health-monitor = "Support for health monitoring"
@@ -188,10 +183,13 @@ RRECOMMENDS:${PN}-user-mgmt = " \
         "
 
 SUMMARY:${PN}-user-mgmt-ldap = "LDAP users and groups support"
-RDEPENDS:${PN}-user-mgmt-ldap = " \
+LDAP_PACKAGE_SET = " \
         ${PN}-user-mgmt \
         nss-pam-ldapd \
         phosphor-ldap \
+        "
+RDEPENDS:${PN}-user-mgmt-ldap = " \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'ldap', '${LDAP_PACKAGE_SET}', '', d)} \
         "
 
 SUMMARY:${PN}-dmtf-pmci = "DMTF PMCI Protocol Implementations"
@@ -202,3 +200,8 @@ RDEPENDS:${PN}-dmtf-pmci:append:df-mctp = " mctp"
 SUMMARY:${PN}-webui = "Web User Interface support"
 RDEPENDS:${PN}-webui = "webui-vue"
 RDEPENDS:${PN}-webui:df-phosphor-no-webui = ""
+
+SUMMARY:${PN}-tpm = "TPM applications"
+RDEPENDS:${PN}-tpm:append = " \
+         ${@bb.utils.contains_any('MACHINE_FEATURES', 'tpm1 tpm2', 'packagegroup-openbmc-tpm', '', d)} \
+         "

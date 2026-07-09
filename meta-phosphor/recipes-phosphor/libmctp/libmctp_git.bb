@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=0d30807bb7a4f16d36e96b78f9ed8fae"
 DEPENDS += "autoconf-archive-native \
             systemd \
            "
-SRCREV = "2f1a1f66dae8752e386d55ab25f244d88d626e8c"
+SRCREV = "01934b6f47c477f2e72e5ed2fcc316487558dda9"
 PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} pcap"
 PACKAGECONFIG[systemd] = "--with-systemdsystemunitdir=${systemd_system_unitdir}, \
                           --without-systemdsystemunitdir,systemd"
@@ -27,7 +27,7 @@ inherit autotools pkgconfig
 
 do_install:append() {
         install -d ${D}${sysconfdir}/default
-        install -m 0644 ${WORKDIR}/default ${D}${sysconfdir}/default/mctp
+        install -m 0644 ${UNPACKDIR}/default ${D}${sysconfdir}/default/mctp
 }
 
 CONFFILES:${PN} = "${sysconfdir}/default/mctp"

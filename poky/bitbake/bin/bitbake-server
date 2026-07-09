@@ -9,6 +9,7 @@ import os
 import sys
 import warnings
 warnings.simplefilter("default")
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*use.of.fork.*may.lead.to.deadlocks.in.the.child.*")
 import logging
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])), 'lib'))
 
@@ -38,9 +39,9 @@ if xmlrpcinterface[0] == "None":
 with open('/dev/null', 'r') as si:
     os.dup2(si.fileno(), sys.stdin.fileno())
 
-so = open(logfile, 'a+')
-os.dup2(so.fileno(), sys.stdout.fileno())
-os.dup2(so.fileno(), sys.stderr.fileno())
+with open(logfile, 'a+') as so:
+    os.dup2(so.fileno(), sys.stdout.fileno())
+    os.dup2(so.fileno(), sys.stderr.fileno())
 
 # Have stdout and stderr be the same so log output matches chronologically
 # and there aren't two seperate buffers

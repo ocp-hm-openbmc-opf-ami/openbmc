@@ -9,6 +9,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 DEPENDS += " \
     ${PYTHON_PN}-inflection-native \
+    ${PYTHON_PN}-jsonschema-native \
     ${PYTHON_PN}-mako-native \
     ${PYTHON_PN}-pyyaml-native \
     "
@@ -18,10 +19,11 @@ PYPI_PACKAGE = "sdbusplus"
 
 S = "${WORKDIR}/git/tools"
 
-inherit setuptools3
+inherit python_setuptools_build_meta
 
 RDEPENDS:${PN} += " \
     ${PYTHON_PN}-inflection \
+    ${PYTHON_PN}-jsonschema \
     ${PYTHON_PN}-mako \
     ${PYTHON_PN}-pyyaml \
     "

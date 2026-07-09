@@ -13,8 +13,9 @@ DEPENDS += " \
   boost \
   sdbusplus \
   systemd \
+  phosphor-dbus-interfaces \
   "
-SRCREV = "5a18f10751278f3dc6e44a6e3bdf28aa1efb2bef"
+SRCREV = "5bafde6f7769e314feb7d091d50f20f6631fbb06"
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[log-threshold] = "-Dlog-threshold=true,-Dlog-threshold=false,"
 PACKAGECONFIG[log-pulse] = "-Dlog-pulse=true,-Dlog-pulse=false,"
@@ -26,8 +27,10 @@ PACKAGECONFIG[sel-delete] = "-Dsel-delete=true,-Dsel-delete=false"
 PV = "0.1+git${SRCPV}"
 
 SRC_URI = "git://github.com/openbmc/phosphor-sel-logger.git;protocol=https;branch=master"
+RDEPENDS:${PN} = "${@bb.utils.contains('PACKAGECONFIG', 'send-to-logger', '', 'rsyslog', d)}"
 
 S = "${WORKDIR}/git"
+FILES:${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'send-to-logger', '', '${sysconfdir}/rsyslog.d/phosphor-sel-logger.conf', d)}"
 SYSTEMD_SERVICE:${PN} += "xyz.openbmc_project.Logging.IPMI.service"
 
 inherit pkgconfig meson systemd

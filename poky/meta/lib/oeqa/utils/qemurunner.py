@@ -30,6 +30,8 @@ control_range = list(range(0,32))+list(range(127,160))
 control_chars = [chr(x) for x in control_range
                 if chr(x) not in string.printable]
 re_control_char = re.compile('[%s]' % re.escape("".join(control_chars)))
+# Regex to remove the ANSI (color) control codes from console strings in order to match the text only
+re_vt100 = re.compile(r'(\x1b\[|\x9b)[^@-_a-z]*[@-_a-z]|\x1b[@-_a-z]')
 
 def getOutput(o):
     import fcntl
@@ -101,7 +103,7 @@ class QemuRunner:
 
         # Only override patterns that were set e.g. login user TESTIMAGE_BOOT_PATTERNS[send_login_user] = "webserver\n"
         for pattern in accepted_patterns:
-            if not self.boot_patterns[pattern]:
+            if pattern not in self.boot_patterns or not self.boot_patterns[pattern]:
                 self.boot_patterns[pattern] = default_boot_patterns[pattern]
 
     def create_socket(self):
@@ -265,12 +267,15 @@ class QemuRunner:
             self.monitorpipe = os.fdopen(w, "w")
         else:
             # child process
-            os.setpgrp()
-            os.close(w)
-            r = os.fdopen(r)
-            x = r.read()
-            os.killpg(os.getpgid(self.runqemu.pid), signal.SIGTERM)
-            os._exit(0)
+            try:
+                os.setpgrp()
+                os.close(w)
+                r = os.fdopen(r)
+                x = r.read()
+                os.killpg(os.getpgid(self.runqemu.pid), signal.SIGTERM)
+            finally:
+                # We must exit under all circumstances
+                os._exit(0)
 
         self.logger.debug("runqemu started, pid is %s" % self.runqemu.pid)
         self.logger.debug("waiting at most %d seconds for qemu pid (%s)" %
@@ -519,7 +524,6 @@ class QemuRunner:
                 except Exception as e:
                     self.logger.warning('Extra log data exception %s' % repr(e))
                     data = None
-            self.thread.serial_lock.release()
             return False
 
         with self.thread.serial_lock:
@@ -533,7 +537,7 @@ class QemuRunner:
                 self.logger.debug("Logged in as %s in serial console" % self.boot_patterns['send_login_user'].replace("\n", ""))
                 if netconf:
                     # configure guest networking
-                    cmd = "ifconfig eth0 %s netmask %s up\n" % (self.ip, self.netmask)
+                    cmd = "ip addr add %s/%s dev eth0\nip link set dev eth0 up\n" % (self.ip, self.netmask)
                     output = self.run_serial(cmd, raw=True)[1]
                     if re.search(r"root@[a-zA-Z0-9\-]+:~#", output):
                         self.logger.debug("configured ip address %s", self.ip)
@@ -681,7 +685,7 @@ class QemuRunner:
                     time.sleep(0.1)
                     answer = self.server_socket.recv(1024)
                     if answer:
-                        data += answer.decode('utf-8')
+                        data += re_vt100.sub("", answer.decode('utf-8'))
                         # Search the prompt to stop
                         if re.search(self.boot_patterns['search_cmd_finished'], data):
                             break
@@ -745,8 +749,10 @@ class LoggingThread(threading.Thread):
     def threadtarget(self):
         try:
             self.eventloop()
-        except Exception as e:
-            self.logger.warning("Exception %s in logging thread" % traceback.format_exception(e))
+        except Exception:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.logger.warning("Exception %s in logging thread" %
+                                traceback.format_exception(exc_type, exc_value, exc_traceback))
         finally:
             self.teardown()
 
@@ -822,10 +828,12 @@ class LoggingThread(threading.Thread):
                     self.logfunc(data, ".stdout")
                 elif self.serialsock and self.serialsock.fileno() == fd:
                     if self.serial_lock.acquire(blocking=False):
-                        data = self.recv(1024, self.serialsock)
-                        self.logger.debug("Data received serial thread %s" % data.decode('utf-8', 'replace'))
-                        self.logfunc(data, ".2")
-                        self.serial_lock.release()
+                        try:
+                            data = self.recv(1024, self.serialsock)
+                            self.logger.debug("Data received serial thread %s" % data.decode('utf-8', 'replace'))
+                            self.logfunc(data, ".2")
+                        finally:
+                            self.serial_lock.release()
                     else:
                         serial_registered = False
                         poll.unregister(self.serialsock.fileno())

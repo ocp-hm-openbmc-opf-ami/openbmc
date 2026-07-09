@@ -199,12 +199,12 @@ class Rootfs(object, metaclass=ABCMeta):
             if command in commands:
                 commands.remove(command)
                 commands.append(command)
-            return "".join(commands)
+            return " ".join(commands)
 
         # We want this to run as late as possible, in particular after
         # systemd_sysusers_create and set_user_group. Using :append is not enough
-        make_last("tidy_shadowutils_files", post_process_cmds)
-        make_last("rootfs_reproducible", post_process_cmds)
+        post_process_cmds = make_last("tidy_shadowutils_files", post_process_cmds)
+        post_process_cmds = make_last("rootfs_reproducible", post_process_cmds)
 
         execute_pre_post_process(self.d, pre_process_cmds)
 
@@ -269,7 +269,11 @@ class Rootfs(object, metaclass=ABCMeta):
                 self.pm.remove(["run-postinsts"])
 
         image_rorfs = bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs",
+                                        True, False, self.d) and \
+                      not bb.utils.contains("IMAGE_FEATURES",
+                                        "read-only-rootfs-delayed-postinsts",
                                         True, False, self.d)
+
         image_rorfs_force = self.d.getVar('FORCE_RO_REMOVE')
 
         if image_rorfs or image_rorfs_force == "1":
@@ -358,11 +362,12 @@ class Rootfs(object, metaclass=ABCMeta):
 
             versioned_modules_dir = os.path.join(self.image_rootfs, modules_dir, kernel_ver)
 
-            bb.utils.mkdirhier(versioned_modules_dir)
-
-            bb.note("Running depmodwrapper for %s ..." % versioned_modules_dir)
-            if self._exec_shell_cmd(['depmodwrapper', '-a', '-b', self.image_rootfs, kernel_ver, kernel_package_name]):
-                bb.fatal("Kernel modules dependency generation failed")
+            if os.path.exists(versioned_modules_dir):
+                bb.note("Running depmodwrapper for %s ..." % versioned_modules_dir)
+                if self._exec_shell_cmd(['depmodwrapper', '-a', '-b', self.image_rootfs, kernel_ver, kernel_package_name]):
+                    bb.fatal("Kernel modules dependency generation failed")
+            else:
+                bb.note("Not running depmodwrapper for %s since directory does not exist" % versioned_modules_dir)
 
     """
     Create devfs:
@@ -423,12 +428,3 @@ def image_list_installed_packages(d, rootfs_dir=None):
     import importlib
     cls = importlib.import_module('oe.package_manager.' + img_type)
     return cls.PMPkgsList(d, rootfs_dir).list_pkgs()
-
-if __name__ == "__main__":
-    """
-    We should be able to run this as a standalone script, from outside bitbake
-    environment.
-    """
-    """
-    TBD
-    """

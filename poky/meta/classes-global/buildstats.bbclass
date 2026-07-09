@@ -188,14 +188,17 @@ python run_buildstats () {
     # bitbake fires HeartbeatEvent even before a build has been
     # triggered, causing BUILDNAME to be None
     ########################################################################
-    if bn is not None:
-        bsdir = os.path.join(d.getVar('BUILDSTATS_BASE'), bn)
-        taskdir = os.path.join(bsdir, d.getVar('PF'))
-        if isinstance(e, bb.event.HeartbeatEvent) and bb.utils.to_boolean(d.getVar("BB_LOG_HOST_STAT_ON_INTERVAL")):
+    if bn is None:
+        return
+
+    bsdir = os.path.join(d.getVar('BUILDSTATS_BASE'), bn)
+    taskdir = os.path.join(bsdir, d.getVar('PF'))
+    if isinstance(e, bb.event.HeartbeatEvent):
+        if bb.utils.to_boolean(d.getVar("BB_LOG_HOST_STAT_ON_INTERVAL")):
             bb.utils.mkdirhier(bsdir)
             write_host_data(os.path.join(bsdir, "host_stats_interval"), e, d, "interval")
 
-    if isinstance(e, bb.event.BuildStarted):
+    elif isinstance(e, bb.event.BuildStarted):
         ########################################################################
         # If the kernel was not configured to provide I/O statistics, issue
         # a one time warning.
@@ -234,7 +237,7 @@ python run_buildstats () {
                 if cpu:
                     f.write("CPU usage: %0.1f%% \n" % cpu)
 
-    if isinstance(e, bb.build.TaskStarted):
+    elif isinstance(e, bb.build.TaskStarted):
         set_timedata("__timedata_task", d, e.time)
         bb.utils.mkdirhier(taskdir)
         # write into the task event file the name and start time
@@ -276,7 +279,7 @@ addhandler run_buildstats
 run_buildstats[eventmask] = "bb.event.BuildStarted bb.event.BuildCompleted bb.event.HeartbeatEvent bb.build.TaskStarted bb.build.TaskSucceeded bb.build.TaskFailed"
 
 python runqueue_stats () {
-    import buildstats
+    import oe.buildstats
     from bb import event, runqueue
     # We should not record any samples before the first task has started,
     # because that's the first activity shown in the process chart.
@@ -286,7 +289,7 @@ python runqueue_stats () {
     # closed when the build is done.
     system_stats = d.getVar('_buildstats_system_stats', False)
     if not system_stats and isinstance(e, (bb.runqueue.sceneQueueTaskStarted, bb.runqueue.runQueueTaskStarted)):
-        system_stats = buildstats.SystemStats(d)
+        system_stats = oe.buildstats.SystemStats(d)
         d.setVar('_buildstats_system_stats', system_stats)
     if system_stats:
         # Ensure that we sample at important events.

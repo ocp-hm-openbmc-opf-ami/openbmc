@@ -2,10 +2,26 @@
 
 # shellcheck source=meta-facebook/recipes-fb/obmc_functions/files/fb-common-functions
 source /usr/libexec/fb-common-functions
+renice -10 $$
+
+check_valid_sgpio() {
+    sgpio_vaild0=$(get_gpio "power-card-enable")
+    sgpio_vaild1=$(get_gpio "power-12v-memory-good")
+    sgpio_vaild2=$(get_gpio "power-pvdd33-s5")
+
+    if [[ "$sgpio_vaild0" == "0" && "$sgpio_vaild1" == "0" && "$sgpio_vaild2" == "1" ]]; then
+        return 0  # true
+    else
+        return 1  # false
+    fi
+}
 
 # Power Good Status
 power_status() {
-    if [ "$(get_gpio "host0-ready")" -eq 1 ]; then
+    check_valid_sgpio
+    valid_sgpio=$?
+
+    if [ "$(get_gpio "host0-ready")" -eq 1 ] && [ "$valid_sgpio" -eq 0 ] ; then
         echo "on"
     else
         echo "off"
@@ -18,7 +34,32 @@ force_power_off() {
         set_gpio power-host-control 0
         sleep 6
         set_gpio power-host-control 1
+        sleep 6
+    fi
+
+    # Workaround for AMD force shutdown failure.
+    if [ "$(power_status)" == "on" ]; then
+        set_gpio reset-control 0
         sleep 1
+        set_gpio reset-control 1
+        sleep 3
+
+        set_gpio power-host-control 0
+        sleep 1
+        set_gpio power-host-control 1
+        sleep 1
+
+        for i in $(seq 1 10)
+        do
+            sleep 1
+            if [ "$(power_status)" == "off" ]; then
+               return 0
+            fi
+
+            if [ "$i" -eq 10 ]; then
+               return 1
+            fi
+        done
     fi
 }
 
@@ -31,10 +72,13 @@ graceful_power_off() {
         sleep 1
 
         # wait host power off
-        sleep 10
-        if [ "$(power_status)" == "on" ]; then
-            force_power_off
-        fi
+        for i in $(seq 1 20)
+        do
+            sleep 1
+            if [ "$(power_status)" == "off" ]; then
+               break
+            fi
+        done
     fi
 }
 
@@ -60,3 +104,104 @@ power_on() {
     fi
     return 0
 }
+
+# Host reset
+power_reset() {
+    set_gpio reset-control 0
+    sleep 1
+    set_gpio reset-control 1
+    sleep 1
+    return 0
+}
+
+# Sync power state to "off" for abnormal power loss.
+power_off_sync() {
+    local timeout=${1:-8}   # default 8 seconds if not provided
+    local delay=${2:-1}     # default 1 second interval if not provided
+
+    for ((i=0; i<timeout; i++)); do
+        local status
+        status=$(power_status)
+        if [ "$status" != "off" ]; then
+            return
+        fi
+        sleep "$delay"
+    done
+
+    local transition
+    transition=$(busctl get-property \
+        xyz.openbmc_project.State.Host0 \
+        /xyz/openbmc_project/state/host0 \
+        xyz.openbmc_project.State.Host \
+        RequestedHostTransition | awk '{print $2}' | tr -d '"')
+
+    if [ "$transition" != "xyz.openbmc_project.State.Host.Transition.Off" ] && [ "$(power_status)" == "off" ]; then
+        busctl set-property xyz.openbmc_project.State.Host0 \
+            /xyz/openbmc_project/state/host0 \
+            xyz.openbmc_project.State.Host \
+            RequestedHostTransition s \
+            xyz.openbmc_project.State.Host.Transition.Off
+    fi
+}
+
+# Sync power status to "On" for abnormal power-on scenarios.
+power_on_sync() {
+    local timeout=${1:-3}   # default 3 seconds if not provided
+    local delay=${2:-1}     # default 1 second interval if not provided
+
+    for ((i=0; i<timeout; i++)); do
+        local status
+        status=$(power_status)
+        if [ "$status" != "on" ]; then
+            return
+        fi
+        sleep "$delay"
+    done
+
+    local transition
+    transition=$(busctl get-property \
+        xyz.openbmc_project.State.Host0 \
+        /xyz/openbmc_project/state/host0 \
+        xyz.openbmc_project.State.Host \
+        RequestedHostTransition | awk '{print $2}' | tr -d '"')
+
+    if [ "$transition" != "xyz.openbmc_project.State.Host.Transition.On" ] && [ "$(power_status)" == "on" ]; then
+        busctl set-property xyz.openbmc_project.State.Host0 \
+            /xyz/openbmc_project/state/host0 \
+            xyz.openbmc_project.State.Host \
+            RequestedHostTransition s \
+            xyz.openbmc_project.State.Host.Transition.On
+    fi
+}
+
+# Main execution
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    case "$1" in
+        force_off)
+            force_power_off
+            ;;
+        graceful_off)
+            graceful_power_off
+            ;;
+        power_on)
+            power_on
+            ;;
+        power_reset)
+            power_reset
+            ;;
+        off_sync)
+            power_off_sync "$2" "$3"
+            ;;
+        on_sync)
+            power_on_sync "$2" "$3"
+            ;;
+        status)
+            power_status
+            ;;
+        *)
+            echo "Usage: $0 {force_off|graceful_off|power_on|power_reset|off_sync|on_sync|status}"
+            exit 0
+            ;;
+    esac
+fi
+

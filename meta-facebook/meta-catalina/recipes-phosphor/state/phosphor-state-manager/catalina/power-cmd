@@ -1,0 +1,343 @@
+#!/bin/bash
+
+# shellcheck source=meta-facebook/recipes-fb/obmc_functions/files/fb-common-functions
+source /usr/libexec/fb-common-functions
+
+phosphor_log() {
+    busctl call \
+        xyz.openbmc_project.Logging \
+        /xyz/openbmc_project/logging \
+        xyz.openbmc_project.Logging.Create \
+        Create "ssa{ss}" "$1" "$2" 0
+}
+
+phosphor_log_err() {
+    local msg=$1
+    local logErr="xyz.openbmc_project.Logging.Entry.Level.Error"
+    phosphor_log "$msg" "$logErr"
+}
+
+phosphor_log_info() {
+    local msg=$1
+    local logInfo="xyz.openbmc_project.Logging.Entry.Level.Informational"
+    phosphor_log "$msg" "$logInfo"
+}
+
+check_pdb_cpld_reg() {
+    local output
+    output=$(i2ctransfer -y -f 14 w1@0x1e 0x00 r16)
+    echo "Raw PDB CPLD reg[0:15]: $output"
+
+    # Clean and split the hex values into an array
+    local hex_array=()
+    read -ra hex_array <<< "$output"
+
+    for ((i = 0; i < ${#hex_array[@]}; i++)); do
+        reg[i]=$((16#${hex_array[i]#0x}))
+    done
+
+    local log_msg="PDB CPLD State: "
+    local master_state=""
+    master_state="0x$(printf "%02x" $(( reg[13] & 0x0F )))"
+
+    # Helper to convert 0/1 to "assert"/"deassert"
+    signal_state() {
+        [[ $1 -eq 1 ]] && echo "deassert" || echo "assert"
+    }
+
+    case "$master_state" in
+        0x0e)
+            log_msg+="System leak (0x0e)"
+            # reg[3], bit 3, wCHASSIS0_LEAK_Q_N_PLD_db
+            log_msg+=", wCHASSIS0_LEAK_Q_N_PLD_db $(signal_state $(( (reg[3] >> 3) & 0x01 )))"
+            # reg[3], bit 2, wCHASSIS1_LEAK_Q_N_PLD_db
+            log_msg+=", wCHASSIS1_LEAK_Q_N_PLD_db $(signal_state $(( (reg[3] >> 2) & 0x01 )))"
+            # reg[3], bit 1, wCHASSIS2_LEAK_Q_N_PLD_db
+            log_msg+=", wCHASSIS2_LEAK_Q_N_PLD_db $(signal_state $(( (reg[3] >> 1) & 0x01 )))"
+            # reg[3], bit 0, wCHASSIS3_LEAK_Q_N_PLD_db
+            log_msg+=", wCHASSIS3_LEAK_Q_N_PLD_db $(signal_state $(( (reg[3] >> 0) & 0x01 )))"
+            ;;
+        0x09)
+            log_msg+="Idle (0x09)"
+            # reg[11], bit 7, PWRGD_P3V3_AUX_PLD
+            log_msg+=", PWRGD_P3V3_AUX_PLD $(signal_state $(( (reg[11] >> 7) & 0x01 )))"
+            ;;
+        0x07)
+            log_msg+="Standby power ready (0x07)"
+            # reg[11], bit 6, PWRGD_P12V_AUX_PLD_ISO_R
+            log_msg+=", PWRGD_P12V_AUX_PLD_ISO_R $(signal_state $(( (reg[11] >> 6) & 0x01 )))"
+            ;;
+        0x05)
+            log_msg+="FANx enabled (0x05)"
+            # reg[11], bit 4, PWRGD_P12V_AUX_FAN_PLD
+            log_msg+=", PWRGD_P12V_AUX_FAN_PLD $(signal_state $(( (reg[11] >> 4) & 0x01 )))"
+            # reg[11], bit 3, wFM_MAIN_PWREN_RMC_EN_ISO_R_config
+            log_msg+=", wFM_MAIN_PWREN_RMC_EN_ISO_R_config $(signal_state $(( (reg[11] >> 3) & 0x01 )))"
+            # reg[11], bit 2, PDB_P12V_EN_N_ISO_PLD_R
+            log_msg+=", PDB_P12V_EN_N_ISO_PLD_R $(signal_state $(( (reg[11] >> 2) & 0x01 )))"
+            ;;
+        0x03)
+            log_msg+="Waiting for Main P12V power ready (0x03)"
+            # reg[12], bit 5, NODEA_NODEB_PWOK_PLD_ISO_R
+            log_msg+=", NODEA_NODEB_PWOK_PLD_ISO_R $(signal_state $(( (reg[12] >> 5) & 0x01 )))"
+            ;;
+        0x01)
+            log_msg+="Waiting for Host PERST Deassert (0x01)"
+            # reg[7], bit 1, OCP_SFF_PERST_FROM_HOST_ISO_PLD_N
+            log_msg+=", OCP_SFF_PERST_FROM_HOST_ISO_PLD_N $(signal_state $(( (reg[7] >> 1) & 0x01 )))"
+            # reg[9], bit 1, OCP_V3_2_PERST_FROM_HOST_ISO_PLD_N
+            log_msg+=", OCP_V3_2_PERST_FROM_HOST_ISO_PLD_N $(signal_state $(( (reg[9] >> 1) & 0x01 )))"
+            ;;
+        *)
+            log_msg+="Unexpected state ($master_state)"
+            ;;
+    esac
+
+    echo "$log_msg"
+    phosphor_log_err "$log_msg"
+}
+
+get_pdb_cpld_ver()
+{
+    local pdb_cpld_ver=""
+
+    pdb_cpld_ver="$(busctl get-property xyz.openbmc_project.Settings /xyz/openbmc_project/software/chassis/Catalina_PDB_cpld xyz.openbmc_project.Software.Version Version | awk '{print $2}' | tr -d '"')"
+    if [ "$pdb_cpld_ver" != "" ]; then
+        # Use the version record on settings service if avilable
+        echo "$pdb_cpld_ver"
+        return 0
+    fi
+
+    # Try i2ctransfer to get cpld version, echo empty string if failed
+    if ! pdb_cpld_ver="$(i2ctransfer -y -f 14 w4@0x40 0xc0 0x00 0x00 0x00 r4)"; then
+        echo ""
+        return 1
+    fi
+
+    echo "$pdb_cpld_ver" | awk '{printf "%02x%02x%02x%02x\n", $1, $2, $3, $4}'
+    return 0
+}
+
+is_rmc_main_power_disable()
+{
+    local pdb_cpld_ver=""
+    local reg_val=""
+
+    if ! pdb_cpld_ver="$(get_pdb_cpld_ver)"; then
+        # unable to get pdb cpld version
+        # assume rmc main power is enabled
+        echo "[DEBUG] unable to get pdb cpld version"
+        return 1
+    fi
+
+    if (( $((16#$pdb_cpld_ver)) < 0x10000 )); then
+        # unable to check rmc main power state with pdb cpld version less than 0x10000
+        # assume rmc main power is enabled
+        echo "[DEBUG] pdb cpld version less than 0x10000"
+        return 1
+    fi
+
+    if ! reg_val="$(i2ctransfer -y -f 14 w1@0x12 0x01 r1)"; then
+        # failed to get rmc main power state from cpld ioexp
+        # assume rmc main power is enabled
+        echo "[DEBUG] failed to get rmc main power state from cpld ioexp"
+        return 1
+    fi
+
+    # check bit[1]
+    # 0: rmc main power disabled
+    # 1: rmc main power enabled
+    if (( (reg_val & 0x02) == 0x02 )); then
+        echo "[DEBUG] rmc main power is enabled"
+        return 1
+    fi
+
+    echo "[DEBUG] rmc main power is disabled"
+    return 0
+}
+
+chassis_power_cycle_xdp710()
+{
+    i2cset -f -y 20 0x13 0xec
+    ret1=$?
+
+    i2cset -f -y 20 0x1c 0xec
+    ret2=$?
+
+    if [ "$ret1" -ne 0 ] || [ "$ret2" -ne 0 ]; then
+        return 1
+    fi
+    return 0
+}
+
+chassis_power_cycle_ltc4287()
+{
+    if ! i2cset -f -y 20 0x42 0xfd 0x04; then
+        echo "48V HSC1 set reboot delay failed"
+        return 1
+    fi
+
+    if ! i2cset -f -y 20 0x43 0xfd 0x04; then
+        echo "48V HSC2 set reboot delay failed"
+        return 1
+    fi
+
+    if ! i2cset -f -y 20 0x42 0xfd 0x0c; then
+        echo "48V HSC1 set reboot bit failed"
+        return 1
+    fi
+
+    if ! i2cset -f -y 20 0x43 0xfd 0x0c; then
+        echo "48V HSC2 set reboot bit failed"
+        return 1
+    fi
+
+    return 0
+}
+
+chassis_power_cycle()
+{
+    # There are two HSCs on the PDB board, and the BMC uses the i2cset command
+    # to power cycle them one by one. Occasionally, the BMC logs a fault during
+    # the AC cycle, which is caused by a small time gap between the power cycles
+    # of the two HSCs.
+    # To prevent false alerts from the GPIO monitor due to this gap, we will add
+    # a workaround to stop the GPIO monitor before initiating the chassis power
+    # cycle.
+    systemctl stop phosphor-multi-gpio-monitor.service
+
+    if [ "$(i2cdetect -y -q 20 0x13 0x13 | grep "10:" | awk '{print $2}')" != "--" ]; then
+        # run 2nd source power cycle if 20-0013 exist
+        chassis_power_cycle_xdp710
+        ret=$?
+    else
+        # run main source power cycle
+        chassis_power_cycle_ltc4287
+        ret=$?
+    fi
+
+    sleep 5
+
+    # Restart gpio monitor service in case chassis power cycle failed.
+    # Normally, we should not run into this line.    
+    systemctl start phosphor-multi-gpio-monitor.service
+
+    return $ret
+}
+
+chassis_power_on()
+{
+    # MB stabdby power should enabled by before BMC ready
+    # So only do checking here.
+    if [ "$(chassis_power_status)" != "on" ]; then
+        return 1
+    fi
+    return 0
+}
+
+chassis_power_status()
+{
+    if [ "$(get_gpio "STBY_POWER_PG_3V3")" -eq 1 ]; then
+        echo "on"
+    else
+        echo "off"
+    fi
+}
+
+host_power_on()
+{
+    if is_rmc_main_power_disable; then
+        # Sleep for 10 seconds to avoid rapid consecutive retries
+        sleep 10
+        return 2
+    fi
+
+    if [ "$(host_power_status)" == "off" ]; then
+        press_host_power_button "on" 1
+        if ! wait_host_power_change "on" 20; then
+            check_pdb_cpld_reg
+            return 1
+        fi
+    fi
+    return 0
+}
+
+host_force_power_off()
+{
+    if [ "$(host_power_status)" == "on" ]; then
+        press_host_power_button "off" 8
+        if ! wait_host_power_change "off" 20; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+host_graceful_power_off()
+{
+    if [ "$(host_power_status)" == "on" ]; then
+        press_host_power_button "off" 1
+        if ! wait_host_power_change "off" 30; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+host_power_reset()
+{
+    if [ "$(host_power_status)" == "on" ]; then
+        set_gpio "RST_BMC_RSTBTN_OUT_N" 1
+        set_gpio "RST_BMC_RSTBTN_OUT_N" 0
+        sleep 1
+        set_gpio "RST_BMC_RSTBTN_OUT_N" 1
+    fi
+    return 0
+}
+
+host_power_status()
+{
+    if [ "$(get_gpio "host0-ready")" -eq 1 ]; then
+        echo "on"
+    else
+        echo "off"
+    fi
+}
+
+press_host_power_button()
+{
+    local exp_val="$1"
+    local max_check_cnt="$2"
+    local count=0
+
+    set_gpio "SYS_BMC_PWRBTN_R_N" 1
+    set_gpio "SYS_BMC_PWRBTN_R_N" 0
+
+    until [ $count -ge "$max_check_cnt" ]
+    do
+        sleep 1
+        if [ "$(host_power_status)" == "$exp_val" ]; then
+            break
+        fi
+        ((count++))
+    done
+
+    set_gpio "SYS_BMC_PWRBTN_R_N" 1
+}
+
+wait_host_power_change()
+{
+    local exp_val="$1"
+    local max_check_cnt="$2"
+    local count=0
+    until [ $count -gt "$max_check_cnt" ]
+    do
+        sleep 1
+        if [ "$(host_power_status)" == "$exp_val" ]; then
+            return 0
+        fi
+        ((count++))
+    done
+
+    return 1
+}

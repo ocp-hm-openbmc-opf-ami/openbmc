@@ -35,7 +35,6 @@ setuptools3_legacy_do_configure() {
 
 setuptools3_legacy_do_compile() {
         cd ${SETUPTOOLS_SETUP_PATH}
-        NO_FETCH_BUILD=1 \
         STAGING_INCDIR=${STAGING_INCDIR} \
         STAGING_LIBDIR=${STAGING_LIBDIR} \
         ${STAGING_BINDIR_NATIVE}/python3-native/python3 setup.py \
@@ -79,6 +78,6 @@ setuptools3_legacy_do_install[vardepsexclude] = "MACHINE"
 
 EXPORT_FUNCTIONS do_configure do_compile do_install
 
-export LDSHARED="${CCLD} -shared"
+export LDSHARED = "${CCLD} -shared"
 DEPENDS += "python3-setuptools-native"
 

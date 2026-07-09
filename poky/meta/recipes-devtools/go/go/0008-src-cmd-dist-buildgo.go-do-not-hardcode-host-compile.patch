@@ -1,7 +1,7 @@
-From e0999902687e2e394499f7153db8d62440c4dab0 Mon Sep 17 00:00:00 2001
+From e5752b239707df8ad7a72dc60420e01c5912d606 Mon Sep 17 00:00:00 2001
 From: Alexander Kanavin <alex.kanavin@gmail.com>
 Date: Tue, 10 Nov 2020 16:33:27 +0000
-Subject: [PATCH 8/9] src/cmd/dist/buildgo.go: do not hardcode host compilers
+Subject: [PATCH 08/11] src/cmd/dist/buildgo.go: do not hardcode host compilers
  into target binaries
 
 These come from $CC/$CXX on the build host and are not useful on targets;
@@ -42,5 +42,5 @@ index 884e9d729a..2f52edacfe 100644
  }
  
 -- 
-2.44.0
+2.25.1
 

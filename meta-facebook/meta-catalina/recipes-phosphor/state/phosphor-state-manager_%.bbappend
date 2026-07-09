@@ -12,7 +12,6 @@ PACKAGECONFIG:remove = "only-run-apr-on-power-loss"
 # shutdown the host.
 HOST_DEFAULT_TARGETS:append = " \
     obmc-host-shutdown@{}.target.requires/host-graceful-poweroff@{}.service \
-    obmc-host-warm-reboot@{}.target.requires/host-graceful-poweroff@{}.service \
     "
 
 # The "warm-reboot" is what does the graceful shutdown operation and the
@@ -38,10 +37,21 @@ HOST_DEFAULT_TARGETS:append = " \
     obmc-host-stop@{}.target.requires/host-force-poweroff@{}.service \
     "
 
+HOST_DEFAULT_TARGETS:remove = " \
+    obmc-host-warm-reboot@{}.target.requires/xyz.openbmc_project.Ipmi.Internal.SoftPowerOff.service \
+    obmc-host-warm-reboot@{}.target.requires/obmc-host-force-warm-reboot@{}.target \
+    obmc-host-force-warm-reboot@{}.target.requires/obmc-host-stop@{}.target \
+    obmc-host-force-warm-reboot@{}.target.requires/phosphor-reboot-host@{}.service \
+    obmc-host-graceful-quiesce@{}.target.wants/pldmSoftPowerOff.service \
+    "
+
+HOST_DEFAULT_TARGETS:append = " \
+    obmc-host-warm-reboot@{}.target.wants/host-powerreset@{}.service \
+    "
+
 # Add services for the chassis power operations.
 CHASSIS_DEFAULT_TARGETS:append = " \
     obmc-chassis-poweron@{}.target.requires/chassis-poweron@{}.service \
-    obmc-chassis-hard-poweroff@{}.target.requires/chassis-poweroff@{}.service \
     obmc-chassis-powercycle@{}.target.requires/chassis-powercycle@{}.service \
     "
 
@@ -77,7 +87,6 @@ HOST_DEFAULT_TARGETS:remove = " \
     obmc-host-shutdown@{}.target.wants/host-poweroff@{}.service \
     obmc-host-start@{}.target.wants/host-poweron@{}.service \
     obmc-host-reboot@{}.target.wants/host-powercycle@{}.service \
-    obmc-host-force-warm-reboot@{}.target.wants/host-powerreset@{}.service \
 "
 #===============================================================================
 
@@ -97,39 +106,42 @@ SRC_URI:append = " \
     file://host-graceful-poweroff@.service \
     file://host-poweron \
     file://host-poweron@.service \
+    file://host-powerreset \
+    file://host-powerreset@.service \
     file://power-cmd \
     file://phosphor-wait-power-off@.service \
-    "
-
-# Catalina chassis off is host force off
-CHASSIS_DEFAULT_TARGETS:remove = " \
-    obmc-chassis-hard-poweroff@{}.target.requires/chassis-poweroff@{}.service \
-    "
-CHASSIS_DEFAULT_TARGETS:append = " \
-    obmc-chassis-hard-poweroff@{}.target.requires/host-force-poweroff@{}.service \
     "
 
 #We need to ensure that the chassis power is always on.
 CHASSIS_DEFAULT_TARGETS:remove = " \
     obmc-host-shutdown@{}.target.requires/obmc-chassis-poweroff@{}.target \
     "
-HARD_OFF_TMPL_CTRL=""
-HARD_OFF_TGTFMT_CTRL=""
-HARD_OFF_FMT_CTRL=""
-HARD_OFF_INSTFMT_CTRL=""
+HARD_OFF_TMPL_CTRL = ""
+HARD_OFF_TGTFMT_CTRL = ""
+HARD_OFF_FMT_CTRL = ""
+HARD_OFF_INSTFMT_CTRL = ""
+
+#Remove unexpected ChassisPowerOnStarted log at host first start
+RRECOMMENDS:${PN}-chassis:remove = " ${PN}-chassis-poweron-log"
+
+SYSTEMD_SERVICE:${PN}-chassis:remove = "obmc-power-start@.service"
+SYSTEMD_SERVICE:${PN}-chassis:remove = "obmc-power-stop@.service"
+SYSTEMD_SERVICE:${PN}-chassis:remove = "phosphor-reset-chassis-on@.service"
+SYSTEMD_SERVICE:${PN}-chassis:remove = "phosphor-reset-chassis-running@.service"
 
 do_install:append() {
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/*.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${UNPACKDIR}/*.service ${D}${systemd_system_unitdir}/
 
     install -d ${D}${libexecdir}/${PN}
-    install -m 0755 ${WORKDIR}/chassis-power-state-init ${D}${libexecdir}/${PN}/
-    install -m 0755 ${WORKDIR}/chassis-poweron ${D}${libexecdir}/${PN}/
-    install -m 0755 ${WORKDIR}/chassis-powercycle ${D}${libexecdir}/${PN}/
-    install -m 0755 ${WORKDIR}/host-force-poweroff ${D}${libexecdir}/${PN}/
-    install -m 0755 ${WORKDIR}/host-graceful-poweroff ${D}${libexecdir}/${PN}/
-    install -m 0755 ${WORKDIR}/host-poweron ${D}${libexecdir}/${PN}/
-    install -m 0755 ${WORKDIR}/power-cmd ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/chassis-power-state-init ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/chassis-poweron ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/chassis-powercycle ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/host-force-poweroff ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/host-graceful-poweroff ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/host-poweron ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/host-powerreset ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/power-cmd ${D}${libexecdir}/${PN}/
 }
 
 SYSTEMD_OVERRIDE:${PN}-host += "chassis-power-state-init.conf:xyz.openbmc_project.State.Host@0.service.d/chassis-power-state-init.conf"

@@ -174,7 +174,6 @@ TEST_RUNQEMUPARAMS += " slirp"
         features += 'PACKAGE_FEED_GPG_NAME = "testuser"\n'
         features += 'PACKAGE_FEED_GPG_PASSPHRASE_FILE = "%s"\n' % os.path.join(signing_key_dir, 'key.passphrase')
         features += 'GPG_PATH = "%s"\n' % self.gpg_home
-        features += 'PSEUDO_IGNORE_PATHS .= ",%s"\n' % self.gpg_home
         self.write_config(features)
 
         bitbake('core-image-full-cmdline socat')
@@ -211,7 +210,6 @@ TEST_RUNQEMUPARAMS += " slirp"
         features += 'PACKAGE_FEED_GPG_NAME = "testuser"\n'
         features += 'PACKAGE_FEED_GPG_PASSPHRASE_FILE = "%s"\n' % os.path.join(signing_key_dir, 'key.passphrase')
         features += 'GPG_PATH = "%s"\n' % self.gpg_home
-        features += 'PSEUDO_IGNORE_PATHS .= ",%s"\n' % self.gpg_home
         self.write_config(features)
 
         # Build core-image-sato and testimage
@@ -273,7 +271,9 @@ TEST_RUNQEMUPARAMS += " slirp"
         import subprocess, os
 
         distro = oe.lsb.distro_identifier()
-        if distro and (distro in ['debian-9', 'debian-10', 'centos-7', 'centos-8', 'ubuntu-16.04', 'ubuntu-18.04'] or
+        # Merge request to address the issue on centos/rhel/derivatives:
+        # https://gitlab.com/cki-project/kernel-ark/-/merge_requests/3449
+        if distro and (distro in ['debian-9', 'debian-10', 'centos-7', 'centos-8', 'centos-9', 'ubuntu-16.04', 'ubuntu-18.04'] or
             distro.startswith('almalinux') or distro.startswith('rocky')):
             self.skipTest('virgl headless cannot be tested with %s' %(distro))
 
@@ -310,10 +310,7 @@ class Postinst(OESelftestTestCase):
                 features += 'IMAGE_FEATURES += "package-management empty-root-password"\n'
                 features += 'PACKAGE_CLASSES = "%s"\n' % classes
                 if init_manager == "systemd":
-                    features += 'DISTRO_FEATURES:append = " systemd usrmerge"\n'
-                    features += 'VIRTUAL-RUNTIME_init_manager = "systemd"\n'
-                    features += 'DISTRO_FEATURES_BACKFILL_CONSIDERED = "sysvinit"\n'
-                    features += 'VIRTUAL-RUNTIME_initscripts = ""\n'
+                    features += 'INIT_MANAGER = "systemd"\n'
                 self.write_config(features)
 
                 bitbake('core-image-minimal')

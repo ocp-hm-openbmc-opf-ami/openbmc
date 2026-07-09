@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# shellcheck source=meta-facebook/meta-harma/recipes-phosphor/gpio/phosphor-gpio-monitor/logging-util
+source /usr/libexec/phosphor-gpio-monitor/logging-util
+
+HELP="
+Usage: power-rail-event-logger <event> <id_gpio-name>
+<event> is the power rail event to log,
+e.g. assert / deassert.
+
+<id_gpio-name> is defined in json file,
+e.g. 2_power-host-good
+"
+
+# get gpio chip ID
+MESSAGE=$2
+
+# remove prefix from 0_xxxxxx to xxxxxx
+GPIO_NAME="${MESSAGE#*_}"
+COMPONENT_NAME="${GPIO_NAME#power-}"
+COMPONENT_NAME="${COMPONENT_NAME%-good}"
+
+MSG_ID="xyz.openbmc_project.State.Power.PowerRailFault"
+DEVICE_PATH="/xyz/openbmc_project/inventory/system/board/Harma_MB/$COMPONENT_NAME"
+STASH_FILE="/run/${GPIO_NAME}.log_entry"
+
+if check_valid_sgpio; then
+    # This delay ensures the BMC does not receive abnormal events
+    # during CMM/MB AC cycling or tray unplugging.
+    # Such actions can cause the CPLD to lose power before the BMC,
+    # leading to abnormal events being received.
+    sleep 2
+    case $1 in
+        "-h")
+            echo "$HELP"
+            ;;
+
+        "assert")
+            /usr/bin/log-create "$MSG_ID" --json \
+                "{ \"POWER_RAIL\": \"${DEVICE_PATH}\", \"FAILURE_DATA\": \"${GPIO_NAME}\"}" \
+                > "${STASH_FILE}"
+            ;;
+
+        "deassert")
+            MSG_ID="xyz.openbmc_project.State.Power.PowerRailFaultRecovered"
+            if [ -s "${STASH_FILE}" ]; then
+                log-resolve -p "$(< "${STASH_FILE}")" && rm "${STASH_FILE}"
+            fi
+            /usr/bin/log-create "$MSG_ID" --json \
+                "{ \"POWER_RAIL\": \"${DEVICE_PATH}\"}"
+            ;;
+    esac
+fi
+
+exit 0

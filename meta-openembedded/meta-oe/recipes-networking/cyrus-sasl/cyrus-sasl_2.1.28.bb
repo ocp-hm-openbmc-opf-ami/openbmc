@@ -7,16 +7,20 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=3f55e0974e3d6db00ca6f57f2d206396"
 
 SRCREV = "7a6b45b177070198fed0682bea5fa87c18abb084"
 
-SRC_URI = "git://github.com/cyrusimap/cyrus-sasl;protocol=https;branch=cyrus-sasl-2.1 \
-           file://avoid-to-call-AC_TRY_RUN.patch \
-           file://debian_patches_0014_avoid_pic_overwrite.diff \
-           file://0001-sample-Rename-dprintf-to-cyrus_dprintf.patch \
-           file://saslauthd.service \
-           file://saslauthd.conf \
-           file://CVE-2019-19906.patch \
-	   file://CVE-2022-24407.patch \
-           file://0001-Fix-time.h-check.patch \
-           "
+SRC_URI = " \
+    git://github.com/cyrusimap/cyrus-sasl;protocol=https;branch=cyrus-sasl-2.1 \
+    file://avoid-to-call-AC_TRY_RUN.patch \
+    file://debian_patches_0014_avoid_pic_overwrite.diff \
+    file://0001-sample-Rename-dprintf-to-cyrus_dprintf.patch \
+    file://saslauthd.service \
+    file://saslauthd.conf \
+    file://CVE-2019-19906.patch \
+    file://CVE-2022-24407.patch \
+    file://0001-Fix-time.h-check.patch \
+    file://0001-configure-prototypes.patch \
+    file://0002-Fix-incompatible-pointer-types-error-with-gcc-15.patch \
+    file://0003-Add-compatibility-for-gcc-15-869.patch \
+"
 
 UPSTREAM_CHECK_URI = "https://github.com/cyrusimap/cyrus-sasl/archives"
 
@@ -58,7 +62,7 @@ do_compile:prepend () {
 do_install:append() {
     if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
         install -d ${D}${systemd_unitdir}/system
-        install -m 0644 ${WORKDIR}/saslauthd.service ${D}${systemd_unitdir}/system
+        install -m 0644 ${UNPACKDIR}/saslauthd.service ${D}${systemd_unitdir}/system
 
         sed -i -e 's#@SBINDIR@#${sbindir}#g' ${D}${systemd_unitdir}/system/saslauthd.service
         sed -i -e 's#@LOCALSTATEDIR@#${localstatedir}#g' ${D}${systemd_unitdir}/system/saslauthd.service
@@ -68,7 +72,7 @@ do_install:append() {
         echo "d /run/saslauthd/ - - - -" > ${D}${sysconfdir}/tmpfiles.d/saslauthd.conf
 
         install -d ${D}${sysconfdir}/default/
-        install -m 0644 ${WORKDIR}/saslauthd.conf ${D}${sysconfdir}/default/saslauthd
+        install -m 0644 ${UNPACKDIR}/saslauthd.conf ${D}${sysconfdir}/default/saslauthd
         sed -i -e 's#@LOCALSTATEDIR@#${localstatedir}#g' ${D}${sysconfdir}/default/saslauthd
     fi
 }
@@ -81,7 +85,6 @@ SYSTEMD_PACKAGES = "${PN}-bin"
 SYSTEMD_SERVICE:${PN}-bin = "saslauthd.service"
 SYSTEMD_AUTO_ENABLE = "disable"
 
-SRC_URI[md5sum] = "a7f4e5e559a0e37b3ffc438c9456e425"
 SRC_URI[sha256sum] = "8fbc5136512b59bb793657f36fadda6359cae3b08f01fd16b3d406f1345b7bc3"
 
 PACKAGES =+ "${PN}-bin"

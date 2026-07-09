@@ -1,0 +1,7 @@
+[Unit]
+Description=%i Power Good LED Assert
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/phosphor-gpio-monitor/frontled "%i" "false" "assert"
+SyslogIdentifier=%i-power-good-led-assert

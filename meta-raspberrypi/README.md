@@ -48,7 +48,7 @@ OpenEmbedded/Yocto distributions and layer stacks, such as:
 
 This layer is officially approved as part of the `Yocto Project Compatible
 Layers Program`. You can find details of that on the official Yocto Project
-[website](https://www.yoctoproject.org/software-overview/layers/?searchTerm=meta-raspberrypi).
+[website](https://www.yoctoproject.org/development/yocto-project-compatible-layers/).
 
 ## Dependencies
 
@@ -70,9 +70,10 @@ This layer depends on:
 ## Quick Start with kas
 
 1. Install kas build tool from PyPi (sudo pip3 install kas)
-2. kas build meta-raspberrypi/kas-poky-rpi.yml
-3. Use bmaptool to copy the generated .wic.bz2 file to the SD card
-4. Boot your RPI
+2. Set the `machine: ` in kas-poky-rpi.yml to one of the supported boards (see conf/machine/*.conf)
+3. kas build meta-raspberrypi/kas-poky-rpi.yml
+4. Use bmaptool to copy the generated .wic.bz2 file to the SD card
+5. Boot your RPI
 
 To adjust the build configuration with specific options (I2C, SPI, ...), simply add
 a section as follows:
@@ -81,7 +82,7 @@ a section as follows:
 local_conf_header:
   rpi-specific: |
     ENABLE_I2C = "1"
-    RPI_EXTRA_CONFIG = "dtoverlay=pi3-disable-bt"
+    RPI_EXTRA_CONFIG = "dtoverlay=disable-bt"
 ```
 
 To configure the machine, you have to update the `machine` variable.

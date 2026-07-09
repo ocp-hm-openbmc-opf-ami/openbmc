@@ -12,7 +12,7 @@ DEPENDS += "boost"
 DEPENDS += "libgpiod"
 DEPENDS += "cli11"
 DEPENDS += "nlohmann-json"
-SRCREV = "8377d59c61c653a34df1c3c4ca72219eceb0b43b"
+SRCREV = "efcb301e20e579619c2920d8c2adad7f17de2d8a"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
@@ -35,6 +35,7 @@ FILES:${PN}-monitor += "${bindir}/phosphor-gpio-monitor"
 FILES:${PN}-monitor += "${bindir}/phosphor-multi-gpio-monitor"
 FILES:${PN}-monitor += "${bindir}/phosphor-gpio-util"
 FILES:${PN}-monitor += "${nonarch_base_libdir}/udev/rules.d/99-gpio-keys.rules"
+FILES:${PN}-monitor += "${datadir}/${PN}/phosphor-multi-gpio-monitor.json"
 FILES:${PN}-presence += "${bindir}/phosphor-gpio-presence"
 FILES:${PN}-presence += "${bindir}/phosphor-multi-gpio-presence"
 FILES:${PN}-presence += "${datadir}/${PN}/phosphor-multi-gpio-presence.json"
@@ -49,5 +50,5 @@ PACKAGE_BEFORE_PN += "${GPIO_PACKAGES}"
 
 do_install:append() {
     install -d ${D}${datadir}/phosphor-gpio-monitor/
-    install -m 0644 ${WORKDIR}/phosphor-multi-gpio-presence.json ${D}${datadir}/${PN}/
+    install -m 0644 ${UNPACKDIR}/phosphor-multi-gpio-presence.json ${D}${datadir}/${PN}/
 }

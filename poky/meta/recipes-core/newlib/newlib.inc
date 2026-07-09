@@ -8,25 +8,33 @@ LIC_FILES_CHKSUM = " \
 		file://COPYING;md5=59530bdf33659b29e73d4adb9f9f6552 \
 		file://COPYING3.LIB;md5=6a6a8e020838b23406c81b19c1d46df6 \
 		file://COPYING3;md5=d32239bcb673463ab874e80d47fae504 \
-		file://COPYING.LIBGLOSS;md5=c0469b6ebb847a75781066be515f032d \
+		file://COPYING.LIBGLOSS;md5=faa6f6ad545714df2a7d1276ed899f15 \
 		file://COPYING.LIB;md5=2d5025d4aa3495befef8f17206a5b0a1 \
-		file://COPYING.NEWLIB;md5=4f1a15846ffee91e352418563e1bce27 \
+		file://COPYING.NEWLIB;md5=61255563bbcda142f581b94591b6a589 \
 		file://newlib/libc/posix/COPYRIGHT;md5=103468ff1982be840fdf4ee9f8b51bbf \
 		"
 
-BASEVER = "4.4.0"
+BASEVER = "4.5.0"
 PV = "${BASEVER}+git"
 SRC_URI = "git://sourceware.org/git/newlib-cygwin.git;protocol=https;branch=main"
-SRCREV="ad11e2587f83d61357a32c61c36d72ea4f39315e"
+SRCREV = "5e5e51f1dc56a99eb4648c28e00d73b6ea44a8b0"
 
 INHIBIT_DEFAULT_DEPS = "1"
-DEPENDS = "virtual/${TARGET_PREFIX}gcc"
+DEPENDS = "virtual/cross-cc"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
 ## disable stdlib
 TARGET_CC_ARCH:append = " -nostdlib"
+
+# Both the C library and the application should share the same mcmodel.
+# Use the medium-any code model for the RISC-V 64 bit implementation,
+# since medlow can only access addresses below 0x80000000 and RAM
+# starts at 0x80000000 on RISC-V 64
+# Keep RISC-V 32 using -mcmodel=medlow (symbols lie between -2GB:2GB)
+TARGET_CFLAGS:append:qemuriscv64 = " -mcmodel=medany"
+
 
 EXTRA_OECONF = " \
                 --build=${BUILD_SYS}  \

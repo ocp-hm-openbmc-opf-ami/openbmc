@@ -5,15 +5,21 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 
 inherit systemd
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/sources"
+UNPACKDIR = "${S}"
 
 SRC_URI:append = " \
   file://firmware-updates.target \
   file://firmware-updates-pre.target \
+  file://gbmc-psu-hardreset-pre.target \
+  file://gbmc-psu-hardreset-time.service \
+  file://gbmc-psu-hardreset.target \
+  file://gbmc-enqueue-powercycle.sh \
   file://40-gbmc-forward.conf \
   file://40-gbmc-sysctl.conf \
   file://40-gbmc-time.conf \
   file://10-gbmc.conf \
+  file://10-reboot-timeout.conf \
   "
 
 FILES:${PN}:append = " \
@@ -24,6 +30,7 @@ FILES:${PN}:append = " \
   ${libdir}/sysctl.d/40-gbmc-forward.conf \
   ${systemd_system_unitdir}/sysinit.target.wants/systemd-time-wait-sync.service \
   ${systemd_system_unitdir}/systemd-time-wait-sync.service.d/10-gbmc.conf \
+  ${systemd_system_unitdir}/reboot.target.d/10-reboot-timeout.conf \
   "
 
 FILES:${PN}:append:dev = " \
@@ -33,6 +40,9 @@ FILES:${PN}:append:dev = " \
 SYSTEMD_SERVICE:${PN}:append = " \
   firmware-updates.target \
   firmware-updates-pre.target \
+  gbmc-psu-hardreset-pre.target \
+  gbmc-psu-hardreset-time.service \
+  gbmc-psu-hardreset.target \
   "
 
 RDEPENDS:${PN}:append = " bash"
@@ -47,26 +57,44 @@ do_install() {
     >${D}${systemd_unitdir}/resolved.conf.d/40-gbmc-nomdns.conf
 
   install -d -m 0755 ${D}${systemd_system_unitdir}
-  install -m 0644 ${WORKDIR}/firmware-updates.target ${D}${systemd_system_unitdir}/
-  install -m 0644 ${WORKDIR}/firmware-updates-pre.target ${D}${systemd_system_unitdir}/
+  install -m 0644 ${UNPACKDIR}/firmware-updates.target ${D}${systemd_system_unitdir}/
+  install -m 0644 ${UNPACKDIR}/firmware-updates-pre.target ${D}${systemd_system_unitdir}/
+  install -m 0644 ${UNPACKDIR}/gbmc-psu-hardreset-pre.target ${D}${systemd_system_unitdir}/
+  install -m 0644 ${UNPACKDIR}/gbmc-psu-hardreset-time.service ${D}${systemd_system_unitdir}/
+  install -m 0644 ${UNPACKDIR}/gbmc-psu-hardreset.target ${D}${systemd_system_unitdir}/
   # mask systemd-pstore.service to avoid copying logs to SPI
   mkdir -p ${D}${sysconfdir}/systemd/system
   ln -sv /dev/null ${D}${sysconfdir}/systemd/system/systemd-pstore.service
-
+  # mask systemd kdump service since it is not used
+  ln -sv /dev/null ${D}${sysconfdir}/systemd/system/kdump.service
+  # mask systemd-nsresourced since it is not used
+  ln -sv /dev/null ${D}${sysconfdir}/systemd/system/systemd-nsresourced.service
+  # mask systemd-mountfsd.service since it is not used
+  ln -sv /dev/null ${D}${sysconfdir}/systemd/system/systemd-mountfsd.service
+  # mask systemd-sysext.service since it is not used
+  ln -sv /dev/null ${D}${sysconfdir}/systemd/system/systemd-sysext.service
+  # mask systemd-confext.service since it is not used
+  ln -sv /dev/null ${D}${sysconfdir}/systemd/system/systemd-confext.service
   # mask networkd-wait-online.service to avoid waiting
   ln -sv /dev/null ${D}/${sysconfdir}/systemd/system/systemd-networkd-wait-online.service
 
+  install -d -m0755 ${D}${bindir}
+  install -D -m0755 ${UNPACKDIR}/gbmc-enqueue-powercycle.sh ${D}${bindir}/
+
   install -d -m0755 ${D}${libdir}/sysctl.d
-  install -m 0644 ${WORKDIR}/40-gbmc-forward.conf ${D}${libdir}/sysctl.d/
-  install -m 0644 ${WORKDIR}/40-gbmc-sysctl.conf ${D}${libdir}/sysctl.d/
+  install -m 0644 ${UNPACKDIR}/40-gbmc-forward.conf ${D}${libdir}/sysctl.d/
+  install -m 0644 ${UNPACKDIR}/40-gbmc-sysctl.conf ${D}${libdir}/sysctl.d/
 
   install -d -m 0755 ${D}${systemd_unitdir}/timesyncd.conf.d/
-  install -D -m0644 ${WORKDIR}/40-gbmc-time.conf ${D}${systemd_unitdir}/timesyncd.conf.d/
+  install -D -m0644 ${UNPACKDIR}/40-gbmc-time.conf ${D}${systemd_unitdir}/timesyncd.conf.d/
 
   mkdir -p ${D}${systemd_system_unitdir}/sysinit.target.wants/
   ln -sv ${systemd_system_unitdir}/systemd-time-wait-sync.service ${D}${systemd_system_unitdir}/sysinit.target.wants/
   mkdir -p ${D}${systemd_system_unitdir}/systemd-time-wait-sync.service.d/
-  install -D -m0644 ${WORKDIR}/10-gbmc.conf ${D}${systemd_system_unitdir}/systemd-time-wait-sync.service.d/
+  install -D -m0644 ${UNPACKDIR}/10-gbmc.conf ${D}${systemd_system_unitdir}/systemd-time-wait-sync.service.d/
+
+  install -d -m 0755 ${D}${systemd_system_unitdir}/reboot.target.d/
+  install -D -m0644 ${UNPACKDIR}/10-reboot-timeout.conf ${D}${systemd_system_unitdir}/reboot.target.d/
 }
 
 do_install:append:dev() {

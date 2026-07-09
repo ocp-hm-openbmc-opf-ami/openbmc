@@ -97,8 +97,10 @@ def compare_file(reference, test, diffutils_sysroot):
     result.status = SAME
     return result
 
-def run_diffoscope(a_dir, b_dir, html_dir, max_report_size=0, **kwargs):
+def run_diffoscope(a_dir, b_dir, html_dir, max_report_size=0, max_diff_block_lines=1024, max_diff_block_lines_saved=0, **kwargs):
     return runCmd(['diffoscope', '--no-default-limits', '--max-report-size', str(max_report_size),
+                   '--max-diff-block-lines-saved', str(max_diff_block_lines_saved),
+                   '--max-diff-block-lines', str(max_diff_block_lines),
                    '--exclude-directory-metadata', 'yes', '--html-dir', html_dir, a_dir, b_dir],
                 **kwargs)
 
@@ -132,8 +134,14 @@ class ReproducibleTests(OESelftestTestCase):
     # Maximum report size, in bytes
     max_report_size = 250 * 1024 * 1024
 
+    # Maximum diff blocks size, in lines
+    max_diff_block_lines = 1024
+    # Maximum diff blocks size (saved in memory), in lines
+    max_diff_block_lines_saved = max_diff_block_lines
+
     # targets are the things we want to test the reproducibility of
-    targets = ['core-image-minimal', 'core-image-sato', 'core-image-full-cmdline', 'core-image-weston', 'world']
+    # Have to add the virtual targets manually for now as builds may or may not include them as they're exclude from world
+    targets = ['core-image-minimal', 'core-image-sato', 'core-image-full-cmdline', 'core-image-weston', 'world', 'virtual/librpc', 'virtual/libsdl2', 'virtual/crypt']
 
     # sstate targets are things to pull from sstate to potentially cut build/debugging time
     sstate_targets = []
@@ -161,6 +169,7 @@ class ReproducibleTests(OESelftestTestCase):
             'OEQA_REPRODUCIBLE_TEST_TARGET',
             'OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS',
             'OEQA_REPRODUCIBLE_EXCLUDED_PACKAGES',
+            'OEQA_REPRODUCIBLE_TEST_LEAF_TARGETS',
         ]
         bb_vars = get_bb_vars(needed_vars)
         for v in needed_vars:
@@ -169,18 +178,19 @@ class ReproducibleTests(OESelftestTestCase):
         if bb_vars['OEQA_REPRODUCIBLE_TEST_PACKAGE']:
             self.package_classes = bb_vars['OEQA_REPRODUCIBLE_TEST_PACKAGE'].split()
 
-        if bb_vars['OEQA_REPRODUCIBLE_TEST_TARGET']:
-            self.targets = bb_vars['OEQA_REPRODUCIBLE_TEST_TARGET'].split()
+        if bb_vars['OEQA_REPRODUCIBLE_TEST_TARGET'] or bb_vars['OEQA_REPRODUCIBLE_TEST_LEAF_TARGETS']:
+            self.targets = (bb_vars['OEQA_REPRODUCIBLE_TEST_TARGET'] or "").split() + (bb_vars['OEQA_REPRODUCIBLE_TEST_LEAF_TARGETS'] or "").split()
 
         if bb_vars['OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS']:
             self.sstate_targets = bb_vars['OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS'].split()
 
-        self.extraresults = {}
-        self.extraresults.setdefault('reproducible.rawlogs', {})['log'] = ''
-        self.extraresults.setdefault('reproducible', {}).setdefault('files', {})
+        if bb_vars['OEQA_REPRODUCIBLE_TEST_LEAF_TARGETS']:
+            # Setup to build every DEPENDS of leaf recipes using sstate
+            for leaf_recipe in bb_vars['OEQA_REPRODUCIBLE_TEST_LEAF_TARGETS'].split():
+                self.sstate_targets.extend(get_bb_var('DEPENDS', leaf_recipe).split())
 
-    def append_to_log(self, msg):
-        self.extraresults['reproducible.rawlogs']['log'] += msg
+        self.extraresults = {}
+        self.extraresults.setdefault('reproducible', {}).setdefault('files', {})
 
     def compare_packages(self, reference_dir, test_dir, diffutils_sysroot):
         result = PackageCompareResults(self.oeqa_reproducible_excluded_packages)
@@ -208,7 +218,7 @@ class ReproducibleTests(OESelftestTestCase):
 
     def write_package_list(self, package_class, name, packages):
         self.extraresults['reproducible']['files'].setdefault(package_class, {})[name] = [
-                {'reference': p.reference, 'test': p.test} for p in packages]
+                p.reference.split("/./")[1] for p in packages]
 
     def copy_file(self, source, dest):
         bb.utils.mkdirhier(os.path.dirname(dest))
@@ -220,7 +230,6 @@ class ReproducibleTests(OESelftestTestCase):
         tmpdir = os.path.join(self.topdir, name, 'tmp')
         if os.path.exists(tmpdir):
             bb.utils.remove(tmpdir, recurse=True)
-
         config = textwrap.dedent('''\
             PACKAGE_CLASSES = "{package_classes}"
             TMPDIR = "{tmpdir}"
@@ -233,11 +242,41 @@ class ReproducibleTests(OESelftestTestCase):
             ''').format(package_classes=' '.join('package_%s' % c for c in self.package_classes),
                         tmpdir=tmpdir)
 
+        # Export BB_CONSOLELOG to the calling function and make it constant to
+        # avoid a case where bitbake would get a timestamp-based filename but
+        # oe-selftest would, later, get another.
+        capture_vars.append("BB_CONSOLELOG")
+        config += 'BB_CONSOLELOG = "${LOG_DIR}/cooker/${MACHINE}/console.log"\n'
+
+        # We want different log files for each build, but a persistent bitbake
+        # may reuse the previous log file so restart the bitbake server.
+        bitbake("--kill-server")
+
+        def print_condensed_error_log(logs, context_lines=10, tail_lines=20):
+            """Prints errors with context and the end of the log."""
+
+            logs = logs.split("\n")
+            for i, line in enumerate(logs):
+                if line.startswith("ERROR"):
+                    self.logger.info("Found ERROR (line %d):" % (i + 1))
+                    for l in logs[i-context_lines:i+context_lines]:
+                        self.logger.info("      " + l)
+
+            self.logger.info("End of log:")
+            for l in logs[-tail_lines:]:
+                self.logger.info("      " + l)
+
+        bitbake_failure_count = 0
         if not use_sstate:
             if self.sstate_targets:
                self.logger.info("Building prebuild for %s (sstate allowed)..." % (name))
                self.write_config(config)
-               bitbake(' '.join(self.sstate_targets))
+               try:
+                   bitbake("--continue "+' '.join(self.sstate_targets))
+               except AssertionError as e:
+                   bitbake_failure_count += 1
+                   self.logger.error("Bitbake failed! but keep going... Log:")
+                   print_condensed_error_log(str(e))
 
             # This config fragment will disable using shared and the sstate
             # mirror, forcing a complete build from scratch
@@ -249,9 +288,24 @@ class ReproducibleTests(OESelftestTestCase):
         self.logger.info("Building %s (sstate%s allowed)..." % (name, '' if use_sstate else ' NOT'))
         self.write_config(config)
         d = get_bb_vars(capture_vars)
-        # targets used to be called images
-        bitbake(' '.join(getattr(self, 'images', self.targets)))
-        return d
+        try:
+            # targets used to be called images
+            bitbake("--continue "+' '.join(getattr(self, 'images', self.targets)))
+        except AssertionError as e:
+            bitbake_failure_count += 1
+            self.logger.error("Bitbake failed! but keep going... Log:")
+            print_condensed_error_log(str(e))
+
+            # The calling function expects the existence of the deploy
+            # directories containing the packages.
+            # If bitbake failed to create them, do it manually
+            for c in self.package_classes:
+                deploy = d['DEPLOY_DIR_' + c.upper()]
+                if not os.path.exists(deploy):
+                    self.logger.info("Manually creating %s" % deploy)
+                    bb.utils.mkdirhier(deploy)
+
+        return (d, bitbake_failure_count)
 
     def test_reproducible_builds(self):
         def strip_topdir(s):
@@ -273,14 +327,29 @@ class ReproducibleTests(OESelftestTestCase):
             os.chmod(save_dir, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
             self.logger.info('Non-reproducible packages will be copied to %s', save_dir)
 
-        vars_A = self.do_test_build('reproducibleA', self.build_from_sstate)
-
-        vars_B = self.do_test_build('reproducibleB', False)
-
-        # NOTE: The temp directories from the reproducible build are purposely
-        # kept after the build so it can be diffed for debugging.
+        # The below bug shows that a few reproducible issues are depends on build dir path length.
+        # https://bugzilla.yoctoproject.org/show_bug.cgi?id=15554
+        # So, the reproducibleA & reproducibleB directories are changed to reproducibleA & reproducibleB-extended to have different size.
 
         fails = []
+        vars_list = [None, None]
+
+        for i, (name, use_sstate) in enumerate(
+                                 (('reproducibleA', self.build_from_sstate),
+                                 ('reproducibleB-extended', False))):
+            (variables, bitbake_failure_count) = self.do_test_build(name, use_sstate)
+            if bitbake_failure_count > 0:
+                self.logger.error('%s build failed. Trying to compute built packages differences but the test will fail.' % name)
+                fails.append("Bitbake %s failure" % name)
+                if self.save_results:
+                    failure_log_path = os.path.join(save_dir, "bitbake-%s.log" % name)
+                    self.logger.info('Failure log for %s will be copied to %s'% (name, failure_log_path))
+                    self.copy_file(variables["BB_CONSOLELOG"], failure_log_path)
+            vars_list[i] = variables
+
+        vars_A, vars_B = vars_list
+        # NOTE: The temp directories from the reproducible build are purposely
+        # kept after the build so it can be diffed for debugging.
 
         for c in self.package_classes:
             with self.subTest(package_class=c):
@@ -293,8 +362,6 @@ class ReproducibleTests(OESelftestTestCase):
                 result = self.compare_packages(deploy_A, deploy_B, diffutils_sysroot)
 
                 self.logger.info('Reproducibility summary for %s: %s' % (c, result))
-
-                self.append_to_log('\n'.join("%s: %s" % (r.status, r.test) for r in result.total))
 
                 self.write_package_list(package_class, 'missing', result.missing)
                 self.write_package_list(package_class, 'different', result.different)
@@ -330,7 +397,9 @@ class ReproducibleTests(OESelftestTestCase):
                 # Copy jquery to improve the diffoscope output usability
                 self.copy_file(os.path.join(jquery_sysroot, 'usr/share/javascript/jquery/jquery.min.js'), os.path.join(package_html_dir, 'jquery.js'))
 
-                run_diffoscope('reproducibleA', 'reproducibleB', package_html_dir, max_report_size=self.max_report_size,
+                run_diffoscope('reproducibleA', 'reproducibleB-extended', package_html_dir, max_report_size=self.max_report_size,
+                        max_diff_block_lines_saved=self.max_diff_block_lines_saved,
+                        max_diff_block_lines=self.max_diff_block_lines,
                         native_sysroot=diffoscope_sysroot, ignore_status=True, cwd=package_dir)
 
         if fails:
