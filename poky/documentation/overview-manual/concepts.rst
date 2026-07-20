@@ -683,7 +683,7 @@ Source Fetching
 The first stages of building a recipe are to fetch and unpack the source
 code:
 
-.. image:: figures/source-fetching.png
+.. image:: svg/source-fetching.*
    :width: 100%
 
 The :ref:`ref-tasks-fetch` and :ref:`ref-tasks-unpack` tasks fetch
@@ -704,10 +704,10 @@ a defined structure. For additional general information on the
 the Yocto Project Reference Manual.
 
 Each recipe has an area in the :term:`Build Directory` where the unpacked
-source code resides. The :term:`S` variable points to this area for a recipe's
-unpacked source code. The name of that directory for any given recipe is
-defined from several different variables. The preceding figure and the
-following list describe the :term:`Build Directory`'s hierarchy:
+source code resides. The :term:`UNPACKDIR` variable points to this area for a
+recipe's unpacked source code, and has the default ``sources-unpack`` name. The
+preceding figure and the following list describe the :term:`Build Directory`'s
+hierarchy:
 
 -  :term:`TMPDIR`: The base directory
    where the OpenEmbedded build system performs all its work during the
@@ -736,11 +736,11 @@ following list describe the :term:`Build Directory`'s hierarchy:
    -  :term:`PV`: The version of the
       recipe used to build the package.
 
-   -  :term:`PR`: The revision of the
-      recipe used to build the package.
+-  :term:`UNPACKDIR`: Contains the unpacked source files for a given recipe.
 
--  :term:`S`: Contains the unpacked source
-   files for a given recipe.
+-  :term:`S`: Contains the final location of the source code.
+
+   The default value for :term:`BP` is ``${BPN}-${PV}`` where:
 
    -  :term:`BPN`: The name of the recipe
       used to build the package. The :term:`BPN` variable is a version of
@@ -764,7 +764,7 @@ Patching
 Once source code is fetched and unpacked, BitBake locates patch files
 and applies them to the source files:
 
-.. image:: figures/patching.png
+.. image:: svg/patching.*
    :width: 100%
 
 The :ref:`ref-tasks-patch` task uses a
@@ -792,7 +792,7 @@ processes patches, see the
 ":ref:`dev-manual/new-recipe:patching code`"
 section in the
 Yocto Project Development Tasks Manual. You can also see the
-":ref:`sdk-manual/extensible:use \`\`devtool modify\`\` to modify the source of an existing component`"
+":ref:`dev-manual/devtool:use \`\`devtool modify\`\` to modify the source of an existing component`"
 section in the Yocto Project Application Development and the Extensible
 Software Development Kit (SDK) manual and the
 ":ref:`kernel-dev/common:using traditional kernel development to patch the kernel`"
@@ -805,7 +805,7 @@ After source code is patched, BitBake executes tasks that configure and
 compile the source code. Once compilation occurs, the files are copied
 to a holding area (staged) in preparation for packaging:
 
-.. image:: figures/configuration-compile-autoreconf.png
+.. image:: svg/configuration-compile-autoreconf.*
    :width: 100%
 
 This step in the build process consists of the following tasks:
@@ -861,7 +861,7 @@ Package Splitting
 After source code is configured, compiled, and staged, the build system
 analyzes the results and splits the output into packages:
 
-.. image:: figures/analysis-for-package-splitting.png
+.. image:: svg/analysis-for-package-splitting.*
    :width: 100%
 
 The :ref:`ref-tasks-package` and
@@ -912,11 +912,62 @@ the analysis and package splitting process use several areas:
    execute on a system and it generates code for yet another machine
    (e.g. :ref:`ref-classes-cross-canadian` recipes).
 
-The :term:`FILES` variable defines the
-files that go into each package in
-:term:`PACKAGES`. If you want
-details on how this is accomplished, you can look at
-:yocto_git:`package.bbclass </poky/tree/meta/classes-global/package.bbclass>`.
+Packages for a recipe are listed in the :term:`PACKAGES` variable. The
+:oe_git:`bitbake.conf </openembedded-core/tree/meta/conf/bitbake.conf>`
+configuration file defines the following default list of packages::
+
+  PACKAGES = "${PN}-src ${PN}-dbg ${PN}-staticdev ${PN}-dev ${PN}-doc ${PN}-locale ${PACKAGE_BEFORE_PN} ${PN}"
+
+Each of these packages contains a default list of files defined with the
+:term:`FILES` variable. For example, the package ``${PN}-dev`` represents files
+useful to the development of applications depending on ``${PN}``. The default
+list of files for ``${PN}-dev``, also defined in :oe_git:`bitbake.conf
+</openembedded-core/tree/meta/conf/bitbake.conf>`, is defined as follows::
+
+  FILES:${PN}-dev = "${includedir} ${FILES_SOLIBSDEV} ${libdir}/*.la \
+                  ${libdir}/*.o ${libdir}/pkgconfig ${datadir}/pkgconfig \
+                  ${datadir}/aclocal ${base_libdir}/*.o \
+                  ${libdir}/${BPN}/*.la ${base_libdir}/*.la \
+                  ${libdir}/cmake ${datadir}/cmake"
+
+The paths in this list must be *absolute* paths from the point of view of the
+root filesystem on the target, and must *not* make a reference to the variable
+:term:`D` or any :term:`WORKDIR` related variable. A correct example would be::
+
+  ${sysconfdir}/foo.conf
+
+.. note::
+
+   The list of files for a package is defined using the override syntax by
+   separating :term:`FILES` and the package name by a semi-colon (``:``).
+
+A given file can only ever be in one package. By iterating from the leftmost to
+rightmost package in :term:`PACKAGES`, each file matching one of the patterns
+defined in the corresponding :term:`FILES` definition is included in the
+package.
+
+.. note::
+
+  To find out which package installs a file, the ``oe-pkgdata-util``
+  command-line utility can be used::
+
+    $ oe-pkgdata-util find-path '/etc/fstab'
+    base-files: /etc/fstab
+
+  For more information on the ``oe-pkgdata-util`` utility, see the section
+  :ref:`dev-manual/debugging:Viewing Package Information with
+  ``oe-pkgdata-util``` of the Yocto Project Development Tasks Manual.
+
+To add a custom package variant of the ``${PN}`` recipe named
+``${PN}-extra`` (name is arbitrary), one can add it to the
+:term:`PACKAGE_BEFORE_PN` variable::
+
+  PACKAGE_BEFORE_PN += "${PN}-extra"
+
+Alternatively, a custom package can be added by adding it to the
+:term:`PACKAGES` variable using the prepend operator (``=+``)::
+
+  PACKAGES =+ "${PN}-extra"
 
 Depending on the type of packages being created (RPM, DEB, or IPK), the
 :ref:`do_package_write_* <ref-tasks-package_write_deb>`
@@ -2153,7 +2204,7 @@ require root privileges, the fact that some earlier steps ran in a fake
 root environment does not cause problems.
 
 The capability to run tasks in a fake root environment is known as
-"`fakeroot <http://man.he.net/man1/fakeroot>`__", which is derived from
+":manpage:`fakeroot <fakeroot(1)>`", which is derived from
 the BitBake keyword/variable flag that requests a fake root environment
 for a task.
 

@@ -1,4 +1,4 @@
-From c59850367a190d70dec43e0a66f399a4d8a5ffed Mon Sep 17 00:00:00 2001
+From fc2d3c17ff2a7b39e8d47b788eeaac5e1487cdee Mon Sep 17 00:00:00 2001
 From: Alexander Kanavin <alex.kanavin@gmail.com>
 Date: Mon, 14 Jun 2021 19:57:30 +0200
 Subject: [PATCH 4/4] reproducible
@@ -34,13 +34,11 @@ Signed-off-by: Alexander Kanavin <alex.kanavin@gmail.com>
  .../Source/Python/AutoGen/ModuleAutoGen.py    |  5 +++-
  4 files changed, 24 insertions(+), 16 deletions(-)
 
-diff --git a/BaseTools/Source/C/GenFw/Elf64Convert.c b/BaseTools/Source/C/GenFw/Elf64Convert.c
-index 9c17c90b16..fcc7864141 100644
 --- a/BaseTools/Source/C/GenFw/Elf64Convert.c
 +++ b/BaseTools/Source/C/GenFw/Elf64Convert.c
-@@ -15,6 +15,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
- #ifndef __GNUC__
+@@ -15,6 +15,8 @@ SPDX-License-Identifier: BSD-2-Clause-Pa
  #include <windows.h>
+ #undef RUNTIME_FUNCTION
  #include <io.h>
 +#else
 +#define _GNU_SOURCE
@@ -56,7 +54,7 @@ index 9c17c90b16..fcc7864141 100644
  
    //
    // Add more space in the .debug data region for the DllCharacteristicsEx
-@@ -2261,7 +2263,7 @@ WriteDebug64 (
+@@ -2310,7 +2312,7 @@ WriteDebug64 (
    EFI_IMAGE_DEBUG_CODEVIEW_NB10_ENTRY         *Nb10;
    EFI_IMAGE_DEBUG_EX_DLLCHARACTERISTICS_ENTRY *DllEntry;
  
@@ -65,7 +63,7 @@ index 9c17c90b16..fcc7864141 100644
  
    NtHdr = (EFI_IMAGE_OPTIONAL_HEADER_UNION *)(mCoffFile + mNtHdrOffset);
    DataDir = &NtHdr->Pe32Plus.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG];
-@@ -2294,7 +2296,7 @@ WriteDebug64 (
+@@ -2343,7 +2345,7 @@ WriteDebug64 (
  
    Nb10 = (EFI_IMAGE_DEBUG_CODEVIEW_NB10_ENTRY*)(Dir + 1);
    Nb10->Signature = CODEVIEW_SIGNATURE_NB10;
@@ -74,8 +72,6 @@ index 9c17c90b16..fcc7864141 100644
  }
  
  STATIC
-diff --git a/BaseTools/Source/Python/AutoGen/BuildEngine.py b/BaseTools/Source/Python/AutoGen/BuildEngine.py
-index 752a1a1f6a..02054cccf8 100644
 --- a/BaseTools/Source/Python/AutoGen/BuildEngine.py
 +++ b/BaseTools/Source/Python/AutoGen/BuildEngine.py
 @@ -70,6 +70,9 @@ class TargetDescBlock(object):
@@ -88,11 +84,9 @@ index 752a1a1f6a..02054cccf8 100644
      def AddInput(self, Input):
          if Input not in self.Inputs:
              self.Inputs.append(Input)
-diff --git a/BaseTools/Source/Python/AutoGen/GenMake.py b/BaseTools/Source/Python/AutoGen/GenMake.py
-index daec9c6d54..0e8cc20efe 100755
 --- a/BaseTools/Source/Python/AutoGen/GenMake.py
 +++ b/BaseTools/Source/Python/AutoGen/GenMake.py
-@@ -575,7 +575,7 @@ cleanlib:
+@@ -576,7 +576,7 @@ cleanlib:
                  os.remove(RespFileList)
  
          # convert source files and binary files to build targets
@@ -101,7 +95,7 @@ index daec9c6d54..0e8cc20efe 100755
          if len(self.ResultFileList) == 0 and len(MyAgo.SourceFileList) != 0:
              EdkLogger.error("build", AUTOGEN_ERROR, "Nothing to build",
                              ExtraData="[%s]" % str(MyAgo))
-@@ -726,7 +726,7 @@ cleanlib:
+@@ -727,7 +727,7 @@ cleanlib:
          OutputFile = ''
          DepsFileList = []
  
@@ -110,7 +104,7 @@ index daec9c6d54..0e8cc20efe 100755
              if Cmd[2]:
                  for CopyCmd in Cmd[2]:
                      Src, Dst = CopyCmd
-@@ -759,7 +759,7 @@ cleanlib:
+@@ -760,7 +760,7 @@ cleanlib:
              self.BuildTargetList.append('\t%s' % CmdString)
  
              self.ParseSecCmd(DepsFileList, Cmd[1])
@@ -119,7 +113,7 @@ index daec9c6d54..0e8cc20efe 100755
                  self.BuildTargetList.append('%s : %s' % (self.ReplaceMacro(SecOutputFile), self.ReplaceMacro(SecDepsFile)))
                  self.BuildTargetList.append('\t%s' % self.ReplaceMacro(SecCmd))
              self.FfsOutputFileList = []
-@@ -798,13 +798,13 @@ cleanlib:
+@@ -799,13 +799,13 @@ cleanlib:
  
      def CommandExceedLimit(self):
          FlagDict = {
@@ -140,7 +134,7 @@ index daec9c6d54..0e8cc20efe 100755
                     }
  
          RespDict = {}
-@@ -1007,9 +1007,9 @@ cleanlib:
+@@ -1019,9 +1019,9 @@ cleanlib:
                  if not self.ObjTargetDict.get(T.Target.SubDir):
                      self.ObjTargetDict[T.Target.SubDir] = set()
                  self.ObjTargetDict[T.Target.SubDir].add(NewFile)
@@ -152,8 +146,6 @@ index daec9c6d54..0e8cc20efe 100755
                  # Generate related macros if needed
                  if T.GenFileListMacro and T.FileListMacro not in self.FileListMacros:
                      self.FileListMacros[T.FileListMacro] = []
-diff --git a/BaseTools/Source/Python/AutoGen/ModuleAutoGen.py b/BaseTools/Source/Python/AutoGen/ModuleAutoGen.py
-index d05410b329..99b3f64aba 100755
 --- a/BaseTools/Source/Python/AutoGen/ModuleAutoGen.py
 +++ b/BaseTools/Source/Python/AutoGen/ModuleAutoGen.py
 @@ -1474,6 +1474,9 @@ class ModuleAutoGen(AutoGen):
@@ -175,6 +167,3 @@ index d05410b329..99b3f64aba 100755
  
          # Ignore generating makefile when it is a binary module
          if self.IsBinaryModule:
--- 
-2.30.2
-

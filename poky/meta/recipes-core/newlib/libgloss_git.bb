@@ -6,7 +6,6 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/libgloss:"
 
 SRC_URI:append = " file://libgloss-build-without-nostdinc.patch"
 SRC_URI:append:powerpc = " file://fix-rs6000-crt0.patch"
-SRC_URI:append:powerpc = " file://fix-rs6000-cflags.patch"
 
 do_configure() {
 	${S}/libgloss/configure ${EXTRA_OECONF}
@@ -22,8 +21,12 @@ do_install:append() {
 	install -d ${D}${libdir}
 	mv -v ${D}${prefix}/${TARGET_SYS}/lib/* ${D}${libdir}
 
-	# Remove original directory
-	rmdir -p --ignore-fail-on-non-empty ${D}${prefix}/${TARGET_SYS}/lib
+        # Remove original directory
+        rmdir -p --ignore-fail-on-non-empty ${D}${prefix}/${TARGET_SYS}/lib
+        # Remove empty include dir
+        rmdir ${D}/${prefix}/${TARGET_SYS}/include
+        rmdir ${D}/${prefix}/${TARGET_SYS}/
+
 }
 
 # Split packages correctly

@@ -15,6 +15,8 @@ SRC_URI = "git://github.com/HewlettPackard/netperf.git;branch=master;protocol=ht
            file://0001-netlib.c-Move-including-sched.h-out-og-function.patch \
            file://0001-nettest_omni-Remove-duplicate-variable-definitions.patch \
            file://netserver_permissions.patch \
+           file://0001-Makefile.am-add-ACLOCAL_AMFLAGS.patch \
+           file://0001-Fix-too-many-arguments-error-occurring-in-gcc-15.patch \
            "
 
 SRCREV = "3bc455b23f901dae377ca0a558e1e32aa56b31c4"
@@ -35,21 +37,15 @@ PACKAGECONFIG[sctp] = "--enable-sctp,--disable-sctp,lksctp-tools,"
 PACKAGECONFIG[intervals] = "--enable-intervals,--disable-intervals,,"
 PACKAGECONFIG[histogram] = "--enable-histogram,--disable-histogram,,"
 
-# autotools.bbclass attends to include m4 files with path depth <= 2 by
-# "find ${S} -maxdepth 2 -name \*.m4", so move m4 files from m4/m4.
-do_configure:prepend() {
-    test -d ${S}/m4/m4 && mv -f ${S}/m4/m4 ${S}/m4-files
-}
-
 do_install() {
-    sed -e 's#/usr/sbin/#${sbindir}/#g' -i ${WORKDIR}/init
+    sed -e 's#/usr/sbin/#${sbindir}/#g' -i ${UNPACKDIR}/init
     install -d ${D}${sbindir} ${D}${bindir} ${D}${sysconfdir}/init.d ${D}${systemd_system_unitdir}
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        sed -e 's#/usr/sbin/#${sbindir}/#g' ${WORKDIR}/netserver.service > ${D}${systemd_system_unitdir}/netserver.service
+        sed -e 's#/usr/sbin/#${sbindir}/#g' ${UNPACKDIR}/netserver.service > ${D}${systemd_system_unitdir}/netserver.service
     fi
     install -m 4755 src/netperf ${D}${bindir}
     install -m 4755 src/netserver ${D}${sbindir}
-    install -m 0755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/netperf
+    install -m 0755 ${UNPACKDIR}/init ${D}${sysconfdir}/init.d/netperf
 
     # man
     install -d ${D}${mandir}/man1/
@@ -69,6 +65,6 @@ do_install() {
 
 RRECOMMENDS:${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'sctp', 'kernel-module-sctp', '', d)}"
 
-INITSCRIPT_NAME="netperf"
-INITSCRIPT_PARAMS="defaults"
+INITSCRIPT_NAME = "netperf"
+INITSCRIPT_PARAMS = "defaults"
 SYSTEMD_SERVICE:${PN} = "netserver.service"

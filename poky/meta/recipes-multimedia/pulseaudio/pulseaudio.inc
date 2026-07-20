@@ -71,6 +71,14 @@ inherit bash-completion meson pkgconfig useradd gettext perlnative systemd manpa
 # if using --disable-nls
 USE_NLS = "yes"
 
+# Helps tests for -msse fail on non-SSE architectures which is all non-x86
+TUNE_CCARGS:append:toolchain-clang = " -Werror=unused-command-line-argument"
+
+# mix_neon.c:179:9: error: invalid operand in inline asm: 'vld1.s32 ${0:h}, [$2]
+#      vld1.s32 ${1:h}, [$3] '
+TOOLCHAIN:armv7ve = "gcc"
+TOOLCHAIN:armv7a = "gcc"
+
 EXTRA_OEMESON = "\
 		-Dhal-compat=false \
 		-Dorc=disabled \
@@ -121,9 +129,10 @@ PACKAGECONFIG[jack] = "-Djack=enabled,-Djack=disabled,jack"
 # able to use pulseaudio autospawn for root as well.
 PACKAGECONFIG[autospawn-for-root] = ",,,"
 PACKAGECONFIG[lirc] = "-Dlirc=enabled,-Dlirc=disabled,lirc"
-PACKAGECONFIG[webrtc] = "-Dwebrtc-aec=enabled,-Dwebrtc-aec=disabled,webrtc-audio-processing"
+PACKAGECONFIG[webrtc] = "-Dwebrtc-aec=enabled,-Dwebrtc-aec=disabled,webrtc-audio-processing-1"
 PACKAGECONFIG[ipv6] = "-Dipv6=true,-Dipv6=false,"
 PACKAGECONFIG[manpages] = "-Dman=true,-Dman=false,"
+PACKAGECONFIG[oss-output] = "-Doss-output=enabled,-Doss-output=disabled,"
 
 export TARGET_PFPU = "${TARGET_FPU}"
 
@@ -142,7 +151,7 @@ do_compile:append () {
 
 do_install:append() {
 	install -d ${D}${sysconfdir}/default/volatiles
-	install -m 0644 ${WORKDIR}/volatiles.04_pulse  ${D}${sysconfdir}/default/volatiles/04_pulse
+	install -m 0644 ${UNPACKDIR}/volatiles.04_pulse  ${D}${sysconfdir}/default/volatiles/04_pulse
 }
 
 USERADD_PACKAGES = "pulseaudio-server"

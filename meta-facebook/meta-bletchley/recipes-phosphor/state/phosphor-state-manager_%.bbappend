@@ -4,6 +4,7 @@ SRC_URI:append = " \
     file://chassis-powercycle \
     file://chassis-powercycle@.service \
     file://chassis-poweroff@.service \
+    file://chassis-poweron \
     file://chassis-poweron@.service \
     file://host-poweroff@.service \
     file://host-poweron@.service \
@@ -14,14 +15,15 @@ RDEPENDS:${PN}:append = " bash motor-ctrl"
 
 do_install:append() {
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/*.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${UNPACKDIR}/*.service ${D}${systemd_system_unitdir}/
 
     install -d ${D}${libexecdir}/${PN}
-    install -m 0755 ${WORKDIR}/chassis-powercycle ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/chassis-powercycle ${D}${libexecdir}/${PN}/
+    install -m 0755 ${UNPACKDIR}/chassis-poweron ${D}${libexecdir}/${PN}/
 }
 
-FILES:${PN}:append= " ${systemd_system_unitdir}"
-FILES:${PN}:append= " ${libexecdir}/${PN}"
+FILES:${PN}:append = " ${systemd_system_unitdir}"
+FILES:${PN}:append = " ${libexecdir}/${PN}"
 
 # Because Bletchley does not have IPMI between Bmc & Host, the Host init
 # state will set to Off after Bmc booted. We require an extra service to
@@ -42,7 +44,13 @@ CHASSIS_DEFAULT_TARGETS:remove = " \
     obmc-chassis-powerreset@{}.target.requires/phosphor-reset-chassis-running@{}.service \
     obmc-chassis-poweroff@{}.target.requires/obmc-power-stop@{}.service \
     obmc-chassis-poweron@{}.target.requires/obmc-power-start@{}.service \
+    obmc-host-shutdown@{}.target.requires/obmc-chassis-poweroff@{}.target \
 "
+
+SYSTEMD_SERVICE:${PN}-chassis:remove = "phosphor-reset-chassis-on@.service"
+SYSTEMD_SERVICE:${PN}-chassis:remove = "phosphor-reset-chassis-running@.service"
+SYSTEMD_SERVICE:${PN}-chassis:remove = "obmc-power-start@.service"
+SYSTEMD_SERVICE:${PN}-chassis:remove = "obmc-power-stop@.service"
 
 HOST_DEFAULT_TARGETS:append = " \
     obmc-host-startmin@{}.target.wants/host-poweron@{}.service \

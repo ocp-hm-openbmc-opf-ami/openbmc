@@ -8,6 +8,7 @@ LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=55c5fdf02cfcca3fc9621b6f2ceae10f"
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>\d+(\.\d+)+)"
 
 SRC_URI = "git://github.com/openSUSE/xinetd.git;protocol=https;branch=master \
+           file://0001-Use-monotonic-time.patch \
            file://xinetd.init \
            file://xinetd.default \
            file://xinetd.service \
@@ -30,19 +31,19 @@ INITSCRIPT_PARAMS = "defaults"
 PACKAGECONFIG ??= "tcp-wrappers"
 PACKAGECONFIG[tcp-wrappers] = "--with-libwrap,,tcp-wrappers"
 
-CFLAGS += "-D_GNU_SOURCE"
+CFLAGS += "-D_GNU_SOURCE -std=gnu17"
 
 CONFFILES:${PN} = "${sysconfdir}/xinetd.conf"
 
 do_install:append() {
        install -d "${D}${sysconfdir}/init.d"
        install -d "${D}${sysconfdir}/default"
-       install -m 755 "${WORKDIR}/xinetd.init" "${D}${sysconfdir}/init.d/xinetd"
-       install -m 644 "${WORKDIR}/xinetd.default" "${D}${sysconfdir}/default/xinetd"
+       install -m 755 "${UNPACKDIR}/xinetd.init" "${D}${sysconfdir}/init.d/xinetd"
+       install -m 644 "${UNPACKDIR}/xinetd.default" "${D}${sysconfdir}/default/xinetd"
 
        # Install systemd unit files
        install -d ${D}${systemd_system_unitdir}
-       install -m 0644 ${WORKDIR}/xinetd.service ${D}${systemd_system_unitdir}
+       install -m 0644 ${UNPACKDIR}/xinetd.service ${D}${systemd_system_unitdir}
        sed -i -e 's,@BASE_BINDIR@,${base_bindir},g' \
               -e 's,@SBINDIR@,${sbindir},g' \
               ${D}${systemd_system_unitdir}/xinetd.service

@@ -18,9 +18,9 @@ SRC_URI = "http://grsecurity.net/stable/${BP}.tar.gz \
            "
 SRC_URI[sha256sum] = "2459290f367a47c8a1ce4ea2ec08359799ea33dc15ed4436439596ce88284fb9"
 
-S = "${WORKDIR}/gradm"
+UPSTREAM_CHECK_URI = "https://grsecurity.net/download"
 
-inherit autotools-brokensep
+S = "${WORKDIR}/gradm"
 
 do_compile() {
     oe_runmake 'CC=${CC}'                               \

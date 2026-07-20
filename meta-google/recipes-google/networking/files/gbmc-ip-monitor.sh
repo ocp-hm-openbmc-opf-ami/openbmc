@@ -81,7 +81,7 @@ gbmc_ip_monitor_parse_line() {
     if [ -n "${BASH_REMATCH[1]}" ]; then
       action=del
     fi
-    intf="${BASH_REMATCH[2]}"
+    intf="${BASH_REMATCH[2]%%@*}"
     fam="${BASH_REMATCH[3]}"
     ip="${BASH_REMATCH[4]}"
     scope="${BASH_REMATCH[7]}"
@@ -91,7 +91,7 @@ gbmc_ip_monitor_parse_line() {
     change=route
     action=add
     if ! [[ "$line" =~ ^\[ROUTE\](Deleted )?(.*)$ ]]; then
-      echo "Failed to parse link: $line" >&2
+      echo "Failed to parse route: $line" >&2
       return 1
     fi
     if [ -n "${BASH_REMATCH[1]}" ]; then
@@ -103,14 +103,17 @@ gbmc_ip_monitor_parse_line() {
     action=add
     pfx_re='^\[LINK\](Deleted )?[0-9]+:[[:space:]]*'
     intf_re='([^:]+):[[:space:]]+'
-    if ! [[ "$line" =~ ${pfx_re}${intf_re} ]]; then
+    carrier_re='state[[:space:]]+([^ ]+)([[:space:]]+|$)'
+    combined_re="${pfx_re}${intf_re}.*${carrier_re}"
+    if ! [[ "$line" =~ ${combined_re} ]]; then
       echo "Failed to parse link: $line" >&2
       return 1
     fi
     if [ -n "${BASH_REMATCH[1]}" ]; then
       action=del
     fi
-    intf="${BASH_REMATCH[2]}"
+    intf="${BASH_REMATCH[2]%%@*}"
+    carrier="${BASH_REMATCH[3]}"
     read -ra data || return
     mac="${data[1]}"
   elif [[ "$line" == '[DEFER]'* ]]; then
@@ -123,6 +126,7 @@ gbmc_ip_monitor_parse_line() {
 
 return 0 2>/dev/null
 
+# shellcheck disable=SC2329
 cleanup() {
   local st="$?"
   trap - HUP INT QUIT ABRT TERM EXIT

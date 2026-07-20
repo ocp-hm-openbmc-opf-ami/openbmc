@@ -6,10 +6,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 DEPENDS += "sdbusplus"
 DEPENDS += "phosphor-logging"
 DEPENDS += "phosphor-dbus-interfaces"
-DEPENDS += "boost"
-DEPENDS += "nss-pam-ldapd"
 DEPENDS += "systemd"
-SRCREV = "16c2b681dd3ce7c2d71a150c11138fd65c6c4f21"
+SRCREV = "2a137f4de7d678cdc87f5d6b62c85fa7b1d95ec1"
 PV = "1.0+git${SRCPV}"
 PR = "r1"
 
@@ -24,13 +22,17 @@ inherit useradd
 
 EXTRA_OEMESON = "-Dtests=disabled"
 
-PACKAGECONFIG ?= "root-user-mgmt"
+PACKAGECONFIG ?= " \
+    root-user-mgmt\
+    ${@bb.utils.filter('DISTRO_FEATURES', 'ldap', d)} \
+    "
 PACKAGECONFIG[root-user-mgmt] = "-Droot_user_mgmt=enabled, -Droot_user_mgmt=disabled"
+PACKAGECONFIG[ldap] = "-Dldap=enabled, -Dldap=disabled, nss-pam-ldapd"
 
 
 do_install:append() {
   install -d ${D}${libexecdir}
-  install -m 0755 ${WORKDIR}/upgrade_hostconsole_group.sh ${D}${libexecdir}/upgrade_hostconsole_group.sh
+  install -m 0755 ${UNPACKDIR}/upgrade_hostconsole_group.sh ${D}${libexecdir}/upgrade_hostconsole_group.sh
 }
 
 FILES:phosphor-ldap += " \
@@ -43,6 +45,7 @@ FILES:${PN} += " \
 "
 
 USERADD_PACKAGES = "${PN} phosphor-ldap"
+RDEPENDS:${PN}:append:df-google-authenticator-libpam = " pam-google-authenticator google-authenticator-libpam"
 
 PACKAGE_BEFORE_PN = "phosphor-ldap"
 DBUS_PACKAGES = "${USERADD_PACKAGES}"

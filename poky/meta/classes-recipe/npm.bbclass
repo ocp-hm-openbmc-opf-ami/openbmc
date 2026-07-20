@@ -72,8 +72,10 @@ def npm_pack(env, srcdir, workdir):
         j = json.load(f)
 
     # base does not really matter and is for documentation purposes
-    # only.  But the 'version' part must exist because other parts of
+    # only. But the 'version' part must exist because other parts of
     # the bbclass rely on it.
+    if 'version' not in j:
+        j['version'] = '0.0.0-unknown'
     base = j['name'].split('/')[-1]
     tarball = os.path.join(workdir, "%s-%s.tgz" % (base, j['version']));
 
@@ -152,6 +154,9 @@ python npm_do_configure() {
         has_shrinkwrap_file = False
 
     if has_shrinkwrap_file:
+       if int(orig_shrinkwrap.get("lockfileVersion", 0)) < 2:
+           bb.fatal("%s: lockfileVersion version 2 or later is required" % orig_shrinkwrap_file)
+
        cached_shrinkwrap = copy.deepcopy(orig_shrinkwrap)
        for package in orig_shrinkwrap["packages"]:
             if package != "":

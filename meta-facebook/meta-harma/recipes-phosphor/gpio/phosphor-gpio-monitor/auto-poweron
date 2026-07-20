@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# shellcheck source=meta-facebook/meta-harma/recipes-phosphor/gpio/phosphor-gpio-monitor/auto-power
+source /usr/libexec/phosphor-gpio-monitor/auto-power
+
+# End the script if the FRU version is DVT1 and triggered by SGPIO18
+if ! check-auto-power-condition "$1"; then
+    exit 0
+fi
+
+sleep 1
+
+# Set Host Power On
+busctl set-property xyz.openbmc_project.State.Host0 \
+    /xyz/openbmc_project/state/host0 \
+    xyz.openbmc_project.State.Host \
+    RequestedHostTransition s \
+    xyz.openbmc_project.State.Host.Transition.On
+
+# Turn on the power Led
+systemctl start obmc-led-group-start@power_on.service

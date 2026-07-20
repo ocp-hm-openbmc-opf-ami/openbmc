@@ -19,7 +19,7 @@ DESCRIPTION = "\
 "
 HOMEPAGE = "http://www.postgresql.com"
 LICENSE = "0BSD"
-DEPENDS = "libnsl2 readline tzcode-native"
+DEPENDS = "libnsl2 tzcode-native perl bison-native"
 
 ARM_INSTRUCTION_SET = "arm"
 
@@ -37,9 +37,9 @@ LEAD_SONAME = "libpq.so"
 export LDFLAGS_SL = "${LDFLAGS}"
 export LDFLAGS_EX_BE = "-Wl,--export-dynamic"
 
-inherit autotools pkgconfig perlnative python3native python3targetconfig useradd update-rc.d systemd gettext cpan-base multilib_header
+inherit autotools pkgconfig perlnative python3native python3targetconfig useradd update-rc.d systemd gettext perl-version multilib_header
 
-CFLAGS += "-I${STAGING_INCDIR}/${PYTHON_DIR} -I${STAGING_INCDIR}/tcl8.6"
+CFLAGS += "-I${STAGING_INCDIR}/${PYTHON_DIR}"
 
 SYSTEMD_SERVICE:${PN} = "postgresql.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "disable"
@@ -55,7 +55,7 @@ pkg_postinst:${PN} () {
 
 PACKAGECONFIG ??= " \
     ${@bb.utils.filter('DISTRO_FEATURES', 'pam systemd', d)} \
-    openssl python uuid libxml tcl perl zlib icu \
+    openssl python uuid libxml perl zlib icu readline \
 "
 PACKAGECONFIG[tcl] = "--with-tcl --with-tclconfig=${STAGING_BINDIR_CROSS},--without-tcl,tcl tcl-native,"
 PACKAGECONFIG[perl] = "--with-perl,--without-perl,perl,perl"
@@ -71,8 +71,9 @@ PACKAGECONFIG[zlib] = "--with-zlib,--without-zlib,zlib"
 PACKAGECONFIG[lz4] = "--with-lz4,--without-lz4,lz4"
 PACKAGECONFIG[openssl] = "--with-ssl=openssl,ac_cv_file__dev_urandom=yes,openssl"
 PACKAGECONFIG[icu] = "--with-icu,--without-icu,icu,icu"
+PACKAGECONFIG[readline] = "--with-readline,--without-readline,readline"
 
-EXTRA_OECONF += "--enable-thread-safety --disable-rpath \
+EXTRA_OECONF += "--disable-rpath \
     --datadir=${datadir}/${BPN} \
     --sysconfdir=${sysconfdir}/${BPN} \
 "
@@ -122,9 +123,17 @@ python populate_packages:prepend() {
 
 }
 
+# Same as the function in cpan-base.bbclass (but without the perl RDEPENDS)
+def is_target(d):
+    if not bb.data.inherits_class('native', d):
+        return "yes"
+    return "no"
+
 # This will make native perl use target settings (for include dirs etc.)
 export PERLCONFIGTARGET = "${@is_target(d)}"
 export PERL_ARCHLIB = "${STAGING_LIBDIR}${PERL_OWN_DIR}/perl5/${@get_perl_version(d)}/${@get_perl_arch(d)}"
+
+EXTRA_AUTORECONF += "-I config"
 
 do_configure() {
     # do_configure
@@ -168,6 +177,11 @@ do_configure() {
 
 do_compile:append() {
     oe_runmake -C contrib all
+
+    for f in `find ${B} -name "*.[c|h]"`;
+    do
+        sed -i -e 's,${B}/../,,' $f
+    done
 }
 
 # server needs to configure user and group
@@ -198,24 +212,24 @@ do_install:append() {
 
     # install dirs and server init
     install -d ${D}${sysconfdir}/init.d
-    install -m 0755 ${WORKDIR}/${BPN}.init ${D}${sysconfdir}/init.d/${BPN}-server
+    install -m 0755 ${UNPACKDIR}/${BPN}.init ${D}${sysconfdir}/init.d/${BPN}-server
     sed -i -e "s/^PGVERSION=.*$/PGVERSION=${PV}/g" ${D}${sysconfdir}/init.d/${BPN}-server
-    install -m 0755 ${WORKDIR}/${BPN}-setup ${D}${bindir}/${BPN}-setup
+    install -m 0755 ${UNPACKDIR}/${BPN}-setup ${D}${bindir}/${BPN}-setup
     install -d -m 700 ${D}${localstatedir}/lib/${BPN}/data
     install -d -m 700 ${D}${localstatedir}/lib/${BPN}/backups
-    install -m 644 ${WORKDIR}/${BPN}-profile ${D}${localstatedir}/lib/${BPN}/.profile
+    install -m 644 ${UNPACKDIR}/${BPN}-profile ${D}${localstatedir}/lib/${BPN}/.profile
     chown -R postgres:postgres ${D}${localstatedir}/lib/${BPN}
     # multiple server config directory
     install -d -m 700 ${D}${sysconfdir}/default/${BPN}
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'true', 'false', d)}; then
         install -d ${D}${sysconfdir}/pam.d
-        install -m 644 ${WORKDIR}/postgresql.pam ${D}${sysconfdir}/pam.d/postgresql
+        install -m 644 ${UNPACKDIR}/postgresql.pam ${D}${sysconfdir}/pam.d/postgresql
     fi
 
     # Install systemd unit files
     install -d ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/postgresql.service ${D}${systemd_unitdir}/system
+    install -m 0644 ${UNPACKDIR}/postgresql.service ${D}${systemd_unitdir}/system
     sed -i -e 's,@BINDIR@,${bindir},g' \
         ${D}${systemd_unitdir}/system/postgresql.service
     # Remove the build path
@@ -235,7 +249,7 @@ postgresql_fix_sources () {
 	for f in ${PKGD}${TARGET_DBGSRC_DIR}/src/pl/plperl/Util.c \
 			${PKGD}${TARGET_DBGSRC_DIR}/src/pl/plperl/SPI.c; do
 		if [ -e $f ]; then
-			sed -i -e 's#${B}/../${P}#${TARGET_DBGSRC_DIR}#g' $f
+			sed -i -e 's#${B}/../${BP}#${TARGET_DBGSRC_DIR}#g' $f
 		fi
 	done
 }

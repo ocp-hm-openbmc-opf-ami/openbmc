@@ -1,0 +1,7 @@
+{
+    "name": "OpenBMC",
+    "type": "base",
+    "ref": "openbmc",
+    "description": "OpenBMC Repo",
+    "clone_dir": "."
+}

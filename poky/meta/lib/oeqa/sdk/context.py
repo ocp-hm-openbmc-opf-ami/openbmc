@@ -23,6 +23,13 @@ class OESDKTestContext(OETestContext):
         self.target_pkg_manifest = target_pkg_manifest
         self.host_pkg_manifest = host_pkg_manifest
 
+        # match multilib according to sdk_env
+        self.multilib = ""
+        multilibs = self.td.get('MULTILIB_VARIANTS', '').split()
+        for ml in multilibs:
+            if ml in os.path.basename(self.sdk_env):
+                self.multilib = ml
+
     def _hasPackage(self, manifest, pkg, regex=False):
         if regex:
             # do regex match
@@ -40,12 +47,8 @@ class OESDKTestContext(OETestContext):
         return self._hasPackage(self.host_pkg_manifest, pkg, regex=regex)
 
     def hasTargetPackage(self, pkg, multilib=False, regex=False):
-        if multilib:
-            # match multilib according to sdk_env
-            mls = self.td.get('MULTILIB_VARIANTS', '').split()
-            for ml in mls:
-                if ('ml'+ml) in self.sdk_env:
-                    pkg = ml + '-' + pkg
+        if multilib and self.multilib:
+            pkg = self.multilib + '-' + pkg
         return self._hasPackage(self.target_pkg_manifest, pkg, regex=regex)
 
 class OESDKTestContextExecutor(OETestContextExecutor):

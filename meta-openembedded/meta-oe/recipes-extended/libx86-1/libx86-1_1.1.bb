@@ -16,10 +16,14 @@ SRC_URI = "https://mirrors.slackware.com/slackware/slackware-current/source/ap/l
 "
 SRC_URI[sha256sum] = "5bf13104cb327472b5cb65643352a9138646becacc06763088d83001d832d048"
 
+UPSTREAM_CHECK_URI = "https://mirrors.slackware.com/slackware/slackware-current/source/ap/libx86/"
+
 BPN = "libx86"
 COMPATIBLE_HOST = '(x86_64|i.86).*-linux'
 
 export LIBDIR = "${libdir}"
 export BACKEND = "x86emu"
 
-inherit autotools-brokensep
+do_install() {
+    oe_runmake 'DESTDIR=${D}' install
+}

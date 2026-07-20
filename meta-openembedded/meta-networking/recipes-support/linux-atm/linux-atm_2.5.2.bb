@@ -16,6 +16,8 @@ SRC_URI = "http://nchc.dl.sourceforge.net/project/${BPN}/${BPN}/${PV}/${BPN}-${P
            file://0001-make-Add-PREFIX-knob.patch \
            file://0001-include-string-h-from-memcpy-and-strcpy-function-pro.patch \
            file://0001-configure-Check-for-symbol-from-libresolv-instead-of.patch \
+           file://0001-Fix-implicit-declaration-error.patch \
+           file://0002-Fix-build-with-gcc-15.patch \
            "
 
 SRC_URI:append:libc-musl = " file://musl-no-on_exit.patch"

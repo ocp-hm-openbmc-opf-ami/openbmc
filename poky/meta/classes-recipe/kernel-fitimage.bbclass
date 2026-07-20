@@ -5,6 +5,7 @@
 #
 
 inherit kernel-uboot kernel-artifact-names uboot-config
+require conf/image-fitimage.conf
 
 def get_fit_replacement_type(d):
     kerneltypes = d.getVar('KERNEL_IMAGETYPES') or ""
@@ -29,80 +30,28 @@ KERNEL_IMAGETYPE_REPLACEMENT ?= "${@get_fit_replacement_type(d)}"
 DEPENDS:append = " ${@'u-boot-tools-native dtc-native' if 'fitImage' in (d.getVar('KERNEL_IMAGETYPES') or '').split() else ''}"
 
 python __anonymous () {
-        # Override KERNEL_IMAGETYPE_FOR_MAKE variable, which is internal
-        # to kernel.bbclass . We have to override it, since we pack zImage
-        # (at least for now) into the fitImage .
-        typeformake = d.getVar("KERNEL_IMAGETYPE_FOR_MAKE") or ""
-        if 'fitImage' in typeformake.split():
-            d.setVar('KERNEL_IMAGETYPE_FOR_MAKE', typeformake.replace('fitImage', d.getVar('KERNEL_IMAGETYPE_REPLACEMENT')))
+    # Override KERNEL_IMAGETYPE_FOR_MAKE variable, which is internal
+    # to kernel.bbclass . We have to override it, since we pack zImage
+    # (at least for now) into the fitImage .
+    typeformake = d.getVar("KERNEL_IMAGETYPE_FOR_MAKE") or ""
+    if 'fitImage' in typeformake.split():
+        d.setVar('KERNEL_IMAGETYPE_FOR_MAKE', typeformake.replace('fitImage', d.getVar('KERNEL_IMAGETYPE_REPLACEMENT')))
 
-        image = d.getVar('INITRAMFS_IMAGE')
-        if image:
+    image = d.getVar('INITRAMFS_IMAGE')
+    if image and not bb.utils.to_boolean(d.getVar('INITRAMFS_IMAGE_BUNDLE')):
+        if d.getVar('INITRAMFS_MULTICONFIG'):
+            mc = d.getVar('BB_CURRENT_MC')
+            d.appendVarFlag('do_assemble_fitimage_initramfs', 'mcdepends', ' mc:' + mc + ':${INITRAMFS_MULTICONFIG}:${INITRAMFS_IMAGE}:do_image_complete')
+        else:
             d.appendVarFlag('do_assemble_fitimage_initramfs', 'depends', ' ${INITRAMFS_IMAGE}:do_image_complete')
 
-        ubootenv = d.getVar('UBOOT_ENV')
-        if ubootenv:
-            d.appendVarFlag('do_assemble_fitimage', 'depends', ' virtual/bootloader:do_populate_sysroot')
-
-        #check if there are any dtb providers
-        providerdtb = d.getVar("PREFERRED_PROVIDER_virtual/dtb")
-        if providerdtb:
-            d.appendVarFlag('do_assemble_fitimage', 'depends', ' virtual/dtb:do_populate_sysroot')
-            d.appendVarFlag('do_assemble_fitimage_initramfs', 'depends', ' virtual/dtb:do_populate_sysroot')
-            d.setVar('EXTERNAL_KERNEL_DEVICETREE', "${RECIPE_SYSROOT}/boot/devicetree")
+    #check if there are any dtb providers
+    providerdtb = d.getVar("PREFERRED_PROVIDER_virtual/dtb")
+    if providerdtb:
+        d.appendVarFlag('do_assemble_fitimage', 'depends', ' virtual/dtb:do_populate_sysroot')
+        d.appendVarFlag('do_assemble_fitimage_initramfs', 'depends', ' virtual/dtb:do_populate_sysroot')
+        d.setVar('EXTERNAL_KERNEL_DEVICETREE', "${RECIPE_SYSROOT}/boot/devicetree")
 }
-
-
-# Description string
-FIT_DESC ?= "Kernel fitImage for ${DISTRO_NAME}/${PV}/${MACHINE}"
-
-# Kernel fitImage Hash Algo
-FIT_HASH_ALG ?= "sha256"
-
-# Kernel fitImage Signature Algo
-FIT_SIGN_ALG ?= "rsa2048"
-
-# Kernel / U-Boot fitImage Padding Algo
-FIT_PAD_ALG ?= "pkcs-1.5"
-
-# Generate keys for signing Kernel fitImage
-FIT_GENERATE_KEYS ?= "0"
-
-# Size of private keys in number of bits
-FIT_SIGN_NUMBITS ?= "2048"
-
-# args to openssl genrsa (Default is just the public exponent)
-FIT_KEY_GENRSA_ARGS ?= "-F4"
-
-# args to openssl req (Default is -batch for non interactive mode and
-# -new for new certificate)
-FIT_KEY_REQ_ARGS ?= "-batch -new"
-
-# Standard format for public key certificate
-FIT_KEY_SIGN_PKCS ?= "-x509"
-
-# Sign individual images as well
-FIT_SIGN_INDIVIDUAL ?= "0"
-
-FIT_CONF_PREFIX ?= "conf-"
-FIT_CONF_PREFIX[doc] = "Prefix to use for FIT configuration node name"
-
-FIT_SUPPORTED_INITRAMFS_FSTYPES ?= "cpio.lz4 cpio.lzo cpio.lzma cpio.xz cpio.zst cpio.gz ext2.gz cpio"
-
-# Allow user to select the default DTB for FIT image when multiple dtb's exists.
-FIT_CONF_DEFAULT_DTB ?= ""
-
-# length of address in number of <u32> cells
-# ex: 1 32bits address, 2 64bits address
-FIT_ADDRESS_CELLS ?= "1"
-
-# Keys used to sign individually image nodes.
-# The keys to sign image nodes must be different from those used to sign
-# configuration nodes, otherwise the "required" property, from
-# UBOOT_DTB_BINARY, will be set to "conf", because "conf" prevails on "image".
-# Then the images signature checking will not be mandatory and no error will be
-# raised in case of failure.
-# UBOOT_SIGN_IMG_KEYNAME = "dev2" # keys name in keydir (eg. "dev2.crt", "dev2.key")
 
 #
 # Emit the fitImage ITS header
@@ -294,6 +243,8 @@ EOF
 fitimage_emit_section_setup() {
 
 	setup_csum="${FIT_HASH_ALG}"
+	setup_sign_algo="${FIT_SIGN_ALG}"
+	setup_sign_keyname="${UBOOT_SIGN_IMG_KEYNAME}"
 
 	cat << EOF >> $1
                 setup-$2 {
@@ -310,6 +261,17 @@ fitimage_emit_section_setup() {
                         };
                 };
 EOF
+
+	if [ "${UBOOT_SIGN_ENABLE}" = "1" -a "${FIT_SIGN_INDIVIDUAL}" = "1" -a -n "$setup_sign_keyname" ] ; then
+		sed -i '$ d' $1
+		cat << EOF >> $1
+                        signature-1 {
+                                algo = "$setup_csum,$setup_sign_algo";
+                                key-name-hint = "$setup_sign_keyname";
+                        };
+                };
+EOF
+	fi
 }
 
 #
@@ -429,7 +391,7 @@ fitimage_emit_section_config() {
 	fi
 
 	dtb_path="${EXTERNAL_KERNEL_DEVICETREE}/${dtb_image_sect}"
-	if [ -e "$dtb_path" ]; then
+	if [ -f "$dtb_path" ] || [ -L "$dtb_path" ]; then
 		compat=$(fdtget -t s "$dtb_path" / compatible | sed 's/ /", "/g')
 		if [ -n "$compat" ]; then
 			compatible_line="compatible = \"$compat\";"
@@ -480,13 +442,13 @@ fitimage_emit_section_config() {
 		# default node is selected based on dtb ID if it is present,
 		# otherwise its selected based on kernel ID
 		if [ -n "$dtb_image" ]; then
-		        # Select default node as user specified dtb when
-		        # multiple dtb exists.
-		        if [ -n "$default_dtb_image" ]; then
-			        default_line="default = \"${FIT_CONF_PREFIX}$default_dtb_image\";"
-		        else
-			        default_line="default = \"${FIT_CONF_PREFIX}$dtb_image\";"
-		        fi
+			# Select default node as user specified dtb when
+			# multiple dtb exists.
+			if [ -n "$default_dtb_image" ]; then
+				default_line="default = \"${FIT_CONF_PREFIX}$default_dtb_image\";"
+			else
+				default_line="default = \"${FIT_CONF_PREFIX}$dtb_image\";"
+			fi
 		else
 			default_line="default = \"${FIT_CONF_PREFIX}$kernel_id\";"
 		fi
@@ -605,13 +567,13 @@ fitimage_assemble() {
 				DTB_PATH="${KERNEL_OUTPUT_DIR}/$DTB"
 			fi
 
-		        # Strip off the path component from the filename
+			# Strip off the path component from the filename
 			if "${@'false' if oe.types.boolean(d.getVar('KERNEL_DTBVENDORED')) else 'true'}"; then
-			    DTB=`basename $DTB`
+				DTB=`basename $DTB`
 			fi
 
 			# Set the default dtb image if it exists in the devicetree.
-			if [ ${FIT_CONF_DEFAULT_DTB} = $DTB ];then
+			if [ "${FIT_CONF_DEFAULT_DTB}" = "$DTB" ];then
 				default_dtb_image=$(echo "$DTB" | tr '/' '_')
 			fi
 
@@ -658,14 +620,10 @@ fitimage_assemble() {
 	# Step 3: Prepare a u-boot script section
 	#
 
-	if [ -n "${UBOOT_ENV}" ] && [ -d "${STAGING_DIR_HOST}/boot" ]; then
-		if [ -e "${STAGING_DIR_HOST}/boot/${UBOOT_ENV_BINARY}" ]; then
-			cp ${STAGING_DIR_HOST}/boot/${UBOOT_ENV_BINARY} ${B}
-			bootscr_id="${UBOOT_ENV_BINARY}"
-			fitimage_emit_section_boot_script $1 "$bootscr_id" ${UBOOT_ENV_BINARY}
-		else
-			bbwarn "${STAGING_DIR_HOST}/boot/${UBOOT_ENV_BINARY} not found."
-		fi
+	if [ -n "${FIT_UBOOT_ENV}" ]; then
+		cp ${UNPACKDIR}/${FIT_UBOOT_ENV} ${B}
+		bootscr_id="${FIT_UBOOT_ENV}"
+		fitimage_emit_section_boot_script $1 "$bootscr_id" ${FIT_UBOOT_ENV}
 	fi
 
 	#
@@ -683,7 +641,7 @@ fitimage_assemble() {
 		# Find and use the first initramfs image archive type we find
 		found=
 		for img in ${FIT_SUPPORTED_INITRAMFS_FSTYPES}; do
-			initramfs_path="${DEPLOY_DIR_IMAGE}/${INITRAMFS_IMAGE_NAME}.$img"
+			initramfs_path="${INITRAMFS_DEPLOY_DIR_IMAGE}/${INITRAMFS_IMAGE_NAME}.$img"
 			if [ -e "$initramfs_path" ]; then
 				bbnote "Found initramfs image: $initramfs_path"
 				found=true
@@ -715,8 +673,8 @@ fitimage_assemble() {
 	# kernel-fitimage.bbclass currently only supports a single kernel (no less or
 	# more) to be added to the FIT image along with 0 or more device trees and
 	# 0 or 1 ramdisk.
-        # It is also possible to include an initramfs bundle (kernel and rootfs in one binary)
-        # When the initramfs bundle is used ramdisk is disabled.
+	# It is also possible to include an initramfs bundle (kernel and rootfs in one binary)
+	# When the initramfs bundle is used ramdisk is disabled.
 	# If a device tree is to be part of the FIT image, then select
 	# the default configuration to be used is based on the dtbcount. If there is
 	# no dtb present than select the default configuation to be based on

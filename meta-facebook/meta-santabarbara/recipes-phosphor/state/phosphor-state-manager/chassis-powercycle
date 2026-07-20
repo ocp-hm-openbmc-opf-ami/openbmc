@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# shellcheck source=meta-facebook/meta-santabarbara/recipes-phosphor/state/phosphor-state-manager/power-cmd
+source /usr/libexec/phosphor-state-manager/power-cmd
+
+# shellcheck source=meta-facebook/recipes-fb/obmc_functions/files/fb-common-functions
+source /usr/libexec/fb-common-functions
+
+#Sled cycle
+echo "Starting Chassis Power Cycle"
+
+chassis-power-cycle-ltc4287() {
+    # LTC4287 MFR_REBOOT_CONTROL (FDh) Read/Write
+    # [3]:
+    #       REBOOT 0 Write a 1 to reboot.
+    # [2:0]
+    #       RBT_DL 100 Configures Auto-Reboot turn-on Delay (tDL(RBT)) after the REBOOT bit is set to 1
+    #       RBT_DL[2:0] DELAY
+    #       000 0.580 s
+    #       001 1.16 s
+    #       010 2.32 s
+    #       011 4.64 s
+    #       100 9.28 s
+    #       101 18.6 s
+    #       110 37.1 s
+    #       111 74.2 s
+    if ! i2cset -f -y 47 0x0f 0xfd 0x05; then
+        echo "52V HSCs set reboot delay failed"
+        return 1
+    fi
+
+    if ! i2cset -f -y 47 0x43 0xfd 0x0d; then
+        echo "52V HSC1 set reboot bit failed"
+        return 1
+    fi
+
+    if ! i2cset -f -y 47 0x41 0xfd 0x0d; then
+        echo "52V HSC2 set reboot bit failed"
+        return 1
+    fi
+
+    return 0
+}
+
+chassis-power-cycle-xdp711() {
+    # XDP711 RESTART command (ECh)
+    # This command turns-off the hot-swap for 10 seconds. Then it is automatically turned back on.
+    # This command is write-only without a data byte.
+
+    if ! i2cset -f -y 47 0x14 0xec; then
+        echo "52V HSC1 set reboot bit failed"
+        return 1
+    fi
+
+    if ! i2cset -f -y 47 0x16 0xec; then
+        echo "52V HSC2 set reboot bit failed"
+        return 1
+    fi
+
+    return 0
+}
+
+chassis-power-cycle()
+{
+    if [ "$(i2cdetect -y -q 47 0x0f 0x0f | grep "00:" | awk '{print $2}')" != "--" ]; then
+        # run main source power cycle if 47-000f exist
+        chassis-power-cycle-ltc4287
+        ret=$?
+    else
+        # run 2nd source power cycle
+        chassis-power-cycle-xdp711
+        ret=$?
+    fi
+
+    return $ret
+}
+
+declare -A iris_map=(
+    [0]="FM_MODULE_PWR_EN_N_1B"
+    [1]="FM_MODULE_PWR_EN_N_3B"
+    [2]="FM_MODULE_PWR_EN_N_2B"
+    [3]="FM_MODULE_PWR_EN_N_4B"
+)
+
+iris-power-cycle() {
+    local gpio="${iris_map[$1]}"
+
+    set_gpio "$gpio" 1
+    sleep 5
+    set_gpio "$gpio" 0
+}
+
+ChassisNumber=$1
+
+if [ "$ChassisNumber" == 0 ]
+then
+  echo "Starting Chassis Power Cycle"
+  chassis-power-cycle
+elif [ "$ChassisNumber" == 1 ] || [ "$ChassisNumber" == 2 ] || 
+    [ "$ChassisNumber" == 3 ] || [ "$ChassisNumber" == 4 ]
+then
+  echo "Starting Iris Module $ChassisNumber Power Cycle"
+  iris-power-cycle $((ChassisNumber - 1))
+fi

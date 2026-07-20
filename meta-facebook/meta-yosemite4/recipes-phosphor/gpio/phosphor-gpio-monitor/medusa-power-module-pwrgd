@@ -1,0 +1,17 @@
+#!/bin/bash
+
+medusa_power_module_pwrgd()
+{
+    local pu_num="$1"
+    power_rail="/xyz/openbmc_project/inventory/system/board/Yosemite_4_Medusa_Board/MEDUSA_DELTA${pu_num}_12V"
+    failure_data="Medusa Power Module $pu_num Fault"
+
+    # Send event
+    log-create xyz.openbmc_project.State.Power.PowerRailFault --json \
+        "{\"POWER_RAIL\": \"$power_rail\", \"FAILURE_DATA\": \"$failure_data\"}"
+}
+
+group="$1"
+
+medusa_power_module_pwrgd "$((group*2))"
+medusa_power_module_pwrgd "$((group*2+1))"

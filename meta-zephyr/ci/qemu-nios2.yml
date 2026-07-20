@@ -1,0 +1,7 @@
+header:
+  version: 9
+  includes:
+    - ci/base.yml
+
+
+machine: qemu-nios2

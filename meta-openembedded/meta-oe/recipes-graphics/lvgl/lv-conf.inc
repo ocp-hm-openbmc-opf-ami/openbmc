@@ -2,6 +2,8 @@ PACKAGECONFIG ??= "drm"
 
 PACKAGECONFIG[drm] = ",,libdrm"
 PACKAGECONFIG[fbdev] = ",,"
+PACKAGECONFIG[gridnav] = ",,"
+PACKAGECONFIG[thorvg] = ",,"
 PACKAGECONFIG[sdl] = ",,virtual/libsdl2 libsdl2-image"
 
 # Add libdrm include if drm is selected in PACKAGECONFIG
@@ -14,6 +16,7 @@ LVGL_CONFIG_USE_EVDEV = "${@bb.utils.contains_any('PACKAGECONFIG', 'drm fbdev', 
 LVGL_CONFIG_USE_FBDEV = "${@bb.utils.contains('PACKAGECONFIG', 'fbdev', '1', '0', d)}"
 
 LVGL_CONFIG_USE_SDL = "${@bb.utils.contains('PACKAGECONFIG', 'sdl', '1', '0', d)}"
+
 LVGL_CONFIG_SDL_FULLSCREEN ?= "0"
 
 LVGL_CONFIG_LV_MEM_CUSTOM ?= "0"
@@ -26,7 +29,19 @@ LVGL_CONFIG_LV_LOG_PRINTF ?= "0"
 
 LVGL_CONFIG_LV_USE_FONT_COMPRESSED ?= "0"
 
+LVGL_CONFIG_LV_USE_GRIDNAV = "${@bb.utils.contains('PACKAGECONFIG', 'gridnav', '1', '0', d)}"
+
 LVGL_CONFIG_LV_THEME_DEFAULT_DARK ?= "0"
+
+LVGL_CONFIG_USE_LOTTIE = "${@bb.utils.contains('PACKAGECONFIG', 'thorvg', '1', '0', d)}"
+
+LVGL_CONFIG_USE_VECTOR_GRAPHICS = "${@bb.utils.contains('PACKAGECONFIG', 'thorvg', '1', '0', d)}"
+
+LVGL_CONFIG_USE_THORVG_INTERNAL = "${@bb.utils.contains('PACKAGECONFIG', 'thorvg', '1', '0', d)}"
+
+LVGL_CONFIG_USE_MATRIX = "${@bb.utils.contains('PACKAGECONFIG', 'thorvg', '1', '0', d)}"
+
+LVGL_CONFIG_USE_FLOAT = "${@bb.utils.contains('PACKAGECONFIG', 'thorvg', '1', '0', d)}"
 
 DEBUG_BUILD ??= "0"
 
@@ -70,7 +85,14 @@ do_configure:append() {
         -e "s|^([[:space:]]*#define LV_LOG_PRINTF[[:space:]]).*|\1${LVGL_CONFIG_LV_LOG_PRINTF}|" \
         \
         -e "s|^([[:space:]]*#define LV_USE_FONT_COMPRESSED[[:space:]]).*|\1${LVGL_CONFIG_LV_USE_FONT_COMPRESSED}|" \
+        -e "s|^([[:space:]]*#define LV_USE_GRIDNAV[[:space:]]).*|\1${LVGL_CONFIG_LV_USE_GRIDNAV}|" \
         -e "s|^([[:space:]]*#define LV_THEME_DEFAULT_DARK[[:space:]]).*|\1${LVGL_CONFIG_LV_THEME_DEFAULT_DARK}|" \
         \
+        -e "s|^([[:space:]]*#define LV_USE_VECTOR_GRAPHIC[[:space:]]).*|\1${LVGL_CONFIG_USE_VECTOR_GRAPHICS}|" \
+        -e "s|^([[:space:]]*#define LV_USE_THORVG_INTERNAL[[:space:]]).*|\1${LVGL_CONFIG_USE_THORVG_INTERNAL}|" \
+        -e "s|^([[:space:]]*#define LV_USE_MATRIX[[:space:]]).*|\1${LVGL_CONFIG_USE_MATRIX}|" \
+        -e "s|^([[:space:]]*#define LV_USE_FLOAT[[:space:]]).*|\1${LVGL_CONFIG_USE_FLOAT}|" \
+        \
+        -e "s|^([[:space:]]*#define LV_USE_LOTTIE[[:space:]]).*|\1${LVGL_CONFIG_USE_LOTTIE}|" \
         -i "${S}/lv_conf.h"
 }

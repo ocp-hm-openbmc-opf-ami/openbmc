@@ -2,12 +2,13 @@
 Description=Phosphor MBOX Daemon
 BindsTo=dev-aspeed\x2dlpc\x2dctrl.device
 After=dev-aspeed\x2dlpc\x2dctrl.device
-Requires=xyz.openbmc_project.Control.Host.service
+Wants=xyz.openbmc_project.Control.Host.service
 After=xyz.openbmc_project.Control.Host.service
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/env mboxd --flash {FLASH_SIZE} --window-size 1M --window-num {WINDOW_NUM}
+EnvironmentFile=-/etc/default/mboxd
+ExecStart=/usr/bin/env mboxd --flash {FLASH_SIZE} --window-size 1M --window-num {WINDOW_NUM} $MBOXD_ARGS
 SyslogIdentifier=mboxd
 
 [Install]

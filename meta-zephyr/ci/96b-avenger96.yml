@@ -1,0 +1,6 @@
+header:
+  version: 9
+  includes:
+    - ci/base.yml
+
+machine: 96b-avenger96

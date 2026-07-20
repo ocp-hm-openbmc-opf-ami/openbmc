@@ -462,21 +462,23 @@ class GitApplyTree(PatchTree):
         return (tmpfile, cmd)
 
     @staticmethod
-    def addNote(repo, ref, key, value=None):
+    def addNote(repo, ref, key, value=None, commituser=None, commitemail=None):
         note = key + (": %s" % value if value else "")
         notes_ref = GitApplyTree.notes_ref
         runcmd(["git", "config", "notes.rewriteMode", "ignore"], repo)
         runcmd(["git", "config", "notes.displayRef", notes_ref, notes_ref], repo)
         runcmd(["git", "config", "notes.rewriteRef", notes_ref, notes_ref], repo)
-        runcmd(["git", "notes", "--ref", notes_ref, "append", "-m", note, ref], repo)
+        cmd = ["git"]
+        GitApplyTree.gitCommandUserOptions(cmd, commituser, commitemail)
+        runcmd(cmd + ["notes", "--ref", notes_ref, "append", "-m", note, ref], repo)
 
     @staticmethod
-    def removeNote(repo, ref, key):
+    def removeNote(repo, ref, key, commituser=None, commitemail=None):
         notes = GitApplyTree.getNotes(repo, ref)
         notes = {k: v for k, v in notes.items() if k != key and not k.startswith(key + ":")}
         runcmd(["git", "notes", "--ref", GitApplyTree.notes_ref, "remove", "--ignore-missing", ref], repo)
         for note, value in notes.items():
-            GitApplyTree.addNote(repo, ref, note, value)
+            GitApplyTree.addNote(repo, ref, note, value, commituser, commitemail)
 
     @staticmethod
     def getNotes(repo, ref):
@@ -507,7 +509,7 @@ class GitApplyTree(PatchTree):
         GitApplyTree.gitCommandUserOptions(cmd, d=d)
         cmd += ["commit", "-m", subject, "--no-verify"]
         runcmd(cmd, dir)
-        GitApplyTree.addNote(dir, "HEAD", GitApplyTree.ignore_commit)
+        GitApplyTree.addNote(dir, "HEAD", GitApplyTree.ignore_commit, d.getVar('PATCH_GIT_USER_NAME'), d.getVar('PATCH_GIT_USER_EMAIL'))
 
     @staticmethod
     def extractPatches(tree, startcommits, outdir, paths=None):
@@ -654,7 +656,7 @@ class GitApplyTree(PatchTree):
             raise
         finally:
             if patch_applied:
-                GitApplyTree.addNote(self.dir, "HEAD", GitApplyTree.original_patch, os.path.basename(patch['file']))
+                GitApplyTree.addNote(self.dir, "HEAD", GitApplyTree.original_patch, os.path.basename(patch['file']), self.commituser, self.commitemail)
 
 
 class QuiltTree(PatchSet):
@@ -882,7 +884,7 @@ class UserResolver(Resolver):
             os.chdir(olddir)
 
 
-def patch_path(url, fetch, workdir, expand=True):
+def patch_path(url, fetch, unpackdir, expand=True):
     """Return the local path of a patch, or return nothing if this isn't a patch"""
 
     local = fetch.localpath(url)
@@ -891,7 +893,7 @@ def patch_path(url, fetch, workdir, expand=True):
     base, ext = os.path.splitext(os.path.basename(local))
     if ext in ('.gz', '.bz2', '.xz', '.Z'):
         if expand:
-            local = os.path.join(workdir, base)
+            local = os.path.join(unpackdir, base)
         ext = os.path.splitext(base)[1]
 
     urldata = fetch.ud[url]
@@ -905,12 +907,12 @@ def patch_path(url, fetch, workdir, expand=True):
     return local
 
 def src_patches(d, all=False, expand=True):
-    workdir = d.getVar('WORKDIR')
+    unpackdir = d.getVar('UNPACKDIR')
     fetch = bb.fetch2.Fetch([], d)
     patches = []
     sources = []
     for url in fetch.urls:
-        local = patch_path(url, fetch, workdir, expand)
+        local = patch_path(url, fetch, unpackdir, expand)
         if not local:
             if all:
                 local = fetch.localpath(url)

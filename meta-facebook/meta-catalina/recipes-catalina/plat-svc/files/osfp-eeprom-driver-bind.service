@@ -1,0 +1,12 @@
+[Unit]
+Description=Bind OSFP FRU EEPROM driver
+After=platform-sys-init.service
+After=xyz.openbmc_project.FruDevice.service
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/plat-svc/osfp-eeprom-driver-bind
+SyslogIdentifier=osfp-eeprom-driver-bind
+
+[Install]
+WantedBy=multi-user.target

@@ -1,22 +1,12 @@
 SUMMARY = "Phosphor LED Group Management Daemon"
 DESCRIPTION = "Daemon to cater to triggering actions on LED groups"
-DEPENDS += "${PYTHON_PN}-native"
-DEPENDS += "${PYTHON_PN}-pyyaml-native"
-DEPENDS += "${PYTHON_PN}-inflection-native"
 DEPENDS += "cli11"
 DEPENDS += "libcereal"
 DEPENDS += "nlohmann-json"
 DEPENDS += "phosphor-logging"
 DEPENDS += "sdbusplus ${PYTHON_PN}-sdbus++-native"
 DEPENDS += "systemd"
-PACKAGECONFIG ??= "\
-    ${@oe.utils.conditional( \
-        'PREFERRED_PROVIDER_virtual/${PN}-config-native', \
-        'phosphor-led-manager-config-example-native', \
-        'use-json', 'use-yaml', d)} \
-"
-PACKAGECONFIG[use-json] = "-Duse-json=enabled,,,,,use-yaml"
-PACKAGECONFIG[use-yaml] = "-Duse-json=disabled,,virtual/${PN}-config-native,,,use-json"
+PACKAGECONFIG ??= ""
 PACKAGECONFIG[use-lamp-test] = "-Duse-lamp-test=enabled, -Duse-lamp-test=disabled"
 PACKAGECONFIG[monitor-operational-status] = "-Dmonitor-operational-status=enabled, \
                                              -Dmonitor-operational-status=disabled"
@@ -54,19 +44,11 @@ inherit obmc-phosphor-dbus-service obmc-phosphor-systemd
 
 EXTRA_OEMESON:append = " -Dtests=disabled"
 
-do_compile:prepend() {
-    if [ -f "${LED_YAML_PATH}/led.yaml" ]; then
-        cp "${LED_YAML_PATH}/led.yaml" "${S}/led.yaml"
-    elif [ -f "${STAGING_DATADIR_NATIVE}/${PN}/led.yaml" ]; then
-        cp "${STAGING_DATADIR_NATIVE}/${PN}/led.yaml" "${S}/led.yaml"
-    elif [ -f "${WORKDIR}/led.yaml" ]; then
-        cp "${WORKDIR}/led.yaml" "${S}/led.yaml"
-    fi
-}
-
 RDEPENDS:${PN} += "bash"
 
-FILES:${PN}-faultmonitor += "${bindir}/phosphor-fru-fault-monitor"
+FILES:${PN} += "${datadir}/dbus-1/system.d"
+FILES:${PN}-faultmonitor += "${libexecdir}/phosphor-fru-fault-monitor"
+FILES:${PN}-faultmonitor += "${systemd_unitdir}/system/obmc-fru-fault-monitor.service"
 
 require ${PN}.inc
 

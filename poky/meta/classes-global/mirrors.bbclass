@@ -6,26 +6,10 @@
 
 MIRRORS += "\
 ${DEBIAN_MIRROR}	http://snapshot.debian.org/archive/debian/20180310T215105Z/pool \
+${DEBIAN_MIRROR}	http://snapshot.debian.org/archive/debian/20250101T023759Z/pool \
 ${DEBIAN_MIRROR}	http://snapshot.debian.org/archive/debian-archive/20120328T092752Z/debian/pool \
 ${DEBIAN_MIRROR}	http://snapshot.debian.org/archive/debian-archive/20110127T084257Z/debian/pool \
 ${DEBIAN_MIRROR}	http://snapshot.debian.org/archive/debian-archive/20090802T004153Z/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.de.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.au.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.cl.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.hr.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.fi.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.hk.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.hu.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.ie.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.it.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.jp.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.no.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.pl.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.ro.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.si.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.es.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.se.debian.org/debian/pool \
-${DEBIAN_MIRROR}	http://ftp.tr.debian.org/debian/pool \
 ${GNU_MIRROR}	https://mirrors.kernel.org/gnu \
 ${KERNELORG_MIRROR}	http://www.kernel.org/pub \
 ${GNUPG_MIRROR}	ftp://ftp.gnupg.org/gcrypt \
@@ -88,7 +72,7 @@ git://.*/.*                   git://HOST/git/PATH;protocol=https \
 BB_GIT_SHALLOW:pn-binutils = "1"
 BB_GIT_SHALLOW:pn-binutils-cross-${TARGET_ARCH} = "1"
 BB_GIT_SHALLOW:pn-binutils-cross-canadian-${TRANSLATED_TARGET_ARCH} = "1"
-BB_GIT_SHALLOW:pn-binutils-cross-testsuite = "1"
+BB_GIT_SHALLOW:pn-binutils-testsuite = "1"
 BB_GIT_SHALLOW:pn-binutils-crosssdk-${SDK_SYS} = "1"
 BB_GIT_SHALLOW:pn-binutils-native = "1"
 BB_GIT_SHALLOW:pn-nativesdk-binutils = "1"

@@ -13,7 +13,6 @@
 # - obmc-fan-control                  - OpenBMC fan management
 # - obmc-fan-mgmt                     - Deprecated - use obmc-fan-control instead
 # - obmc-flash-mgmt                   - OpenBMC flash management
-# - obmc-fru-ipmi                     - OpenBMC IPMI FRU EEPROM support
 # - obmc-health-monitor               - OpenBMC health monitoring
 # - obmc-host-ctl                     - OpenBMC host control
 # - obmc-host-ipmi                    - OpenBMC host IPMI
@@ -31,6 +30,7 @@
 # - obmc-user-mgmt                    - OpenBMC user management
 # - obmc-user-mgmt-ldap               - OpenBMC LDAP users
 # - obmc-webui                        - OpenBMC Web User Interface
+# - obmc-tpm                          - OpenBMC TPM Applications
 
 inherit core-image
 inherit obmc-phosphor-utils
@@ -45,7 +45,6 @@ FEATURE_PACKAGES_obmc-devtools ?= "packagegroup-obmc-apps-devtools"
 FEATURE_PACKAGES_obmc-fan-control ?= "packagegroup-obmc-apps-fan-control"
 FEATURE_PACKAGES_obmc-fan-mgmt ?= "${@bb.utils.contains('COMBINED_FEATURES', 'obmc-phosphor-fan-mgmt', 'virtual-obmc-fan-mgmt', '', d)}"
 FEATURE_PACKAGES_obmc-flash-mgmt ?= "${@bb.utils.contains('COMBINED_FEATURES', 'obmc-phosphor-flash-mgmt', 'virtual-obmc-flash-mgmt', '', d)}"
-FEATURE_PACKAGES_obmc-fru-ipmi ?= "packagegroup-obmc-apps-fru-ipmi"
 FEATURE_PACKAGES_obmc-health-monitor ?= "packagegroup-obmc-apps-health-monitor"
 FEATURE_PACKAGES_obmc-host-ctl ?= "${@bb.utils.contains('COMBINED_FEATURES', 'obmc-host-ctl', 'virtual-obmc-host-ctl', '', d)}"
 FEATURE_PACKAGES_obmc-host-ipmi ?= "${@bb.utils.contains('COMBINED_FEATURES', 'obmc-host-ipmi', 'virtual-obmc-host-ipmi-hw', '', d)}"
@@ -55,7 +54,7 @@ FEATURE_PACKAGES_obmc-inventory ?= "packagegroup-obmc-apps-inventory"
 FEATURE_PACKAGES_obmc-leds ?= "packagegroup-obmc-apps-leds"
 FEATURE_PACKAGES_obmc-logging-mgmt ?= "packagegroup-obmc-apps-logging"
 FEATURE_PACKAGES_obmc-remote-logging-mgmt ?= "packagegroup-obmc-apps-remote-logging"
-FEATURE_PACKAGES_obmc-net-ipmi ?= "phosphor-ipmi-net"
+FEATURE_PACKAGES_obmc-net-ipmi ?= "${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-no-ipmi-rmcp', '', 'phosphor-ipmi-net', d)}"
 FEATURE_PACKAGES_obmc-sensors ?= "packagegroup-obmc-apps-sensors"
 FEATURE_PACKAGES_obmc-software ?= "packagegroup-obmc-apps-software"
 FEATURE_PACKAGES_obmc-system-mgmt ?= "${@bb.utils.contains('DISTRO_FEATURES', 'obmc-phosphor-system-mgmt', 'virtual-obmc-system-mgmt', '', d)}"
@@ -66,12 +65,7 @@ FEATURE_PACKAGES_obmc-telemetry ?= "packagegroup-obmc-apps-telemetry"
 FEATURE_PACKAGES_obmc-user-mgmt ?= "packagegroup-obmc-apps-user-mgmt"
 FEATURE_PACKAGES_obmc-user-mgmt-ldap ?= "packagegroup-obmc-apps-user-mgmt-ldap"
 FEATURE_PACKAGES_obmc-dmtf-pmci ?= "packagegroup-obmc-apps-dmtf-pmci"
-
-# Note that the webui is not included by default in OpenBMC
-# images due to its non-standard build process. It utilizes
-# npm during the build, resulting in an inability to build
-# this package offline and making the software bill of materials
-# incorrect.
+FEATURE_PACKAGES_obmc-tpm ?= "packagegroup-obmc-apps-tpm"
 FEATURE_PACKAGES_obmc-webui ?= "packagegroup-obmc-apps-webui"
 
 # FIXME: phosphor-net-ipmi depends on phosphor-ipmi-host !?!? and
@@ -106,5 +100,5 @@ enable_ldap_nsswitch() {
         "${IMAGE_ROOTFS}${sysconfdir}/nsswitch.conf"
 }
 
-ROOTFS_POSTPROCESS_COMMAND += "${@bb.utils.contains('IMAGE_FEATURES', 'obmc-user-mgmt-ldap', 'enable_ldap_nsswitch ;', '', d)}"
+ROOTFS_POSTPROCESS_COMMAND += "${@bb.utils.contains('IMAGE_FEATURES', 'obmc-user-mgmt-ldap', 'enable_ldap_nsswitch', '', d)}"
 

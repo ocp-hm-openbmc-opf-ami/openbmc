@@ -17,6 +17,12 @@ export CHASSIS_INTF_NAME="xyz.openbmc_project.State.Chassis"
 export CHASSIS_PROPERTY_NAME="CurrentPowerState"
 export CHASSIS_ON_PROPERTY="xyz.openbmc_project.State.Chassis.PowerState.On"
 export CHASSIS_OFF_PROPERTY="xyz.openbmc_project.State.Chassis.PowerState.Off"
+export HOST_BUS_NAME="xyz.openbmc_project.State.Host"
+export HOST_OBJ_PATH="/xyz/openbmc_project/state/host"
+export HOST_INTF_NAME="xyz.openbmc_project.State.Host"
+export HOST_PROPERTY_NAME="CurrentHostState"
+export HOST_ON_PROPERTY="xyz.openbmc_project.State.Host.HostState.Running"
+export HOST_OFF_PROPERTY="xyz.openbmc_project.State.Host.HostState.Off"
 
 MANAGEMENT_BOARD_VERSION=$(get_product_version Management_Board)
 if [ "$MANAGEMENT_BOARD_VERSION" = "DVT" ] || [ "$MANAGEMENT_BOARD_VERSION" = "EVT" ]; then
@@ -55,12 +61,26 @@ gpio_set()
 
 add_sel()
 {
-  MESSAGE="$*"
+  MESSAGE="$1"
+  LEVEL_STR="$2"
+  LEVEL_ENUM="xyz.openbmc_project.Logging.Entry.Level.Error"
+
+  case "$LEVEL_STR" in
+    "Error")
+      LEVEL_ENUM="xyz.openbmc_project.Logging.Entry.Level.Error"
+      ;;
+    "Info")
+      LEVEL_ENUM="xyz.openbmc_project.Logging.Entry.Level.Informational"
+      ;;
+    *)
+      echo "Unknown log level: $LEVEL_STR"
+      ;;
+  esac
 
   busctl call \
     xyz.openbmc_project.Logging /xyz/openbmc_project/logging \
-    xyz.openbmc_project.Logging.Create Create "ssa{ss}" "$MESSAGE" \
-    xyz.openbmc_project.Logging.Entry.Level.Error 0
+    xyz.openbmc_project.Logging.Create Create "ssa{ss}" \
+   "$MESSAGE" "$LEVEL_ENUM" 0
 }
 
 get_ac_on_status()

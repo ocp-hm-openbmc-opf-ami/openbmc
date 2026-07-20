@@ -1,793 +1,725 @@
 [
     {
-        "Name": "PWRGD_MTIA_BLADE0_PWROK_N",
+        "Name": "PWRGD_MTIA_BLADE1_PWROK_N",
         "ChipId": "2",
         "GpioNum": 56,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-0.service"],
-            "RISING": ["power-good-deassert@mtia-blade-0.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "PWRGD_MTIA_BLADE1_PWROK_N",
-        "ChipId": "2",
-        "GpioNum": 58,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-1.service"],
-            "RISING": ["power-good-deassert@mtia-blade-1.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-1_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-1_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE2_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 60,
+        "GpioNum": 58,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-2.service"],
-            "RISING": ["power-good-deassert@mtia-blade-2.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-2_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-2_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE3_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 62,
+        "GpioNum": 60,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-3.service"],
-            "RISING": ["power-good-deassert@mtia-blade-3.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-3_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-3_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE4_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 64,
+        "GpioNum": 62,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-4.service"],
-            "RISING": ["power-good-deassert@mtia-blade-4.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-4_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-4_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE5_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 66,
+        "GpioNum": 64,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-5.service"],
-            "RISING": ["power-good-deassert@mtia-blade-5.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-5_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-5_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE6_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 68,
+        "GpioNum": 66,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-6.service"],
-            "RISING": ["power-good-deassert@mtia-blade-6.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-6_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-6_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE7_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 70,
+        "GpioNum": 68,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-7.service"],
-            "RISING": ["power-good-deassert@mtia-blade-7.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-7_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-7_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE8_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 72,
+        "GpioNum": 70,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-8.service"],
-            "RISING": ["power-good-deassert@mtia-blade-8.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-8_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-8_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE9_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 74,
+        "GpioNum": 72,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-9.service"],
-            "RISING": ["power-good-deassert@mtia-blade-9.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-9_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-9_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE10_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 76,
+        "GpioNum": 74,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-10.service"],
-            "RISING": ["power-good-deassert@mtia-blade-10.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-10_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-10_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE11_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 78,
+        "GpioNum": 76,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-11.service"],
-            "RISING": ["power-good-deassert@mtia-blade-11.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-11_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-11_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE12_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 80,
+        "GpioNum": 78,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-12.service"],
-            "RISING": ["power-good-deassert@mtia-blade-12.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-12_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-12_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE13_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 82,
+        "GpioNum": 80,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-13.service"],
-            "RISING": ["power-good-deassert@mtia-blade-13.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-13_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-13_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE14_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 84,
+        "GpioNum": 82,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-14.service"],
-            "RISING": ["power-good-deassert@mtia-blade-14.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-14_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-14_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE15_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 86,
+        "GpioNum": 84,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@mtia-blade-15.service"],
-            "RISING": ["power-good-deassert@mtia-blade-15.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-15_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-15_pwrgd.service"]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_NW_BLADE0_PWROK_N",
+        "Name": "PWRGD_MTIA_BLADE16_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 88,
+        "GpioNum": 86,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@network-blade-0.service"],
-            "RISING": ["power-good-deassert@network-blade-0.service"]
+            "FALLING": ["power-rail-deassert-log@mtia-blade-16_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@mtia-blade-16_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE1_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 90,
+        "GpioNum": 88,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@network-blade-1.service"],
-            "RISING": ["power-good-deassert@network-blade-1.service"]
+            "FALLING": ["power-rail-deassert-log@network-blade-1_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@network-blade-1_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE2_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 92,
+        "GpioNum": 90,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@network-blade-2.service"],
-            "RISING": ["power-good-deassert@network-blade-2.service"]
+            "FALLING": ["power-rail-deassert-log@network-blade-2_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@network-blade-2_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE3_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 94,
+        "GpioNum": 92,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@network-blade-3.service"],
-            "RISING": ["power-good-deassert@network-blade-3.service"]
+            "FALLING": ["power-rail-deassert-log@network-blade-3_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@network-blade-3_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE4_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 96,
+        "GpioNum": 94,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@network-blade-4.service"],
-            "RISING": ["power-good-deassert@network-blade-4.service"]
+            "FALLING": ["power-rail-deassert-log@network-blade-4_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@network-blade-4_pwrgd.service"]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE5_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 98,
+        "GpioNum": 96,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@network-blade-5.service"],
-            "RISING": ["power-good-deassert@network-blade-5.service"]
+            "FALLING": ["power-rail-deassert-log@network-blade-5_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@network-blade-5_pwrgd.service"]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_FCB_TOP_0_PWROK_N",
+        "Name": "PWRGD_NW_BLADE6_PWROK_N",
+        "ChipId": "2",
+        "GpioNum": 98,
+        "EventMon": "BOTH",
+        "Targets": {
+            "FALLING": ["power-rail-deassert-log@network-blade-6_pwrgd.service"],
+            "RISING": ["power-rail-assert-log@network-blade-6_pwrgd.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "PWRGD_FCB_1_N",
         "ChipId": "2",
         "GpioNum": 100,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@fcb-top-0.service"],
-            "RISING": ["power-good-deassert@fcb-top-0.service"]
+            "FALLING": [
+                "power-rail-deassert-log@fcb-1.service",
+                "rescan-fru.service",
+                "fan-reload.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@fcb-1.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_FCB_TOP_1_PWROK_N",
+        "Name": "PWRGD_FCB_2_N",
         "ChipId": "2",
         "GpioNum": 102,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@fcb-top-1.service"],
-            "RISING": ["power-good-deassert@fcb-top-1.service"]
+            "FALLING": [
+                "power-rail-deassert-log@fcb-2.service",
+                "rescan-fru.service",
+                "fan-reload.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@fcb-2.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_FCB_MIDDLE_0_PWROK_N",
+        "Name": "PWRGD_FCB_3_N",
         "ChipId": "2",
         "GpioNum": 104,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@fcb-mid-0.service"],
-            "RISING": ["power-good-deassert@fcb-mid-0.service"]
+            "FALLING": [
+                "power-rail-deassert-log@fcb-3.service",
+                "rescan-fru.service",
+                "fan-reload.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@fcb-3.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_FCB_MIDDLE_1_PWROK_N",
+        "Name": "PWRGD_FCB_4_N",
         "ChipId": "2",
         "GpioNum": 106,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@fcb-mid-1.service"],
-            "RISING": ["power-good-deassert@fcb-mid-1.service"]
+            "FALLING": [
+                "power-rail-deassert-log@fcb-4.service",
+                "rescan-fru.service",
+                "fan-reload.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@fcb-4.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_FCB_BOTTOM_0_PWROK_N",
+        "Name": "PWRGD_FCB_6_N",
         "ChipId": "2",
         "GpioNum": 108,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@fcb-bot-0.service"],
-            "RISING": ["power-good-deassert@fcb-bot-0.service"]
+            "FALLING": [
+                "power-rail-deassert-log@fcb-6.service",
+                "rescan-fru.service",
+                "fan-reload.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@fcb-6.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_FCB_BOTTOM_1_PWROK_N",
+        "Name": "PWRGD_FCB_5_N",
         "ChipId": "2",
         "GpioNum": 110,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["power-good-assert@fcb-bot-1.service"],
-            "RISING": ["power-good-deassert@fcb-bot-1.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE0_N",
-        "ChipId": "2",
-        "GpioNum": 112,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-0.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-0.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE1_N",
-        "ChipId": "2",
-        "GpioNum": 114,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-1.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-1.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE2_N",
-        "ChipId": "2",
-        "GpioNum": 116,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-2.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-2.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE3_N",
-        "ChipId": "2",
-        "GpioNum": 118,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-3.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-3.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE4_N",
-        "ChipId": "2",
-        "GpioNum": 120,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-4.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-4.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE5_N",
-        "ChipId": "2",
-        "GpioNum": 122,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-5.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-5.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE6_N",
-        "ChipId": "2",
-        "GpioNum": 124,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-6.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-6.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE7_N",
-        "ChipId": "2",
-        "GpioNum": 126,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-7.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-7.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE8_N",
-        "ChipId": "2",
-        "GpioNum": 128,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-8.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-8.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE9_N",
-        "ChipId": "2",
-        "GpioNum": 130,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-9.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-9.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE10_N",
-        "ChipId": "2",
-        "GpioNum": 132,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-10.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-10.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE11_N",
-        "ChipId": "2",
-        "GpioNum": 134,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-11.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-11.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE12_N",
-        "ChipId": "2",
-        "GpioNum": 136,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-12.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-12.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE13_N",
-        "ChipId": "2",
-        "GpioNum": 138,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-13.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-13.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE14_N",
-        "ChipId": "2",
-        "GpioNum": 140,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-14.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-14.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_MTIA_BLADE15_N",
-        "ChipId": "2",
-        "GpioNum": 142,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@mtia-blade-15.service"],
-            "RISING": ["leak-detect-deassert@mtia-blade-15.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_NW_BLADE0_N",
-        "ChipId": "2",
-        "GpioNum": 144,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@network-blade-0.service"],
-            "RISING": ["leak-detect-deassert@network-blade-0.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_NW_BLADE1_N",
-        "ChipId": "2",
-        "GpioNum": 146,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@network-blade-1.service"],
-            "RISING": ["leak-detect-deassert@network-blade-1.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_NW_BLADE2_N",
-        "ChipId": "2",
-        "GpioNum": 148,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@network-blade-2.service"],
-            "RISING": ["leak-detect-deassert@network-blade-2.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_NW_BLADE3_N",
-        "ChipId": "2",
-        "GpioNum": 150,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@network-blade-3.service"],
-            "RISING": ["leak-detect-deassert@network-blade-3.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_NW_BLADE4_N",
-        "ChipId": "2",
-        "GpioNum": 152,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@network-blade-4.service"],
-            "RISING": ["leak-detect-deassert@network-blade-4.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "LEAK_DETECT_NW_BLADE5_N",
-        "ChipId": "2",
-        "GpioNum": 154,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["leak-detect-assert@network-blade-5.service"],
-            "RISING": ["leak-detect-deassert@network-blade-5.service"]
-        },
-        "Continue": true
-    },
-    {
-        "Name": "PWRGD_MTIA_BLADE0_HSC_PWROK_N",
-        "ChipId": "2",
-        "GpioNum": 156,
-        "EventMon": "BOTH",
-        "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-0.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-0.service"]
+            "FALLING": [
+                "power-rail-deassert-log@fcb-5.service",
+                "rescan-fru.service",
+                "fan-reload.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@fcb-5.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE1_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 158,
+        "GpioNum": 156,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-1.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-1.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-1_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-1_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE2_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 160,
+        "GpioNum": 158,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-2.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-2.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-2_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-2_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE3_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 162,
+        "GpioNum": 160,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-3.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-3.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-3_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-3_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE4_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 164,
+        "GpioNum": 162,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-4.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-4.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-4_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-4_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE5_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 166,
+        "GpioNum": 164,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-5.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-5.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-5_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-5_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE6_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 168,
+        "GpioNum": 166,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-6.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-6.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-6_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-6_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE7_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 170,
+        "GpioNum": 168,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-7.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-7.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-7_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-7_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE8_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 172,
+        "GpioNum": 170,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-8.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-8.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-8_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-8_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE9_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 174,
+        "GpioNum": 172,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-9.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-9.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-9_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-9_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE10_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 176,
+        "GpioNum": 174,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-10.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-10.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-10_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-10_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE11_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 178,
+        "GpioNum": 176,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-11.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-11.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-11_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-11_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE12_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 180,
+        "GpioNum": 178,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-12.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-12.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-12_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-12_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE13_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 182,
+        "GpioNum": 180,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-13.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-13.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-13_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-13_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE14_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 184,
+        "GpioNum": 182,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-14.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-14.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-14_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-14_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_MTIA_BLADE15_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 186,
+        "GpioNum": 184,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@mtia-blade-15.service"],
-            "RISING": ["ac-power-good-deassert@mtia-blade-15.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-15_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-15_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
-        "Name": "PWRGD_NW_BLADE0_HSC_PWROK_N",
+        "Name": "PWRGD_MTIA_BLADE16_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 188,
+        "GpioNum": 186,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@network-blade-0.service"],
-            "RISING": ["ac-power-good-deassert@network-blade-0.service"]
+            "FALLING": [
+                "power-rail-deassert-log@mtia-blade-16_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@mtia-blade-16_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE1_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 190,
+        "GpioNum": 188,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@network-blade-1.service"],
-            "RISING": ["ac-power-good-deassert@network-blade-1.service"]
+            "FALLING": [
+                "power-rail-deassert-log@network-blade-1_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@network-blade-1_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE2_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 192,
+        "GpioNum": 190,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@network-blade-2.service"],
-            "RISING": ["ac-power-good-deassert@network-blade-2.service"]
+            "FALLING": [
+                "power-rail-deassert-log@network-blade-2_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@network-blade-2_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE3_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 194,
+        "GpioNum": 192,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@network-blade-3.service"],
-            "RISING": ["ac-power-good-deassert@network-blade-3.service"]
+            "FALLING": [
+                "power-rail-deassert-log@network-blade-3_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@network-blade-3_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE4_HSC_PWROK_N",
         "ChipId": "2",
-        "GpioNum": 196,
+        "GpioNum": 194,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@network-blade-4.service"],
-            "RISING": ["ac-power-good-deassert@network-blade-4.service"]
+            "FALLING": [
+                "power-rail-deassert-log@network-blade-4_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@network-blade-4_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
     {
         "Name": "PWRGD_NW_BLADE5_HSC_PWROK_N",
         "ChipId": "2",
+        "GpioNum": 196,
+        "EventMon": "BOTH",
+        "Targets": {
+            "FALLING": [
+                "power-rail-deassert-log@network-blade-5_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@network-blade-5_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "PWRGD_NW_BLADE6_HSC_PWROK_N",
+        "ChipId": "2",
         "GpioNum": 198,
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["ac-power-good-assert@network-blade-5.service"],
-            "RISING": ["ac-power-good-deassert@network-blade-5.service"]
+            "FALLING": [
+                "power-rail-deassert-log@network-blade-6_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ],
+            "RISING": [
+                "power-rail-assert-log@network-blade-6_hsc-pwrgd.service",
+                "rescan-fru.service"
+            ]
         },
         "Continue": true
     },
@@ -814,46 +746,742 @@
         "Continue": true
     },
     {
-        "Name": "CHASSIS_LEAK0_DETECT_N",
-        "ChipId": "2",
-        "GpioNum": 234,
+        "Name": "P12V_INA230_ALERT",
+        "LineName": "P12V_INA230_ALERT_N",
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["leak-detect-assert@chassis-leak-sensor-0.service"],
-            "RISING": ["leak-detect-deassert@chassis-leak-sensor-0.service"]
+            "RISING": ["vr-fault-deassert-log@cmm_p12v-ina230-alert.service"],
+            "FALLING": ["vr-fault-assert-log@cmm_p12v-ina230-alert.service"]
         },
         "Continue": true
     },
     {
-        "Name": "CHASSIS_LEAK1_DETECT_N",
-        "ChipId": "2",
-        "GpioNum": 236,
+        "Name": "P24V_INA230_ALERT",
+        "LineName": "P24V_INA230_ALERT_N",
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["leak-detect-assert@chassis-leak-sensor-1.service"],
-            "RISING": ["leak-detect-deassert@chassis-leak-sensor-1.service"]
+            "RISING": ["vr-fault-deassert-log@cmm_p24v-ina230-alert.service"],
+            "FALLING": ["vr-fault-assert-log@cmm_p24v-ina230-alert.service"]
         },
         "Continue": true
     },
     {
-        "Name": "IT_GEAR_LEAK",
-        "ChipId": "2",
-        "GpioNum": 204,
+        "Name": "P48V_HSC_ALERT",
+        "LineName": "P48V_HSC_ALERT_N",
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["leak-detect-deassert@it-gear-leak.service"],
-            "RISING": ["leak-detect-assert@it-gear-leak.service"]
+            "RISING": ["vr-fault-deassert-log@cmm_p48v-hsc-alert.service"],
+            "FALLING": ["vr-fault-assert-log@cmm_p48v-hsc-alert.service"]
         },
         "Continue": true
     },
     {
-        "Name": "IT_GEAR_LEAK_SPARE",
-        "ChipId": "2",
-        "GpioNum": 248,
+        "Name": "P1V05_PWR_FAIL",
+        "LineName": "P1V05_PWR_FAIL",
         "EventMon": "BOTH",
         "Targets": {
-            "FALLING": ["leak-detect-deassert@it-gear-leak-spare.service"],
-            "RISING": ["leak-detect-assert@it-gear-leak-spare.service"]
+            "RISING": ["vr-fault-assert-log@cmm_p1v05.service"],
+            "FALLING": ["vr-fault-deassert-log@cmm_p1v05.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "P1V5_PWR_FAIL",
+        "LineName": "P1V5_PWR_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@cmm_p1v5.service"],
+            "FALLING": ["vr-fault-deassert-log@cmm_p1v5.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "P24V_PWR_FAIL",
+        "LineName": "P24V_PWR_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@cmm_p24v.service"],
+            "FALLING": ["vr-fault-deassert-log@cmm_p24v.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "P24V_SM_PWR_FAIL",
+        "LineName": "P24V_SM_PWR_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@cmm_p24v-smart-valve.service"],
+            "FALLING": ["vr-fault-deassert-log@cmm_p24v-smart-valve.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN1_ALERT",
+        "LineName": "INA238_FAN1_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-1_ina238-fan1-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-1_ina238-fan1-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN2_ALERT",
+        "LineName": "INA238_FAN2_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-1_ina238-fan2-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-1_ina238-fan2-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN3_ALERT",
+        "LineName": "INA238_FAN3_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-1_ina238-fan3-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-1_ina238-fan3-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN4_ALERT",
+        "LineName": "INA238_FAN4_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-1_ina238-fan4-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-1_ina238-fan4-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN5_ALERT",
+        "LineName": "INA238_FAN5_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-2_ina238-fan5-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-2_ina238-fan5-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN6_ALERT",
+        "LineName": "INA238_FAN6_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-2_ina238-fan6-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-2_ina238-fan6-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN7_ALERT",
+        "LineName": "INA238_FAN7_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-2_ina238-fan7-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-2_ina238-fan7-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN8_ALERT",
+        "LineName": "INA238_FAN8_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-2_ina238-fan8-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-2_ina238-fan8-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN9_ALERT",
+        "LineName": "INA238_FAN9_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-3_ina238-fan9-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-3_ina238-fan9-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN10_ALERT",
+        "LineName": "INA238_FAN10_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-3_ina238-fan10-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-3_ina238-fan10-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN11_ALERT",
+        "LineName": "INA238_FAN11_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-3_ina238-fan11-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-3_ina238-fan11-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN12_ALERT",
+        "LineName": "INA238_FAN12_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-3_ina238-fan12-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-3_ina238-fan12-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN13_ALERT",
+        "LineName": "INA238_FAN13_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-4_ina238-fan13-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-4_ina238-fan13-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN14_ALERT",
+        "LineName": "INA238_FAN14_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-4_ina238-fan14-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-4_ina238-fan14-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN15_ALERT",
+        "LineName": "INA238_FAN15_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-4_ina238-fan15-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-4_ina238-fan15-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN16_ALERT",
+        "LineName": "INA238_FAN16_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-4_ina238-fan16-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-4_ina238-fan16-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN17_ALERT",
+        "LineName": "INA238_FAN17_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-5_ina238-fan17-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-5_ina238-fan17-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN18_ALERT",
+        "LineName": "INA238_FAN18_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-5_ina238-fan18-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-5_ina238-fan18-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN19_ALERT",
+        "LineName": "INA238_FAN19_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-5_ina238-fan19-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-5_ina238-fan19-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN20_ALERT",
+        "LineName": "INA238_FAN20_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-5_ina238-fan20-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-5_ina238-fan20-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN21_ALERT",
+        "LineName": "INA238_FAN21_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-6_ina238-fan21-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-6_ina238-fan21-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN22_ALERT",
+        "LineName": "INA238_FAN22_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-6_ina238-fan22-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-6_ina238-fan22-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN23_ALERT",
+        "LineName": "INA238_FAN23_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-6_ina238-fan23-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-6_ina238-fan23-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "INA238_FAN24_ALERT",
+        "LineName": "INA238_FAN24_ALERT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-deassert-log@fcb-6_ina238-fan24-alert.service"],
+            "FALLING": ["vr-fault-assert-log@fcb-6_ina238-fan24-alert.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN1_POWER_FAIL",
+        "LineName": "FAN1_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_fan1.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_fan1.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN2_POWER_FAIL",
+        "LineName": "FAN2_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_fan2.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_fan2.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN3_POWER_FAIL",
+        "LineName": "FAN3_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_fan3.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_fan3.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN4_POWER_FAIL",
+        "LineName": "FAN4_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_fan4.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_fan4.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN5_POWER_FAIL",
+        "LineName": "FAN5_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_fan5.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_fan5.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN6_POWER_FAIL",
+        "LineName": "FAN6_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_fan6.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_fan6.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN7_POWER_FAIL",
+        "LineName": "FAN7_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_fan7.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_fan7.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN8_POWER_FAIL",
+        "LineName": "FAN8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_fan8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_fan8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN9_POWER_FAIL",
+        "LineName": "FAN9_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_fan9.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_fan9.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN10_POWER_FAIL",
+        "LineName": "FAN10_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_fan10.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_fan10.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN11_POWER_FAIL",
+        "LineName": "FAN11_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_fan11.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_fan11.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN12_POWER_FAIL",
+        "LineName": "FAN12_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_fan12.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_fan12.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN13_POWER_FAIL",
+        "LineName": "FAN13_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_fan13.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_fan13.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN14_POWER_FAIL",
+        "LineName": "FAN14_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_fan14.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_fan14.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN15_POWER_FAIL",
+        "LineName": "FAN15_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_fan15.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_fan15.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN16_POWER_FAIL",
+        "LineName": "FAN16_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_fan16.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_fan16.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN17_POWER_FAIL",
+        "LineName": "FAN17_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_fan17.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_fan17.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN18_POWER_FAIL",
+        "LineName": "FAN18_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_fan18.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_fan18.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN19_POWER_FAIL",
+        "LineName": "FAN19_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_fan19.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_fan19.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN20_POWER_FAIL",
+        "LineName": "FAN20_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_fan20.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_fan20.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN21_POWER_FAIL",
+        "LineName": "FAN21_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_fan21.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_fan21.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN22_POWER_FAIL",
+        "LineName": "FAN22_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_fan22.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_fan22.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN23_POWER_FAIL",
+        "LineName": "FAN23_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_fan23.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_fan23.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FAN24_POWER_FAIL",
+        "LineName": "FAN24_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_fan24.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_fan24.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_1_P1V0_POWER_FAIL",
+        "LineName": "FCB_1_P1V0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_p1v0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_p1v0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_2_P1V0_POWER_FAIL",
+        "LineName": "FCB_2_P1V0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_p1v0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_p1v0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_3_P1V0_POWER_FAIL",
+        "LineName": "FCB_3_P1V0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_p1v0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_p1v0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_4_P1V0_POWER_FAIL",
+        "LineName": "FCB_4_P1V0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_p1v0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_p1v0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_5_P1V0_POWER_FAIL",
+        "LineName": "FCB_5_P1V0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_p1v0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_p1v0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_6_P1V0_POWER_FAIL",
+        "LineName": "FCB_6_P1V0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_p1v0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_p1v0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_1_P1V8_POWER_FAIL",
+        "LineName": "FCB_1_P1V8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_p1v8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_p1v8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_2_P1V8_POWER_FAIL",
+        "LineName": "FCB_2_P1V8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_p1v8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_p1v8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_3_P1V8_POWER_FAIL",
+        "LineName": "FCB_3_P1V8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_p1v8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_p1v8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_4_P1V8_POWER_FAIL",
+        "LineName": "FCB_4_P1V8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_p1v8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_p1v8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_5_P1V8_POWER_FAIL",
+        "LineName": "FCB_5_P1V8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_p1v8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_p1v8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_6_P1V8_POWER_FAIL",
+        "LineName": "FCB_6_P1V8_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_p1v8.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_p1v8.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_1_P48V_ZONE0_POWER_FAIL",
+        "LineName": "FCB_1_P48V_ZONE0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-1_p48v_zone0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-1_p48v_zone0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_2_P48V_ZONE0_POWER_FAIL",
+        "LineName": "FCB_2_P48V_ZONE0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-2_p48v_zone0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-2_p48v_zone0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_3_P48V_ZONE0_POWER_FAIL",
+        "LineName": "FCB_3_P48V_ZONE0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-3_p48v_zone0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-3_p48v_zone0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_4_P48V_ZONE0_POWER_FAIL",
+        "LineName": "FCB_4_P48V_ZONE0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-4_p48v_zone0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-4_p48v_zone0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_5_P48V_ZONE0_POWER_FAIL",
+        "LineName": "FCB_5_P48V_ZONE0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-5_p48v_zone0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-5_p48v_zone0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "FCB_6_P48V_ZONE0_POWER_FAIL",
+        "LineName": "FCB_6_P48V_ZONE0_POWER_FAIL",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["vr-fault-assert-log@fcb-6_p48v_zone0.service"],
+            "FALLING": ["vr-fault-deassert-log@fcb-6_p48v_zone0.service"]
+        },
+        "Continue": true
+    },
+    {
+        "Name": "CR_TOGGLE_BOOT",
+        "LineName": "CR_TOGGLE_BOOT_N",
+        "EventMon": "BOTH",
+        "Targets": {
+            "RISING": ["cr-toggle-boot-disabled.service"],
+            "FALLING": ["cr-toggle-boot-enabled.service"]
         },
         "Continue": true
     }

@@ -1,3 +1,3 @@
-PV = "24.3.25"
-SRCREV = "595bf0007ab1929570c7671f091313c8fc20644e"
+PV = "25.2.10"
+SRCREV = "1c514626e83c20fffa8557e75641848e1e15cd5e"
 SRC_URI = "git://github.com/google/flatbuffers.git;branch=master;protocol=https"

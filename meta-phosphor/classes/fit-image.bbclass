@@ -3,8 +3,8 @@ inherit uboot-config
 CONVERSIONTYPES += "fitImage"
 
 CONVERSION_CMD:fitImage = "run_assemble_fitimage ${IMAGE_NAME}.${type}"
-INITRAMFS_IMAGE="${IMAGE_NAME}.cpio.${INITRAMFS_CTYPE}"
-KERNEL_OUTPUT_DIR="${DEPLOY_DIR_IMAGE}"
+INITRAMFS_IMAGE = "${IMAGE_NAME}.cpio.${INITRAMFS_CTYPE}"
+KERNEL_OUTPUT_DIR = "${DEPLOY_DIR_IMAGE}"
 
 FIT_KERNEL_COMP_ALG ?= "none"
 FIT_KERNEL_COMP_ALG_EXTENSION ?= ""
@@ -38,7 +38,7 @@ uboot_prep_kimage() {
     fi
 }
 
-DEPENDS:append = " u-boot-tools-native dtc-native virtual/${TARGET_PREFIX}binutils"
+DEPENDS:append = " u-boot-tools-native dtc-native virtual/cross-binutils"
 
 # Description string
 FIT_DESC ?= "Kernel fitImage for ${DISTRO_NAME}/${PV}/${MACHINE}"

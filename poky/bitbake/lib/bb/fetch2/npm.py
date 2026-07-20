@@ -42,11 +42,12 @@ from bb.utils import is_semver
 
 def npm_package(package):
     """Convert the npm package name to remove unsupported character"""
-    # Scoped package names (with the @) use the same naming convention
-    # as the 'npm pack' command.
+    # For scoped package names ('@user/package') the '/' is replaced by a '-'.
+    # This is similar to what 'npm pack' does, but 'npm pack' also strips the
+    # leading '@', which can lead to ambiguous package names.
     name = re.sub("/", "-", package)
     name = name.lower()
-    name = re.sub(r"[^\-a-z0-9]", "", name)
+    name = re.sub(r"[^\-a-z0-9@]", "", name)
     name = name.strip("-")
     return name
 
@@ -90,6 +91,12 @@ class NpmEnvironment(object):
         self.d = d
 
         self.user_config = tempfile.NamedTemporaryFile(mode="w", buffering=1)
+
+        hn = self._home_npmrc(d)
+        if hn is not None:
+            with open(hn, 'r') as hnf:
+                self.user_config.write(hnf.read())
+
         for key, value in configs:
             self.user_config.write("%s=%s\n" % (key, value))
 
@@ -101,6 +108,15 @@ class NpmEnvironment(object):
     def __del__(self):
         if self.user_config:
             self.user_config.close()
+
+    def _home_npmrc(self, d):
+        """Function to return user's HOME .npmrc file (or None if it doesn't exist)"""
+        home_npmrc_file = os.path.join(os.environ.get("HOME"), ".npmrc")
+        if d.getVar("BB_USE_HOME_NPMRC") == "1" and os.path.exists(home_npmrc_file):
+            bb.warn(f"BB_USE_HOME_NPMRC flag set and valid .npmrc detected - "\
+                    f"npm fetcher will use {home_npmrc_file}")
+            return home_npmrc_file
+        return None
 
     def run(self, cmd, args=None, configs=None, workdir=None):
         """Run npm command in a controlled environment"""
@@ -165,7 +181,7 @@ class Npm(FetchMethod):
         # Using the 'downloadfilename' parameter as local filename
         # or the npm package name.
         if "downloadfilename" in ud.parm:
-            ud.localfile = npm_localfile(d.expand(ud.parm["downloadfilename"]))
+            ud.localfile = npm_localfile(ud.parm["downloadfilename"])
         else:
             ud.localfile = npm_localfile(ud.package, ud.version)
 

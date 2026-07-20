@@ -1,4 +1,4 @@
-From 780109902b00652dfdc080607c614f210e96ae9b Mon Sep 17 00:00:00 2001
+From 0ff4f23d3521a45835eaa03731c0b3351a50d8ba Mon Sep 17 00:00:00 2001
 From: Khem Raj <raj.khem@gmail.com>
 Date: Mon, 2 Mar 2015 01:09:58 +0000
 Subject: [PATCH] Point scripts location to libdir
@@ -12,7 +12,7 @@ Signed-off-by: Khem Raj <raj.khem@gmail.com>
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 07801c2c3ac..a2bcffecf73 100644
+index cf2c29e89a3..0a6eaada129 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
 @@ -51,7 +51,7 @@ AM_CFLAGS = $(WARN_CFLAGS) $(ELF_CFLAGS) $(JANSSON_CFLAGS) $(ZSTD_CFLAGS)
@@ -25,7 +25,7 @@ index 07801c2c3ac..a2bcffecf73 100644
  EMUL = @EMUL@
  EMULATION_OFILES = @EMULATION_OFILES@
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 6329a12a0d6..15311048855 100644
+index 23d4f1f3132..c3d08edbef1 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
 @@ -584,7 +584,7 @@ AM_CFLAGS = $(WARN_CFLAGS) $(ELF_CFLAGS) $(JANSSON_CFLAGS) $(ZSTD_CFLAGS)

@@ -14,10 +14,11 @@ import glob
 import stat
 import mmap
 import subprocess
+import shutil
 
 import oe.cachedpath
 
-def runstrip(arg):
+def runstrip(file, elftype, strip, extra_strip_sections=''):
     # Function to strip a single file, called from split_and_strip_files below
     # A working 'file' (one which works on the target architecture)
     #
@@ -26,12 +27,6 @@ def runstrip(arg):
     # 4 - executable
     # 8 - shared library
     # 16 - kernel module
-
-    if len(arg) == 3:
-        (file, elftype, strip) = arg
-        extra_strip_sections = ''
-    else:
-        (file, elftype, strip, extra_strip_sections) = arg
 
     newmode = None
     if not os.access(file, os.W_OK) or os.access(file, os.R_OK):
@@ -195,20 +190,33 @@ def strip_execs(pn, dstdir, strip_cmd, libdir, base_libdir, max_process, qa_alre
 
     oe.utils.multiprocess_launch_mp(runstrip, sfiles, max_process)
 
+TRANSLATE = (
+    ("@", "@at@"),
+    (" ", "@space@"),
+    ("\t", "@tab@"),
+    ("[", "@openbrace@"),
+    ("]", "@closebrace@"),
+    ("_", "@underscore@"),
+    (":", "@colon@"),
+)
 
 def file_translate(file):
-    ft = file.replace("@", "@at@")
-    ft = ft.replace(" ", "@space@")
-    ft = ft.replace("\t", "@tab@")
-    ft = ft.replace("[", "@openbrace@")
-    ft = ft.replace("]", "@closebrace@")
-    ft = ft.replace("_", "@underscore@")
+    ft = file
+    for s, replace in TRANSLATE:
+        ft = ft.replace(s, replace)
+
     return ft
 
-def filedeprunner(arg):
+def file_reverse_translate(file):
+    ft = file
+    for s, replace in reversed(TRANSLATE):
+        ft = ft.replace(replace, s)
+
+    return ft
+
+def filedeprunner(pkg, pkgfiles, rpmdeps, pkgdest):
     import re, subprocess, shlex
 
-    (pkg, pkgfiles, rpmdeps, pkgdest) = arg
     provides = {}
     requires = {}
 
@@ -648,6 +656,8 @@ def split_locales(d):
     except ValueError:
         locale_index = len(packages)
 
+    lic = d.getVar("LICENSE:" + pn + "-locale")
+
     localepaths = []
     locales = set()
     for localepath in (d.getVar('LOCALE_PATHS') or "").split():
@@ -683,6 +693,8 @@ def split_locales(d):
         d.setVar('RPROVIDES:' + pkg, '%s-locale %s%s-translation' % (pn, mlprefix, ln))
         d.setVar('SUMMARY:' + pkg, '%s - %s translations' % (summary, l))
         d.setVar('DESCRIPTION:' + pkg, '%s  This package contains language translation files for the %s locale.' % (description, l))
+        if lic:
+            d.setVar('LICENSE:' + pkg, lic)
         if locale_section:
             d.setVar('SECTION:' + pkg, locale_section)
 
@@ -979,7 +991,7 @@ def copydebugsources(debugsrcdir, sources, d):
 
         prefixmap = {}
         for flag in cflags.split():
-            if not flag.startswith("-fdebug-prefix-map"):
+            if not flag.startswith("-ffile-prefix-map"):
                 continue
             if "recipe-sysroot" in flag:
                 continue
@@ -1064,6 +1076,7 @@ def process_split_and_strip_files(d):
             d.getVar('INHIBIT_PACKAGE_DEBUG_SPLIT') != '1'):
         checkelf = {}
         checkelflinks = {}
+        checkstatic = {}
         for root, dirs, files in cpath.walk(dvar):
             for f in files:
                 file = os.path.join(root, f)
@@ -1077,10 +1090,6 @@ def process_split_and_strip_files(d):
                 if file in skipfiles:
                     continue
 
-                if oe.package.is_static_lib(file):
-                    staticlibs.append(file)
-                    continue
-
                 try:
                     ltarget = cpath.realpath(file, dvar, False)
                     s = cpath.lstat(ltarget)
@@ -1092,6 +1101,13 @@ def process_split_and_strip_files(d):
                     continue
                 if not s:
                     continue
+
+                if oe.package.is_static_lib(file):
+                    # Use a reference of device ID and inode number to identify files
+                    file_reference = "%d_%d" % (s.st_dev, s.st_ino)
+                    checkstatic[file] = (file, file_reference)
+                    continue
+
                 # Check its an executable
                 if (s[stat.ST_MODE] & stat.S_IXUSR) or (s[stat.ST_MODE] & stat.S_IXGRP) \
                         or (s[stat.ST_MODE] & stat.S_IXOTH) \
@@ -1156,6 +1172,27 @@ def process_split_and_strip_files(d):
                 # Modified the file so clear the cache
                 cpath.updatecache(file)
 
+        # Do the same hardlink processing as above, but for static libraries
+        results = list(checkstatic.keys())
+
+        # As above, sort the results.
+        results.sort(key=lambda x: x[0])
+
+        for file in results:
+            # Use a reference of device ID and inode number to identify files
+            file_reference = checkstatic[file][1]
+            if file_reference in inodes:
+                os.unlink(file)
+                os.link(inodes[file_reference][0], file)
+                inodes[file_reference].append(file)
+            else:
+                inodes[file_reference] = [file]
+                # break hardlink
+                bb.utils.break_hardlinks(file)
+                staticlibs.append(file)
+            # Modified the file so clear the cache
+            cpath.updatecache(file)
+
     def strip_pkgd_prefix(f):
         nonlocal dvar
 
@@ -1194,11 +1231,24 @@ def process_split_and_strip_files(d):
                 dest = dv["libdir"] + os.path.dirname(src) + dv["dir"] + "/" + os.path.basename(target) + dv["append"]
                 fpath = dvar + dest
                 ftarget = dvar + dv["libdir"] + os.path.dirname(target) + dv["dir"] + "/" + os.path.basename(target) + dv["append"]
-                bb.utils.mkdirhier(os.path.dirname(fpath))
-                # Only one hardlink of separated debug info file in each directory
-                if not os.access(fpath, os.R_OK):
-                    #bb.note("Link %s -> %s" % (fpath, ftarget))
-                    os.link(ftarget, fpath)
+                if os.access(ftarget, os.R_OK):
+                    bb.utils.mkdirhier(os.path.dirname(fpath))
+                    # Only one hardlink of separated debug info file in each directory
+                    if not os.access(fpath, os.R_OK):
+                        #bb.note("Link %s -> %s" % (fpath, ftarget))
+                        os.link(ftarget, fpath)
+                elif (d.getVar('PACKAGE_DEBUG_STATIC_SPLIT') == '1'):
+                    deststatic = dv["staticlibdir"] + os.path.dirname(src) + dv["staticdir"] + "/" + os.path.basename(file) + dv["staticappend"]
+                    fpath = dvar + deststatic
+                    ftarget = dvar + dv["staticlibdir"] + os.path.dirname(target) + dv["staticdir"] + "/" + os.path.basename(target) + dv["staticappend"]
+                    if os.access(ftarget, os.R_OK):
+                        bb.utils.mkdirhier(os.path.dirname(fpath))
+                        # Only one hardlink of separated debug info file in each directory
+                        if not os.access(fpath, os.R_OK):
+                            #bb.note("Link %s -> %s" % (fpath, ftarget))
+                            os.link(ftarget, fpath)
+                else:
+                    bb.note("Unable to find inode link target %s" % (target))
 
         # Create symlinks for all cases we were able to split symbols
         for file in symlinks:
@@ -1394,10 +1444,10 @@ def populate_packages(d):
 
     # Handle excluding packages with incompatible licenses
     package_list = []
+    skipped_pkgs = oe.license.skip_incompatible_package_licenses(d, packages)
     for pkg in packages:
-        licenses = d.getVar('_exclude_incompatible-' + pkg)
-        if licenses:
-            msg = "Excluding %s from packaging as it has incompatible license(s): %s" % (pkg, licenses)
+        if pkg in skipped_pkgs:
+            msg = "Excluding %s from packaging as it has incompatible license(s): %s" % (pkg, skipped_pkgs[pkg])
             oe.qa.handle_error("incompatible-license", msg, d)
         else:
             package_list.append(pkg)
@@ -1566,7 +1616,6 @@ def process_shlibs(pkgfiles, d):
         needs_ldconfig = False
         needed = set()
         sonames = set()
-        renames = []
         ldir = os.path.dirname(file).replace(pkgdest + "/" + pkg, '')
         cmd = d.getVar('OBJDUMP') + " -p " + shlex.quote(file) + " 2>/dev/null"
         fd = os.popen(cmd)
@@ -1594,11 +1643,9 @@ def process_shlibs(pkgfiles, d):
                         sonames.add(prov)
                 if libdir_re.match(os.path.dirname(file)):
                     needs_ldconfig = True
-                if needs_ldconfig and snap_symlinks and (os.path.basename(file) != this_soname):
-                    renames.append((file, os.path.join(os.path.dirname(file), this_soname)))
-        return (needs_ldconfig, needed, sonames, renames)
+        return (needs_ldconfig, needed, sonames)
 
-    def darwin_so(file, needed, sonames, renames, pkgver):
+    def darwin_so(file, needed, sonames, pkgver):
         if not os.path.exists(file):
             return
         ldir = os.path.dirname(file).replace(pkgdest + "/" + pkg, '')
@@ -1650,7 +1697,7 @@ def process_shlibs(pkgfiles, d):
                 if name and name not in needed[pkg]:
                      needed[pkg].add((name, file, tuple()))
 
-    def mingw_dll(file, needed, sonames, renames, pkgver):
+    def mingw_dll(file, needed, sonames, pkgver):
         if not os.path.exists(file):
             return
 
@@ -1668,11 +1715,6 @@ def process_shlibs(pkgfiles, d):
                     dllname = m.group(1)
                     if dllname:
                         needed[pkg].add((dllname, file, tuple()))
-
-    if d.getVar('PACKAGE_SNAP_LIB_SYMLINKS') == "1":
-        snap_symlinks = True
-    else:
-        snap_symlinks = False
 
     needed = {}
 
@@ -1692,16 +1734,15 @@ def process_shlibs(pkgfiles, d):
 
         needed[pkg] = set()
         sonames = set()
-        renames = []
         linuxlist = []
         for file in pkgfiles[pkg]:
                 soname = None
                 if cpath.islink(file):
                     continue
                 if hostos.startswith("darwin"):
-                    darwin_so(file, needed, sonames, renames, pkgver)
+                    darwin_so(file, needed, sonames, pkgver)
                 elif hostos.startswith("mingw"):
-                    mingw_dll(file, needed, sonames, renames, pkgver)
+                    mingw_dll(file, needed, sonames, pkgver)
                 elif os.access(file, os.X_OK) or lib_re.match(file):
                     linuxlist.append(file)
 
@@ -1711,13 +1752,7 @@ def process_shlibs(pkgfiles, d):
                 ldconfig = r[0]
                 needed[pkg] |= r[1]
                 sonames |= r[2]
-                renames.extend(r[3])
                 needs_ldconfig = needs_ldconfig or ldconfig
-
-        for (old, new) in renames:
-            bb.note("Renaming %s to %s" % (old, new))
-            bb.utils.rename(old, new)
-            pkgfiles[pkg].remove(old)
 
         shlibs_file = os.path.join(shlibswork_dir, pkg + ".list")
         if len(sonames):
@@ -1839,7 +1874,7 @@ def process_pkgconfig(pkgfiles, d):
                         if m:
                             hdr = m.group(1)
                             exp = pd.expand(m.group(2))
-                            if hdr == 'Requires':
+                            if hdr == 'Requires' or hdr == 'Requires.private':
                                 pkgconfig_needed[pkg] += exp.replace(',', ' ').split()
                                 continue
                         m = var_re.match(l)

@@ -1,8 +1,19 @@
 EXTRA_OEMESON:append = "\
-    -Dredfish-dbus-log=enabled \
-    -Dmeta-tls-common-name-parsing=enabled \
+    -Dexperimental-redfish-dbus-log-subscription=enabled \
 "
 
-PACKAGECONFIG:append = " insecure-redfish-expand"
+EXTRA_OEMESON:append:fb-compute-multihost = "\
+    -Dexperimental-redfish-multi-computer-system=enabled \
+"
 
-MUTUAL_TLS_PARSING="Meta"
+PACKAGECONFIG:append = " \
+    insecure-redfish-expand \
+    redfish-dbus-log \
+    redfish-dump-log \
+"
+
+PACKAGECONFIG:remove = " \
+    redfish-oem-manager-fan-data \
+"
+
+MUTUAL_TLS_PARSING = "UserPrincipalName"

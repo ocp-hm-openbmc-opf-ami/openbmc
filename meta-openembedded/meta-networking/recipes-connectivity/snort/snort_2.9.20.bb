@@ -15,6 +15,7 @@ SRC_URI = "https://www.snort.org/downloads/archive/snort/${BP}.tar.gz \
     file://fix-host-contamination-when-enable-static-daq.patch \
     file://disable-run-test-program-while-cross-compiling.patch \
     file://configure.in-disable-tirpc-checking-for-fedora.patch \
+    file://0001-Fix-build-with-gcc-15.patch \
 "
 SRC_URI[sha256sum] = "29400e13f53b1831e0b8b10ec1224a1cbaa6dc1533a5322a20dd80bb84b4981c"
 
@@ -76,18 +77,18 @@ do_install:append() {
 
     cp ${S}/preproc_rules/*.rules ${D}${sysconfdir}/snort/preproc_rules/
     if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'true', 'false', d)}; then
-        install -m 755 ${WORKDIR}/snort.init ${D}${sysconfdir}/init.d/snort
+        install -m 755 ${UNPACKDIR}/snort.init ${D}${sysconfdir}/init.d/snort
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -d ${D}/${systemd_system_unitdir}
-        install -m 644 ${WORKDIR}/snort.service ${D}/${systemd_system_unitdir}
+        install -m 644 ${UNPACKDIR}/snort.service ${D}/${systemd_system_unitdir}
         # Install default environment file
         install -d ${D}/${sysconfdir}/default
-        install -m 0644 ${WORKDIR}/snort.default ${D}${sysconfdir}/default/snort
+        install -m 0644 ${UNPACKDIR}/snort.default ${D}${sysconfdir}/default/snort
     fi
     install -d ${D}${sysconfdir}/default/volatiles
-    install -m 0644 ${WORKDIR}/volatiles.99_snort ${D}${sysconfdir}/default/volatiles/99_snort
+    install -m 0644 ${UNPACKDIR}/volatiles.99_snort ${D}${sysconfdir}/default/volatiles/99_snort
 
     sed -i -e 's|-ffile-prefix-map[^ ]*||g; s|-fdebug-prefix-map[^ ]*||g; s|-fmacro-prefix-map[^ ]*||g; s|${STAGING_DIR_TARGET}||g' ${D}${libdir}/pkgconfig/*.pc
 }

@@ -12,7 +12,7 @@ Features provide a mechanism for working out which packages should be
 included in the generated images. Distributions can select which
 features they want to support through the :term:`DISTRO_FEATURES` variable,
 which is set or appended to in a distribution's configuration file such
-as ``poky.conf``, ``poky-tiny.conf``, ``poky-lsb.conf`` and so forth.
+as ``poky.conf``, ``poky-tiny.conf``, ``poky-altcfg.conf`` and so forth.
 Machine features are set in the :term:`MACHINE_FEATURES` variable, which is
 set in the machine configuration file and specifies the hardware
 features for a given machine.
@@ -146,7 +146,7 @@ metadata, as extra layers can define their own:
 
 -  *directfb:* Include DirectFB support.
 
--  *ext2:* Include tools for supporting for devices with internal
+-  *ext2:* Include tools for supporting devices with internal
    HDD/Microdrive for storing files (instead of Flash only devices).
 
 -  *gobject-introspection-data:* Include data to support
@@ -166,9 +166,6 @@ metadata, as extra layers can define their own:
 
 -  *multiarch:* Enable building applications with multiple architecture
    support.
-
--  *ld-is-gold:* Use the :wikipedia:`gold <Gold_(linker)>`
-   linker instead of the standard GCC linker (bfd).
 
 -  *ldconfig:* Include support for ldconfig and ``ld.so.conf`` on the
    target.
@@ -197,13 +194,17 @@ metadata, as extra layers can define their own:
 
 -  *pcmcia:* Include PCMCIA/CompactFlash support.
 
+-  *pni-names:* Enable generation of persistent network interface names, i.e.
+   the system tries hard to have the same but unique names for the network
+   interfaces even after a reinstall.
+
 -  *polkit:* Include :wikipedia:`Polkit <Polkit>` support.
 
 -  *ppp:* Include PPP dialup support.
 
 -  *ptest:* Enables building the package tests where supported by
    individual recipes. For more information on package tests, see the
-   ":ref:`dev-manual/packages:testing packages with ptest`" section
+   ":ref:`test-manual/ptest:testing packages with ptest`" section
    in the Yocto Project Development Tasks Manual.
 
 -  *pulseaudio:* Include support for
@@ -281,31 +282,24 @@ The image features available for all images are:
 -  *dbg-pkgs:* Installs debug symbol packages for all packages installed
    in a given image.
 
--  *debug-tweaks:* Makes an image suitable for development (e.g. allows
-   root logins, logins without passwords ---including root ones, and enables
-   post-installation logging). See the ``allow-empty-password``,
-   ``allow-root-login``, ``empty-root-password``, and ``post-install-logging``
-   features in this list for additional information.
-
 -  *dev-pkgs:* Installs development packages (headers and extra library
    links) for all packages installed in a given image.
 
 -  *doc-pkgs:* Installs documentation packages for all packages
    installed in a given image.
 
--  *empty-root-password:* This feature or ``debug-tweaks`` is required if
-   you want to allow root login with an empty password. If these features
-   are not present in :term:`IMAGE_FEATURES`, a non-empty password is
-   forced in ``/etc/passwd`` and ``/etc/shadow`` if such files exist.
+-  *empty-root-password:* This feature can be used if you want to allow root
+   login with an empty password. If this feature is not present in
+   :term:`IMAGE_FEATURES`, a non-empty password is forced in ``/etc/passwd`` and
+   ``/etc/shadow`` if such files exist.
 
    .. note::
        ``empty-root-password`` doesn't set an empty root password by itself.
        You get an initial empty root password thanks to the
        :oe_git:`base-passwd </openembedded-core/tree/meta/recipes-core/base-passwd/>`
        and :oe_git:`shadow </openembedded-core/tree/meta/recipes-extended/shadow/>`
-       recipes, and the presence of ``empty-root-password`` or ``debug-tweaks``
-       just disables the mechanism which forces an non-empty password for the
-       root user.
+       recipes, and the presence of ``empty-root-password`` just disables the
+       mechanism which forces an non-empty password for the root user.
 
 -  *lic-pkgs:* Installs license packages for all packages installed in a
    given image.
@@ -323,8 +317,9 @@ The image features available for all images are:
 
    .. note::
 
-      To make the ``/var/log`` directory on the target persistent, use the
-      :term:`VOLATILE_LOG_DIR` variable by setting it to "no".
+      To make the ``/var/log`` directory on the target persistent, remove the
+      ``files/fs-perms-volatile-log.txt`` value from
+      :term:`FILESYSTEM_PERMS_TABLES`.
 
 -  *ptest-pkgs:* Installs ptest packages for all ptest-enabled recipes.
 

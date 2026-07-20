@@ -49,20 +49,23 @@ class SkipPackage(SkipRecipe):
 __mtime_cache = {}
 def cached_mtime(f):
     if f not in __mtime_cache:
-        __mtime_cache[f] = os.stat(f)[stat.ST_MTIME]
+        res = os.stat(f)
+        __mtime_cache[f] = (res.st_mtime_ns, res.st_size, res.st_ino)
     return __mtime_cache[f]
 
 def cached_mtime_noerror(f):
     if f not in __mtime_cache:
         try:
-            __mtime_cache[f] = os.stat(f)[stat.ST_MTIME]
+            res = os.stat(f)
+            __mtime_cache[f] = (res.st_mtime_ns, res.st_size, res.st_ino)
         except OSError:
             return 0
     return __mtime_cache[f]
 
 def check_mtime(f, mtime):
     try:
-        current_mtime = os.stat(f)[stat.ST_MTIME]
+        res = os.stat(f)
+        current_mtime = (res.st_mtime_ns, res.st_size, res.st_ino)
         __mtime_cache[f] = current_mtime
     except OSError:
         current_mtime = 0
@@ -70,7 +73,8 @@ def check_mtime(f, mtime):
 
 def update_mtime(f):
     try:
-        __mtime_cache[f] = os.stat(f)[stat.ST_MTIME]
+        res = os.stat(f)
+        __mtime_cache[f] = (res.st_mtime_ns, res.st_size, res.st_ino)
     except OSError:
         if f in __mtime_cache:
             del __mtime_cache[f]
@@ -171,5 +175,42 @@ def get_file_depends(d):
     for (fn, _) in depends:
         dep_files.append(os.path.abspath(fn))
     return " ".join(dep_files)
+
+def vardeps(*varnames):
+    """
+    Function decorator that can be used to instruct the bitbake dependency
+    parsing to add a dependency on the specified variables names
+
+    Example:
+
+        @bb.parse.vardeps("FOO", "BAR")
+        def my_function():
+            ...
+
+    """
+    def inner(f):
+        if not hasattr(f, "bb_vardeps"):
+            f.bb_vardeps = set()
+        f.bb_vardeps |= set(varnames)
+        return f
+    return inner
+
+def vardepsexclude(*varnames):
+    """
+    Function decorator that can be used to instruct the bitbake dependency
+    parsing to ignore dependencies on the specified variable names in the code
+
+    Example:
+
+        @bb.parse.vardepsexclude("FOO", "BAR")
+        def my_function():
+            ...
+    """
+    def inner(f):
+        if not hasattr(f, "bb_vardepsexclude"):
+            f.bb_vardepsexclude = set()
+        f.bb_vardepsexclude |= set(varnames)
+        return f
+    return inner
 
 from bb.parse.parse_py import __version__, ConfHandler, BBHandler

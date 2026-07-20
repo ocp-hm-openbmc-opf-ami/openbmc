@@ -1,0 +1,60 @@
+#!/bin/bash
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# shellcheck source=meta-google/recipes-google/networking/gbmc-bridge/gbmc-br-lib.sh
+source /usr/share/gbmc-br-lib.sh || exit
+
+update_rtr() {
+  true
+}
+
+update_fqdn() {
+  (( IP_OFFSET == 0 )) && return
+  default_update_fqdn "$@"
+}
+
+update_pfx() {
+  local pfx="$1"
+  (( IP_OFFSET == 0 )) && return
+  gbmc_br_set_ip "$pfx" || true
+  echo "IP $pfx set on $RA_IF" >&2
+}
+
+RA_IF=gbmcbr
+IP_OFFSET=@IP_OFFSET@
+# Use the lowest priority, except for kernel RA discovered routes.
+# We want closer NICs to provide a default route if existing.
+ROUTE_METRIC=1000
+
+echo "Waiting for ${RA_IF} configuration" >&2
+
+st_check_timeout=60
+st_check_start=$SECONDS
+while (( SECONDS - st_check_start < st_check_timeout )); do
+  if_st=$(networkctl list "${RA_IF}")
+  if [[ "${if_st}" =~ "configured" ]]; then
+    echo "${RA_IF} is configured, doing RA" >&2
+    break;
+  elif [[ "${if_st}" =~ "failed" ]]; then
+    echo "${RA_IF} failed, need reconfiguring" >&2
+    gbmc_net_networkd_reload "${RA_IF}"
+  else
+    echo "${RA_IF} still configuring, retry in 2s" >&2
+  fi
+  sleep 2
+done
+
+# shellcheck source=meta-google/recipes-google/networking/gbmc-net-common/gbmc-ra.sh
+source /usr/share/gbmc-ra.sh || exit

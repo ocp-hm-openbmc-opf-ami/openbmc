@@ -12,9 +12,9 @@ PE = "1"
 
 # We use the revision in order to avoid having to fetch it from the
 # repo during parse
-SRCREV = "25049ad560826f7dc1c4740883b0016014a59789"
+SRCREV = "34820924edbc4ec7803eb89d9852f4b870fa760a"
 
-SRC_URI = "git://source.denx.de/u-boot/u-boot.git;protocol=https;branch=master"
+SRC_URI = "git://source.denx.de/u-boot/u-boot.git;protocol=https;branch=master;tag=v${PV}"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"

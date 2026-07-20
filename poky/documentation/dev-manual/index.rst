@@ -20,9 +20,11 @@ Yocto Project Development Tasks Manual
    development-shell
    python-development-shell
    building
+   multiconfig
    speeding-up-build
    libraries
    prebuilt-libraries
+   devtool
    x32-psabi
    gobject-introspection
    external-toolchain
@@ -39,7 +41,6 @@ Yocto Project Development Tasks Manual
    external-scm
    read-only-rootfs
    build-quality
-   runtime-testing
    debugging
    licenses
    security-subjects
@@ -48,5 +49,6 @@ Yocto Project Development Tasks Manual
    error-reporting-tool
    wayland
    qemu
+   bblock
 
 .. include:: /boilerplate.rst

@@ -31,7 +31,7 @@ logger = logging.getLogger("BitBake.Data")
 
 __setvar_keyword__ = [":append", ":prepend", ":remove"]
 __setvar_regexp__ = re.compile(r'(?P<base>.*?)(?P<keyword>:append|:prepend|:remove)(:(?P<add>[^A-Z]*))?$')
-__expand_var_regexp__ = re.compile(r"\${[a-zA-Z0-9\-_+./~:]+?}")
+__expand_var_regexp__ = re.compile(r"\${[a-zA-Z0-9\-_+./~:]+}")
 __expand_python_regexp__ = re.compile(r"\${@(?:{.*?}|.)+?}")
 __whitespace_split__ = re.compile(r'(\s)')
 __override_regexp__ = re.compile(r'[a-z0-9]+')
@@ -106,52 +106,52 @@ class VariableParse:
         self.contains = {}
 
     def var_sub(self, match):
-            key = match.group()[2:-1]
-            if self.varname and key:
-                if self.varname == key:
-                    raise Exception("variable %s references itself!" % self.varname)
-            var = self.d.getVarFlag(key, "_content")
-            self.references.add(key)
-            if var is not None:
-                return var
-            else:
-                return match.group()
+        key = match.group()[2:-1]
+        if self.varname and key:
+            if self.varname == key:
+                raise Exception("variable %s references itself!" % self.varname)
+        var = self.d.getVarFlag(key, "_content")
+        self.references.add(key)
+        if var is not None:
+            return var
+        else:
+            return match.group()
 
     def python_sub(self, match):
-            if isinstance(match, str):
-                code = match
-            else:
-                code = match.group()[3:-1]
+        if isinstance(match, str):
+            code = match
+        else:
+            code = match.group()[3:-1]
 
-            # Do not run code that contains one or more unexpanded variables
-            # instead return the code with the characters we removed put back
-            if __expand_var_regexp__.findall(code):
-                return "${@" + code + "}"
+        # Do not run code that contains one or more unexpanded variables
+        # instead return the code with the characters we removed put back
+        if __expand_var_regexp__.findall(code):
+            return "${@" + code + "}"
 
-            if self.varname:
-                varname = 'Var <%s>' % self.varname
-            else:
-                varname = '<expansion>'
-            codeobj = compile(code.strip(), varname, "eval")
+        if self.varname:
+            varname = 'Var <%s>' % self.varname
+        else:
+            varname = '<expansion>'
+        codeobj = compile(code.strip(), varname, "eval")
 
-            parser = bb.codeparser.PythonParser(self.varname, logger)
-            parser.parse_python(code)
-            if self.varname:
-                vardeps = self.d.getVarFlag(self.varname, "vardeps")
-                if vardeps is None:
-                    parser.log.flush()
-            else:
+        parser = bb.codeparser.PythonParser(self.varname, logger)
+        parser.parse_python(code)
+        if self.varname:
+            vardeps = self.d.getVarFlag(self.varname, "vardeps")
+            if vardeps is None:
                 parser.log.flush()
-            self.references |= parser.references
-            self.execs |= parser.execs
+        else:
+            parser.log.flush()
+        self.references |= parser.references
+        self.execs |= parser.execs
 
-            for k in parser.contains:
-                if k not in self.contains:
-                    self.contains[k] = parser.contains[k].copy()
-                else:
-                    self.contains[k].update(parser.contains[k])
-            value = utils.better_eval(codeobj, DataContext(self.d), {'d' : self.d})
-            return str(value)
+        for k in parser.contains:
+            if k not in self.contains:
+                self.contains[k] = parser.contains[k].copy()
+            else:
+                self.contains[k].update(parser.contains[k])
+        value = utils.better_eval(codeobj, DataContext(self.d), {'d' : self.d})
+        return str(value)
 
 class DataContext(dict):
     excluded = set([i for i in dir(builtins) if not i.startswith('_')] + ['oe'])
@@ -272,12 +272,9 @@ class VariableHistory(object):
             return
         if 'op' not in loginfo or not loginfo['op']:
             loginfo['op'] = 'set'
-        if 'detail' in loginfo:
-            loginfo['detail'] = str(loginfo['detail'])
         if 'variable' not in loginfo or 'file' not in loginfo:
             raise ValueError("record() missing variable or file.")
         var = loginfo['variable']
-
         if var not in self.variables:
             self.variables[var] = []
         if not isinstance(self.variables[var], list):
@@ -336,7 +333,8 @@ class VariableHistory(object):
                     flag = '[%s] ' % (event['flag'])
                 else:
                     flag = ''
-                o.write("#   %s %s:%s%s\n#     %s\"%s\"\n" % (event['op'], event['file'], event['line'], display_func, flag, re.sub('\n', '\n#     ', event['detail'])))
+                o.write("#   %s %s:%s%s\n#     %s\"%s\"\n" % \
+                    (event['op'], event['file'], event['line'], display_func, flag, re.sub('\n', '\n#     ', str(event['detail']))))
             if len(history) > 1:
                 o.write("# pre-expansion value:\n")
                 o.write('#   "%s"\n' % (commentVal))
@@ -390,7 +388,7 @@ class VariableHistory(object):
             if isset and event['op'] == 'set?':
                 continue
             isset = True
-            items = d.expand(event['detail']).split()
+            items = d.expand(str(event['detail'])).split()
             for item in items:
                 # This is a little crude but is belt-and-braces to avoid us
                 # having to handle every possible operation type specifically
@@ -582,12 +580,10 @@ class DataSmart(MutableMapping):
             else:
                 loginfo['op'] = keyword
             self.varhistory.record(**loginfo)
-            # todo make sure keyword is not __doc__ or __module__
             # pay the cookie monster
 
             # more cookies for the cookie monster
-            if ':' in var:
-                self._setvar_update_overrides(base, **loginfo)
+            self._setvar_update_overrides(base, **loginfo)
 
             if base in self.overridevars:
                 self._setvar_update_overridevars(var, value)
@@ -640,6 +636,7 @@ class DataSmart(MutableMapping):
                 nextnew.update(vardata.contains.keys())
             new = nextnew
         self.overrides = None
+        self.expand_cache = {}
 
     def _setvar_update_overrides(self, var, **loginfo):
         # aka pay the cookie monster
@@ -829,6 +826,8 @@ class DataSmart(MutableMapping):
                 value = copy.copy(local_var[flag])
             elif flag == "_content" and "_defaultval" in local_var and not noweakdefault:
                 value = copy.copy(local_var["_defaultval"])
+            elif "_defaultval_flag_"+flag in local_var and not noweakdefault:
+                value = copy.copy(local_var["_defaultval_flag_"+flag])
 
 
         if flag == "_content" and local_var is not None and ":append" in local_var and not parsing:
@@ -920,6 +919,8 @@ class DataSmart(MutableMapping):
             self.varhistory.record(**loginfo)
 
             del self.dict[var][flag]
+            if ("_defaultval_flag_" + flag) in self.dict[var]:
+                del self.dict[var]["_defaultval_flag_" + flag]
 
     def appendVarFlag(self, var, flag, value, **loginfo):
         loginfo['op'] = 'append'
@@ -954,16 +955,21 @@ class DataSmart(MutableMapping):
         flags = {}
 
         if local_var:
-            for i in local_var:
-                if i.startswith(("_", ":")) and not internalflags:
+            for i, val in local_var.items():
+                if i.startswith("_defaultval_flag_") and not internalflags:
+                    i = i[len("_defaultval_flag_"):]
+                    if i not in local_var:
+                        flags[i] = val
+                elif i.startswith(("_", ":")) and not internalflags:
                     continue
-                flags[i] = local_var[i]
+                else:
+                    flags[i] = val
+
                 if expand and i in expand:
                     flags[i] = self.expand(flags[i], var + "[" + i + "]")
         if len(flags) == 0:
             return None
         return flags
-
 
     def delVarFlags(self, var, **loginfo):
         self.expand_cache = {}
@@ -1113,6 +1119,11 @@ class DataSmart(MutableMapping):
                 for i in bb_list:
                     value = d.getVar(i, False) or ""
                     data.update({i:value})
+
+        moddeps = bb.codeparser.modulecode_deps
+        for dep in sorted(moddeps):
+            # Ignore visitor code, sort sets
+            data.update({'moddep[%s]' % dep : [sorted(moddeps[dep][0]), sorted(moddeps[dep][1]), sorted(moddeps[dep][2]), sorted(moddeps[dep][3]), moddeps[dep][4]]})
 
         data_str = str([(k, data[k]) for k in sorted(data.keys())])
         return hashlib.sha256(data_str.encode("utf-8")).hexdigest()

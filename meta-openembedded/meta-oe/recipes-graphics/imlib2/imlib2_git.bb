@@ -7,8 +7,8 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=344895f253c32f38e182dcaf30fe8a35"
 
 DEPENDS = "freetype "
 PROVIDES = "virtual/imlib2"
-PV = "1.12.2"
-SRCREV = "a860e34b19af6b0a73d86ddc0e4829145e18fa6e"
+PV = "1.12.5"
+SRCREV = "df73df52ddf0e1ea40507f5ee8c6b794b328b3bc"
 
 inherit autotools pkgconfig lib_package
 

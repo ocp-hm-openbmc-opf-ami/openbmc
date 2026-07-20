@@ -1,0 +1,15 @@
+[Unit]
+Description=MCTP Endpoint ID (EID) Setup
+After=mctpd.service
+Before=pldmd.service
+Before=xyz.openbmc_project.mctpreactor.service
+Wants=mctpd.service
+Requires=mctpd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/mctp/mctp_setup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

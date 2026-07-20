@@ -19,10 +19,11 @@ HOMEPAGE = "https://odbc.postgresql.org/"
 LICENSE = "LGPL-2.0-only"
 LIC_FILES_CHKSUM = "file://license.txt;md5=6db3822fc7512e83087ba798da013692"
 
-SRC_URI = "http://ftp.postgresql.org/pub/odbc/versions/src/${BPN}-${PV}.tar.gz \
+SRC_URI = "http://ftp.postgresql.org/pub/odbc/versions.old/src/${BPN}-${PV}.tar.gz \
     file://psqlodbc-remove-some-checks-for-cross-compiling.patch \
     file://psqlodbc-donot-use-the-hardcode-libdir.patch \
     file://psqlodbc-fix-for-ptest-support.patch \
+    file://0001-configure-make-sure-to-call-AC_CHECK_HEADER_STDBOOL.patch \
     file://run-ptest \
 "
 
@@ -58,5 +59,5 @@ do_install_ptest() {
 FILES:${PN} += "${libdir}"
 
 # The tests need a local PostgreSQL server running
-RDEPENDS:${PN}-ptest = "postgresql"
-
+RDEPENDS:${PN}-ptest += "psqlodbc postgresql diffutils"
+RDEPENDS:${PN}-ptest:append:libc-glibc = " glibc-utils locale-base-en-us glibc-gconv glibc-charmaps"

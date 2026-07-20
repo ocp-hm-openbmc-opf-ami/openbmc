@@ -52,7 +52,7 @@ EXTRA_OEMESON = " \
 
 do_install:append() {
     install -d ${D}${exec_prefix}/lib/tmpfiles.d
-    install -m 644 ${WORKDIR}/coretemp.conf ${D}${exec_prefix}/lib/tmpfiles.d/
+    install -m 644 ${UNPACKDIR}/coretemp.conf ${D}${exec_prefix}/lib/tmpfiles.d/
 }
 do_install[postfuncs] += "install_dreport"
 do_install[postfuncs] += "install_dreport_conf_file"
@@ -74,13 +74,13 @@ RDEPENDS:${PN}-scripts += " \
 "
 
 FILES:${PN}-manager += " \
-    ${bindir}/phosphor-dump-manager \
+    ${libexecdir}/phosphor-debug-collector/phosphor-dump-manager \
     ${bindir}/phosphor-offload-handler \
     ${exec_prefix}/lib/tmpfiles.d/coretemp.conf \
     ${datadir}/dump/ \
     "
-FILES:${PN}-monitor += "${bindir}/phosphor-dump-monitor"
-FILES:${PN}-monitor += "${bindir}/phosphor-ramoops-monitor"
+FILES:${PN}-monitor += "${libexecdir}/phosphor-debug-collector/phosphor-dump-monitor"
+FILES:${PN}-monitor += "${libexecdir}/phosphor-debug-collector/phosphor-ramoops-monitor"
 FILES:${PN}-dreport += "${bindir}/dreport"
 FILES:${PN}-scripts += "${dreport_dir}"
 

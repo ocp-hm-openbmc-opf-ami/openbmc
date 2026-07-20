@@ -24,12 +24,15 @@ EXTRA_OEMAKE += " \
     CFG_${OPTEE_CORE}_core=y \
     CROSS_COMPILE_core=${HOST_PREFIX} \
     CROSS_COMPILE_ta_${OPTEE_ARCH}=${HOST_PREFIX} \
-    NOWERROR=1 \
+    AFLAGS="${CFLAGS}" \
     ta-targets=ta_${OPTEE_ARCH} \
     O=${B} \
 "
 EXTRA_OEMAKE += " HOST_PREFIX=${HOST_PREFIX}"
 EXTRA_OEMAKE += " CROSS_COMPILE64=${HOST_PREFIX}"
+
+# Enable BTI in optee
+EXTREA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'arm-branch-protection', ' CFG_CORE_BTI=1 CFG_TA_BTI=1 CFG_CORE_PAUTH=y CFG_TA_PAUTH=y', '', d)}"
 
 LDFLAGS[unexport] = "1"
 CPPFLAGS[unexport] = "1"
@@ -76,8 +79,5 @@ FILES:${PN}-ta = "${nonarch_base_libdir}/optee_armtz/*"
 
 # note: "textrel" is not triggered on all archs
 INSANE_SKIP:${PN} = "textrel"
-# Build paths are currently embedded
-INSANE_SKIP:${PN} += "buildpaths"
 INSANE_SKIP:${PN}-dev = "staticdev"
 INHIBIT_PACKAGE_STRIP = "1"
-

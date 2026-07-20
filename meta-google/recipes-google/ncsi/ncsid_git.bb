@@ -14,7 +14,6 @@ SYSTEMD_SERVICE:${PN} += " \
   ncsid@.service \
   nic-hostful@.target \
   nic-hostless@.target \
-  update-ra-gw@.service \
   "
 
 DEPENDS += " \

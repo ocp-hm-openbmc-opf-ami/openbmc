@@ -4,20 +4,20 @@
 # SPDX-License-Identifier: MIT
 #
 
-# Zap the root password if debug-tweaks and empty-root-password features are not enabled
-ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'empty-root-password' ], "", "zap_empty_root_password ",d)}'
+# Zap the root password if empty-root-password feature is not enabled
+ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("IMAGE_FEATURES", "empty-root-password", "", "zap_empty_root_password ",d)}'
 
-# Allow dropbear/openssh to accept logins from accounts with an empty password string if debug-tweaks or allow-empty-password is enabled
-ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'allow-empty-password' ], "ssh_allow_empty_password ", "",d)}'
+# Allow dropbear/openssh to accept logins from accounts with an empty password string if allow-empty-password is enabled
+ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("IMAGE_FEATURES", "allow-empty-password", "ssh_allow_empty_password ", "",d)}'
 
-# Allow dropbear/openssh to accept root logins if debug-tweaks or allow-root-login is enabled
-ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'allow-root-login' ], "ssh_allow_root_login ", "",d)}'
+# Allow dropbear/openssh to accept root logins if allow-root-login is enabled
+ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("IMAGE_FEATURES", "allow-root-login", "ssh_allow_root_login ", "",d)}'
 
 # Autologin the root user on the serial console, if empty-root-password and serial-autologin-root are active
 ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("IMAGE_FEATURES", [ 'empty-root-password', 'serial-autologin-root' ], "serial_autologin_root ", "",d)}'
 
-# Enable postinst logging if debug-tweaks or post-install-logging is enabled
-ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'post-install-logging' ], "postinst_enable_logging ", "",d)}'
+# Enable postinst logging if post-install-logging is enabled
+ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("IMAGE_FEATURES", "post-install-logging", "postinst_enable_logging ", "",d)}'
 
 # Create /etc/timestamp during image construction to give a reasonably sane default time setting
 ROOTFS_POSTPROCESS_COMMAND += "rootfs_update_timestamp "
@@ -43,7 +43,7 @@ ROOTFS_POSTUNINSTALL_COMMAND =+ "write_image_manifest"
 POSTINST_LOGFILE ?= "${localstatedir}/log/postinstall.log"
 # Set default target for systemd images
 SYSTEMD_DEFAULT_TARGET ?= '${@bb.utils.contains_any("IMAGE_FEATURES", [ "x11-base", "weston" ], "graphical.target", "multi-user.target", d)}'
-ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("DISTRO_FEATURES", "systemd", "set_systemd_default_target systemd_sysusers_check", "", d)}'
+ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("DISTRO_FEATURES", "systemd", "set_systemd_default_target systemd_sysusers_check systemd_handle_machine_id", "", d)}'
 
 ROOTFS_POSTPROCESS_COMMAND += 'empty_var_volatile'
 
@@ -173,6 +173,23 @@ python systemd_sysusers_check() {
                     check_group_exists(d, sid)
 }
 
+systemd_handle_machine_id() {
+    if ${@bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs", "true", "false", d)}; then
+        # Create machine-id
+        # 20:12 < mezcalero> koen: you have three options: a) run systemd-machine-id-setup at install time, b) have / read-only and an empty file there (for stateless) and c) boot with / writable
+        touch ${IMAGE_ROOTFS}${sysconfdir}/machine-id
+    fi
+    # In order to be backward compatible with the previous OE-core specific (re)implementation of systemctl
+    # we need to touch machine-id when handling presets and when the rootfs is NOT stateless
+    if ${@ 'true' if not bb.utils.contains('IMAGE_FEATURES', 'stateless-rootfs', True, False, d) else 'false'}; then
+        touch ${IMAGE_ROOTFS}${sysconfdir}/machine-id
+        if [ -e ${IMAGE_ROOTFS}${root_prefix}/lib/systemd/systemd ]; then
+            systemctl --root="${IMAGE_ROOTFS}" --preset-mode=enable-only preset-all
+            systemctl --root="${IMAGE_ROOTFS}" --global --preset-mode=enable-only preset-all
+        fi
+    fi
+}
+
 #
 # A hook function to support read-only-rootfs IMAGE_FEATURES
 #
@@ -206,7 +223,9 @@ read_only_rootfs_hook () {
 		# Also tweak the key location for dropbear in the same way.
 		if [ -d ${IMAGE_ROOTFS}/etc/dropbear ]; then
 			if [ ! -e ${IMAGE_ROOTFS}/etc/dropbear/dropbear_rsa_host_key ]; then
-				echo "DROPBEAR_RSAKEY_DIR=/var/lib/dropbear" >> ${IMAGE_ROOTFS}/etc/default/dropbear
+				if ! grep -q "^DROPBEAR_RSAKEY_DIR=" ${IMAGE_ROOTFS}/etc/default/dropbear ; then
+					echo "DROPBEAR_RSAKEY_DIR=/var/lib/dropbear" >> ${IMAGE_ROOTFS}/etc/default/dropbear
+				fi
 			fi
 		fi
 	fi
@@ -221,12 +240,6 @@ read_only_rootfs_hook () {
 		if [ -x ${IMAGE_ROOTFS}/etc/init.d/populate-volatile.sh ]; then
 			${IMAGE_ROOTFS}/etc/init.d/populate-volatile.sh
 		fi
-	fi
-
-	if ${@bb.utils.contains("DISTRO_FEATURES", "systemd", "true", "false", d)}; then
-	# Create machine-id
-	# 20:12 < mezcalero> koen: you have three options: a) run systemd-machine-id-setup at install time, b) have / read-only and an empty file there (for stateless) and c) boot with / writable
-		touch ${IMAGE_ROOTFS}${sysconfdir}/machine-id
 	fi
 }
 
@@ -306,19 +319,19 @@ serial_autologin_root () {
 }
 
 python tidy_shadowutils_files () {
-    import rootfspostcommands
-    rootfspostcommands.tidy_shadowutils_files(d.expand('${IMAGE_ROOTFS}${sysconfdir}'))
+    import oe.rootfspostcommands
+    oe.rootfspostcommands.tidy_shadowutils_files(d.expand('${IMAGE_ROOTFS}${sysconfdir}'))
 }
 
 python sort_passwd () {
     """
     Deprecated in the favour of tidy_shadowutils_files.
     """
-    import rootfspostcommands
+    import oe.rootfspostcommands
     bb.warn('[sort_passwd] You are using a deprecated function for '
         'SORT_PASSWD_POSTPROCESS_COMMAND. The default one is now called '
         '"tidy_shadowutils_files".')
-    rootfspostcommands.tidy_shadowutils_files(d.expand('${IMAGE_ROOTFS}${sysconfdir}'))
+    oe.rootfspostcommands.tidy_shadowutils_files(d.expand('${IMAGE_ROOTFS}${sysconfdir}'))
 }
 
 #
@@ -484,6 +497,10 @@ rootfs_reproducible () {
 		if [ -d ${IMAGE_ROOTFS}${sysconfdir}/gconf ]; then
 			find ${IMAGE_ROOTFS}${sysconfdir}/gconf -name '%gconf.xml' -print0 | xargs -0r \
 			sed -i -e 's@\bmtime="[0-9][0-9]*"@mtime="'${REPRODUCIBLE_TIMESTAMP_ROOTFS}'"@g'
+		fi
+
+		if [ -f ${IMAGE_ROOTFS}${localstatedir}/lib/opkg/status ]; then
+			sed -i 's/^Installed-Time: .*/Installed-Time: ${REPRODUCIBLE_TIMESTAMP_ROOTFS}/' ${IMAGE_ROOTFS}${localstatedir}/lib/opkg/status
 		fi
 	fi
 }
